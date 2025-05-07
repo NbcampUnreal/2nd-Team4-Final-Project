@@ -6,7 +6,13 @@
 #include "DW_MonsterBaseInterface.h"
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISenseConfig_Damage.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception/AISenseConfig_Sight.h"
 #include "DW_MonsterBase.generated.h"
+
 
 UCLASS()
 class DW_DALWONDER_API ADW_MonsterBase : public ACharacter, public IDW_MonsterBaseInterface
@@ -57,6 +63,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAIPerceptionComponent* AIPerceptionComponent;
+
+	UAISenseConfig_Sight* SightConfig;
+	UAISenseConfig_Hearing* HearingConfig;
+	UAISenseConfig_Damage* DamageConfig;
 	
 	// 현재 몬스터 상태를 반환
 	virtual EMonsterState GetCurrentState() const override;

@@ -28,6 +28,29 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+
+	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+
+	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
+	SightConfig->SightRadius = 1500.0f;
+	SightConfig->LoseSightRadius = 1800.0f;
+	SightConfig->PeripheralVisionAngleDegrees = 90.0f;
+	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
+	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+
+	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
+	HearingConfig->HearingRange = 1200.0f;
+	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
+	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
+
+	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
+
+	AIPerceptionComponent->ConfigureSense(*SightConfig);
+	AIPerceptionComponent->ConfigureSense(*HearingConfig);
+	AIPerceptionComponent->ConfigureSense(*DamageConfig);
+	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 }
 
 // Called when the game starts or when spawned
