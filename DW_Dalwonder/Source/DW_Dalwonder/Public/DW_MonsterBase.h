@@ -23,13 +23,13 @@ protected:
 
 public:
 
-	EMonsterState CurrentState = EMonsterState::Idle;
+	EMonsterState CurrentState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	TArray<UAnimMontage*> AnimMontages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	UDataTable* DataTable;
+	class UDataTable* DataTable;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* AttackSoundComponent;
@@ -43,16 +43,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* HitSound;
 
-	class DW_CharacterBase* PlayerCharacter;
-	
-	
-	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
+	class ADW_CharacterBase* PlayerCharacter;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	FName MonsterName;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MonsterHP;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MonsterDamage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MonsterSpeed;
 	
 	// 현재 몬스터 상태를 반환
 	virtual EMonsterState GetCurrentState() const override;
@@ -61,7 +65,7 @@ public:
 	virtual void SetCurrentState(EMonsterState MonsterState) override;
 
 	// 데이터 테이블을 통해 몬스터 스탯 설정
-	virtual void SetStats(UDataTable* DataTable) override;
+	virtual void SetStats(UDataTable* NewDataTable) override;
 
 	// 몬스터 이름 반환
 	virtual FName GetMonsterName() const override;
@@ -82,6 +86,7 @@ public:
 	virtual int32 GetRandomMontage() override;
 
 	// 블랙보드에 랜덤 공격 키 설정
+	UFUNCTION(BlueprintCallable)
 	virtual void SetRandomAttackKey(int32 PatternIndex) override;
 
 	// 공격 사운드 재생
@@ -105,15 +110,15 @@ public:
 		AController* EventInstigator,
 		AActor* DamageCauser,
 		TSubclassOf<UDamageType> DamageTypeClass
-	) override;
+	);
 
 	// 플레이어 캐릭터 캐스팅
 	virtual void CastPlayerCharacter() override;
 
 	// 플레이어 캐릭터 참조 반환
-	virtual class DW_CharacterBase GetPlayerCharacter() override;
+	virtual class ADW_CharacterBase* GetPlayerCharacter() override;
 
 	// 플레이어와의 거리 반환
+	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
-	
 };
