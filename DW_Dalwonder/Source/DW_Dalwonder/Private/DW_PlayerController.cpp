@@ -1,0 +1,26 @@
+#include "DW_PlayerController.h"
+#include "EnhancedInputSubsystems.h"
+
+ADW_PlayerController::ADW_PlayerController()
+	: InputMappingContext(nullptr),
+	MoveAction(nullptr),
+	LookAction(nullptr),
+	JumpAction(nullptr)
+{
+}
+
+void ADW_PlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* EILPS = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			if (InputMappingContext)
+			{
+				EILPS->AddMappingContext(InputMappingContext, 0);
+			}
+		}
+	}
+}
