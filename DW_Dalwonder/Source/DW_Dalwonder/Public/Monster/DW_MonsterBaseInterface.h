@@ -17,6 +17,12 @@ class DW_DALWONDER_API IDW_MonsterBaseInterface
 
 public:
 
+	// 최대 속도 정의
+	virtual void SetMovementSpeed(int32 const NewSpeed) = 0;
+
+	// 최대 가속 정의
+	virtual void SetAccelerationSpeed(int32 const NewAccelerationSpeed) = 0;
+
 	// 현재 몬스터 상태를 반환
 	virtual EMonsterState GetCurrentState() const = 0;
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DW_BossMonsterBaseInterface.h"
-#include "DW_MonsterBase.h"
+#include "Monster/DW_MonsterBase.h"
 #include "DW_BossMonsterBase.generated.h"
 
 UCLASS()

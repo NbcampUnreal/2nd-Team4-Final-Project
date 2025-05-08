@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_MonsterBase.h"
 #include "DW_NormalMonsterBaseInterface.h"
+#include "Monster/DW_MonsterBase.h"
 #include "DW_NormalMonsterBase.generated.h"
 
 UCLASS()

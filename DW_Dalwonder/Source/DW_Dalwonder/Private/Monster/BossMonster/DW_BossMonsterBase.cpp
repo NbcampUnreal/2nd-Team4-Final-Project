@@ -1,8 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DW_BossMonsterBase.h"
-
+#include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "Components/AudioComponent.h"
 
 

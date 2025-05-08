@@ -1,7 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DW_NormalMonsterBase.h"
+#include "Monster/NormalMonster/DW_NormalMonsterBase.h"
+
 #include "Kismet/KismetSystemLibrary.h"
 
 

@@ -63,6 +63,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
+
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void SetMovementSpeed(int32 const NewSpeed) override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SetAccelerationSpeed(int32 const NewAccelerationSpeed) override;
 	
 	// 현재 몬스터 상태를 반환
 	virtual EMonsterState GetCurrentState() const override;

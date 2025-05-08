@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_BossMonsterBase.h"
+#include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
 
 UCLASS()
@@ -19,10 +19,5 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetMovementSpeed(int32 NewSpeed);
-
-	UFUNCTION(BlueprintCallable)
-	void SetAccelerationSpeed(int32 NewAccelerationSpeed);
 
 };

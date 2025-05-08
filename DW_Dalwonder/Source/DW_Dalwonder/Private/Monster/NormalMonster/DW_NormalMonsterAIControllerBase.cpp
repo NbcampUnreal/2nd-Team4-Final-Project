@@ -1,10 +1,10 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DW_NormalMonsterAIControllerBase.h"
 
-#include "DW_NormalMonsterBaseInterface.h"
+#include "Monster/NormalMonster/DW_NormalMonsterAIControllerBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Monster/NormalMonster/DW_NormalMonsterBaseInterface.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISenseConfig_Hearing.h"

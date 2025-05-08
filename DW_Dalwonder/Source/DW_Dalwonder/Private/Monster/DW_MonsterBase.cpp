@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DW_MonsterBase.h"
+#include "Monster/DW_MonsterBase.h"
 
 #include "AIController.h"
 #include "DW_CharacterBase.h"
@@ -50,6 +50,17 @@ void ADW_MonsterBase::BeginPlay()
 
 	CastPlayerCharacter();
 	
+}
+
+
+void ADW_MonsterBase::SetMovementSpeed(int32 const NewSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
+
+void ADW_MonsterBase::SetAccelerationSpeed(int32 const NewAccelerationSpeed)
+{
+	GetCharacterMovement()->MaxAcceleration = NewAccelerationSpeed;
 }
 
 EMonsterState ADW_MonsterBase::GetCurrentState() const

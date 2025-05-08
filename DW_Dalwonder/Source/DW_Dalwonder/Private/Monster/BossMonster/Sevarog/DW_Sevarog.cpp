@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DW_Sevarog.h"
+#include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -22,12 +22,3 @@ void ADW_Sevarog::BeginPlay()
 	SetAccelerationSpeed(200);
 }
 
-void ADW_Sevarog::SetMovementSpeed(int32 NewSpeed)
-{
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-}
-
-void ADW_Sevarog::SetAccelerationSpeed(int32 NewAccelerationSpeed)
-{
-	GetCharacterMovement()->MaxAcceleration = NewAccelerationSpeed;
-}

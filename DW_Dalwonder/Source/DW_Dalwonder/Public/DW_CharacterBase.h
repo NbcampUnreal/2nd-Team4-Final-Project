@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_BossMonsterBaseInterface.h"
-#include "DW_MonsterBaseInterface.h"
+#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
+#include "Monster/DW_MonsterBaseInterface.h"
 #include "GameFramework/Character.h"
 #include "DW_CharacterBase.generated.h"
 
