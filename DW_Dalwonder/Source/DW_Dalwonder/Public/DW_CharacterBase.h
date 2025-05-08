@@ -33,6 +33,18 @@ public:
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetCombatState(ECharacterCombatState NewState);
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PlayAttackMontage();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* AttackMontage;
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArm;
