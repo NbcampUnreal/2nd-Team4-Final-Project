@@ -28,6 +28,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	
 
 	EMonsterState CurrentState;
 
@@ -64,10 +65,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
 
-	
+	// 몬스터의 최대 속도 정의
 	UFUNCTION(BlueprintCallable)
 	virtual void SetMovementSpeed(int32 const NewSpeed) override;
 
+	// 몬스터의 속도 가속 정의
 	UFUNCTION(BlueprintCallable)
 	virtual void SetAccelerationSpeed(int32 const NewAccelerationSpeed) override;
 	
@@ -93,9 +95,11 @@ public:
 	virtual float GetMonsterSpeed() const override;
 
 	// 공격 실행 (패턴 인덱스 기반)
+	UFUNCTION(BlueprintCallable)
 	virtual void PerformAttack(int32 PatternIndex) override;
-
+	
 	// 공격용 몽타주 인덱스 랜덤 반환
+	UFUNCTION(BlueprintCallable)
 	virtual int32 GetRandomMontage() override;
 
 	// 블랙보드에 랜덤 공격 키 설정

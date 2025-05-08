@@ -31,10 +31,9 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 
 	Tags.Add(TEXT("Monster"));
 	
-	bUseControllerRotationYaw = false;
-
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
+	bUseControllerRotationYaw = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 30.f, 0.f); // 회전 속도 조절
 	
 }
 
@@ -51,7 +50,6 @@ void ADW_MonsterBase::BeginPlay()
 	CastPlayerCharacter();
 	
 }
-
 
 void ADW_MonsterBase::SetMovementSpeed(int32 const NewSpeed)
 {
