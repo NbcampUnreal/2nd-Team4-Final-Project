@@ -25,7 +25,7 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ADW_CharacterBase::PlayAttackMontage);
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
@@ -62,6 +62,7 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::StopJump);
 			}
+			
 		}
 	}
 }
@@ -103,5 +104,20 @@ void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 	if (Value.Get<bool>())
 	{
 		StopJumping();
+	}
+}
+
+void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
+{
+	CurrentCombatState = NewState;
+
+	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
+}
+
+void ADW_CharacterBase::PlayAttackMontage()
+{
+	if (AttackMontage)
+	{
+		PlayAnimMontage(AttackMontage);
 	}
 }

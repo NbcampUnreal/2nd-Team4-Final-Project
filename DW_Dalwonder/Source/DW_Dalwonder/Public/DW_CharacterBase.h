@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Character/ECharacterCombatState.h"
 #include "DW_BossMonsterBaseInterface.h"
 #include "DW_MonsterBaseInterface.h"
 #include "GameFramework/Character.h"
