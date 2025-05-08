@@ -15,6 +15,8 @@ ADW_BossMonsterBase::ADW_BossMonsterBase(): CurrentPhase(0), BGM(nullptr)
 	BGMSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BGM"));
 	BGMSoundComponent->SetupAttachment(RootComponent);
 	BGMSoundComponent->bAutoActivate = false;
+
+	Tags.Add(TEXT("BossMonster"));
 }
 
 // Called when the game starts or when spawned
@@ -34,10 +36,10 @@ void ADW_BossMonsterBase::SetCurrentPhase(int32 NewPhase)
 	CurrentPhase = NewPhase;
 }
 
-void ADW_BossMonsterBase::SetPhaseBlackboardValues(int32 NewPhase)
-{
-	//Blackboard의 값을 바꿀 예정
-}
+// void ADW_BossMonsterBase::SetPhaseBlackboardValues(int32 NewPhase)
+// {
+// 	//Blackboard의 값을 바꿀 예정
+// }
 
 void ADW_BossMonsterBase::SetBGM(USoundBase* NewBGM)
 {

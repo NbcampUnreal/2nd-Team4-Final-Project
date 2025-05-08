@@ -43,11 +43,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* HitSoundComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Base")
 	TArray<USoundBase*> AttackSounds;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Base")
+	TArray<USoundBase*> HitSounds;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
@@ -63,13 +63,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UAIPerceptionComponent* AIPerceptionComponent;
-
-	UAISenseConfig_Sight* SightConfig;
-	UAISenseConfig_Hearing* HearingConfig;
-	UAISenseConfig_Damage* DamageConfig;
 	
 	// 현재 몬스터 상태를 반환
 	virtual EMonsterState GetCurrentState() const override;
@@ -99,14 +92,14 @@ public:
 	virtual int32 GetRandomMontage() override;
 
 	// 블랙보드에 랜덤 공격 키 설정
-	UFUNCTION(BlueprintCallable)
-	virtual void SetRandomAttackKey(int32 PatternIndex) override;
+	// UFUNCTION(BlueprintCallable)
+	// virtual void SetRandomAttackKey(int32 PatternIndex) override;
 
 	// 공격 사운드 재생
 	virtual void PlayAttackSound(int32 SoundIndex) override;
 
 	// 피격 사운드 재생
-	virtual void PlayHitSound() override;
+	virtual void PlayHitSound(int32 SoundIndex) override;
 
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(

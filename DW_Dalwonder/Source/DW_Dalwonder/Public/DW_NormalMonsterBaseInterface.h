@@ -23,9 +23,12 @@ class DW_DALWONDER_API IDW_NormalMonsterBaseInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	virtual void AlertNearbyMonsters(int32 AlertDistance) = 0;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Monster")
+	void AlertNearbyMonsters(int32 AlertDistance);
 
-	virtual void FoundPlayer() = 0;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Monster")
+	void FoundPlayer();
 
-	virtual void SetAlerted(bool AlertValue) = 0;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Monster")
+	void SetAlerted(bool AlertValue);
 };

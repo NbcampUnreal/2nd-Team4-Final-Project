@@ -35,8 +35,8 @@ public:
 
 	virtual void SetCurrentPhase(int32 NewPhase) override;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void SetPhaseBlackboardValues(int32 NewPhase) override;
+	// UFUNCTION(BlueprintCallable)
+	// virtual void SetPhaseBlackboardValues(int32 NewPhase) override;
 
 	virtual void SetBGM(USoundBase* NewBGM) override;
 	

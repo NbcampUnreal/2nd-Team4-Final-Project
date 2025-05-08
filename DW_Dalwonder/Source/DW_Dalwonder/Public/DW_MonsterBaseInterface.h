@@ -45,13 +45,13 @@ public:
 	virtual int32 GetRandomMontage() = 0;
 
 	// 블랙보드에 랜덤 공격 키 설정
-	virtual void SetRandomAttackKey(int32 PatternIndex) = 0;
+	// virtual void SetRandomAttackKey(int32 PatternIndex) = 0;
 
 	// 공격 사운드 재생
 	virtual void PlayAttackSound(int32 SoundIndex) = 0;
 
 	// 피격 사운드 재생
-	virtual void PlayHitSound() = 0;
+	virtual void PlayHitSound(int32 SoundIndex) = 0;
 
 	// 데미지를 받을 때 호출
 	// virtual float TakeDamage(

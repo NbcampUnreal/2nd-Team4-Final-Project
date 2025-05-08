@@ -25,9 +25,12 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="NormalMonster")
 	bool bIsAlerted;
 
-	virtual void AlertNearbyMonsters(int32 AlertDistance) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="NormalMonster")
+	int32 MonsterAlertDistance;
 
-	virtual void FoundPlayer() override;
+	virtual void AlertNearbyMonsters_Implementation(const int32 AlertDistance) override;
 
-	virtual void SetAlerted(bool AlertValue) override;
+	virtual void FoundPlayer_Implementation() override;
+
+	virtual void SetAlerted_Implementation(const bool AlertValue) override;
 };

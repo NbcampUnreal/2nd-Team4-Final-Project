@@ -8,6 +8,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Engine/DataTable.h"
 #include "Components/AudioComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 
@@ -15,7 +16,6 @@
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr),
-                                    HitSound(nullptr),
                                     PlayerCharacter(nullptr), MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -29,28 +29,13 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
 
-	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
+	Tags.Add(TEXT("Monster"));
+	
+	bUseControllerRotationYaw = false;
 
-	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 1500.0f;
-	SightConfig->LoseSightRadius = 1800.0f;
-	SightConfig->PeripheralVisionAngleDegrees = 90.0f;
-	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
-	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
-	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
-
-	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = 1200.0f;
-	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
-	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
-	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
-
-	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
-
-	AIPerceptionComponent->ConfigureSense(*SightConfig);
-	AIPerceptionComponent->ConfigureSense(*HearingConfig);
-	AIPerceptionComponent->ConfigureSense(*DamageConfig);
-	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
+	
 }
 
 // Called when the game starts or when spawned
@@ -131,16 +116,16 @@ int32 ADW_MonsterBase::GetRandomMontage()
 	}
 }
 
-void ADW_MonsterBase::SetRandomAttackKey(int32 PatternIndex)
-{
-	if (AAIController* Ctr = Cast<AAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
-		{
-			BBC->SetValueAsBool(FName("RandomAttackKey"), true);
-		}
-	}
-}
+// void ADW_MonsterBase::SetRandomAttackKey(int32 PatternIndex)
+// {
+// 	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+// 	{
+// 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+// 		{
+// 			BBC->SetValueAsBool(FName("RandomAttackKey"), true);
+// 		}
+// 	}
+// }
 
 void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
 {
@@ -151,11 +136,11 @@ void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
 	}
 }
 
-void ADW_MonsterBase::PlayHitSound()
+void ADW_MonsterBase::PlayHitSound(int32 SoundIndex)
 {
-	if (AttackSoundComponent && HitSound)
+	if (AttackSoundComponent && HitSounds[SoundIndex])
 	{
-		AttackSoundComponent->SetSound(HitSound);
+		AttackSoundComponent->SetSound(HitSounds[SoundIndex]);
 		AttackSoundComponent->Play();
 	}
 }
@@ -184,6 +169,13 @@ void ADW_MonsterBase::CastPlayerCharacter()
 		if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(Actor))
 		{
 			PlayerCharacter = Character;
+				if (AAIController* Ctr = Cast<AAIController>(GetController()))
+				{
+					if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+					{
+						BBC->SetValueAsObject(FName("TargetActor"), Actor);
+					}
+				}
 		}
 	}
 }
