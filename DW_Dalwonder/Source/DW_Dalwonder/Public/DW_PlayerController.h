@@ -6,6 +6,7 @@
 
 class UInputMappingContext;
 class UInputAction;
+class UUserWidget;
 
 UCLASS()
 class DW_DALWONDER_API ADW_PlayerController : public APlayerController
@@ -29,4 +30,14 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input)
 	UInputAction* JumpAction;
+
+protected:
+	// HUD
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<UUserWidget> HUDWidgetClass;
+
+private:
+	//HUD
+	UPROPERTY()
+	UUserWidget* HUDWidgetInstance;
 };
