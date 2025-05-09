@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Character/ECharacterCombatState.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
 #include "GameFramework/Character.h"
@@ -32,10 +33,25 @@ public:
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetCombatState(ECharacterCombatState NewState);
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PlayAttackMontage();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* AttackMontage;
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArm;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* Camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* Weapon;
 };
