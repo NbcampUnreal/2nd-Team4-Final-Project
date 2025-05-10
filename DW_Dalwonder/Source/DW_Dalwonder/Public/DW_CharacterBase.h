@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
-#include "DW_BossMonsterBaseInterface.h"
-#include "DW_MonsterBaseInterface.h"
+#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
+#include "Monster/DW_MonsterBaseInterface.h"
 #include "GameFramework/Character.h"
 #include "DW_CharacterBase.generated.h"
 
@@ -28,9 +28,6 @@ public:
 	void StartJump(const FInputActionValue& Value);
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);
-	
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void PlayAttackMontage();
 
 protected:
 	virtual void BeginPlay() override;
@@ -42,6 +39,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetCombatState(ECharacterCombatState NewState);
 	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PlayAttackMontage();
+
+	virtual float TakeDamage(
+	float DamageAmount,
+	struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator,
+	AActor* DamageCauser
+) override;
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetParrying(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetGuarding(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetInvincible(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StartGuard();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void EndGuard();
+  
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
 	
@@ -54,4 +76,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	UChildActorComponent* Weapon;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsParrying = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsGuarding = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsInvincible = false;
+
 };
