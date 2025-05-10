@@ -42,6 +42,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PlayAttackMontage();
 	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetParrying(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetGuarding(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetInvincible(bool bNewParrying);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StartGuard();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void EndGuard();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
 	
@@ -54,4 +69,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	UChildActorComponent* Weapon;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsParrying = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsGuarding = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsInvincible = false;
+
 };

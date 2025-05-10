@@ -121,3 +121,33 @@ void ADW_CharacterBase::PlayAttackMontage()
 		PlayAnimMontage(AttackMontage);
 	}
 }
+
+void ADW_CharacterBase::SetParrying(bool bNewParrying)
+{
+	bIsParrying = bNewParrying;
+
+	UE_LOG(LogTemp, Log, TEXT("패링 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
+{
+	bIsGuarding = bNewGuarding;
+	UE_LOG(LogTemp, Log, TEXT("가드 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
+{
+	bIsInvincible = bNewInvincible;
+	UE_LOG(LogTemp, Log, TEXT("회피 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::StartGuard()
+{
+	SetGuarding(true);
+	// PlayAnimMontage(GuardMontage);
+}
+
+void ADW_CharacterBase::EndGuard()
+{
+	SetGuarding(false);
+}
