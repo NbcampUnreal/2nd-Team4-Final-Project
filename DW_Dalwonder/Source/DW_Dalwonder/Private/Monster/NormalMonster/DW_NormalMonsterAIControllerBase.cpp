@@ -50,8 +50,6 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 	{
 		if (Actor->ActorHasTag("Player"))
 		{
-			GetBlackboardComponent()->SetValueAsObject("TargetActor", Actor);
-
 			APawn* ControlledPawn = GetPawn();
 			if (ControlledPawn && ControlledPawn->Implements<UDW_NormalMonsterBaseInterface>())
 			{

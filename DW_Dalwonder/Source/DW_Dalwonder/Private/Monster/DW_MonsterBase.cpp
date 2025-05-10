@@ -16,7 +16,7 @@
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
-                                    PlayerCharacter(nullptr), MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
+                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -287,6 +287,19 @@ void ADW_MonsterBase::Parried()
 	}
 }
 
+void ADW_MonsterBase::Dead()
+{
+	if (IsValid(DeadMontage))
+	{
+		UAnimMontage* Montage = DeadMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
 //데미지 받을 때의 함수, 구현 필요
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
@@ -311,13 +324,13 @@ void ADW_MonsterBase::CastPlayerCharacter()
 		if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(Actor))
 		{
 			PlayerCharacter = Character;
-				if (AAIController* Ctr = Cast<AAIController>(GetController()))
-				{
-					if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
-					{
-						BBC->SetValueAsObject(FName("TargetActor"), Actor);
-					}
-				}
+				// if (AAIController* Ctr = Cast<AAIController>(GetController()))
+				// {
+				// 	if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+				// 	{
+				// 		BBC->SetValueAsObject(FName("TargetActor"), Actor);
+				// 	}
+				// }
 		}
 	}
 }
