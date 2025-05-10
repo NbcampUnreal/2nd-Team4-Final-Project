@@ -4,6 +4,7 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Monster/MonsterStatsTable.h"
 
 
 // Sets default values
@@ -16,13 +17,3 @@ ADW_Sevarog::ADW_Sevarog()
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 }
-
-// Called when the game starts or when spawned
-void ADW_Sevarog::BeginPlay()
-{
-	Super::BeginPlay();
-
-	SetMovementSpeed(400);
-	SetAccelerationSpeed(200);
-}
-

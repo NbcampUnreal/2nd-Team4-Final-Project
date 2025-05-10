@@ -14,10 +14,4 @@ class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
 public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-
 };

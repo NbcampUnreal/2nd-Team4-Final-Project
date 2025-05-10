@@ -70,8 +70,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	FName MonsterName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	EMonsterName MonsterName;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterMaxHP;
@@ -84,6 +84,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MonsterAccelSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
@@ -183,15 +186,6 @@ public:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 	) override;
-
-	// 데미지를 가할 때 호출
-	virtual float ApplyDamage(
-		AActor* DamagedActor,
-		float BaseDamage,
-		AController* EventInstigator,
-		AActor* DamageCauser,
-		TSubclassOf<UDamageType> DamageTypeClass
-	);
 
 	// 플레이어 캐릭터 캐스팅
 	virtual void CastPlayerCharacter() override;

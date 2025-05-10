@@ -14,3 +14,9 @@ enum class EMonsterState : uint8
 	Chase       UMETA(DisplayName = "Chase"),     
 	Dead        UMETA(DisplayName = "Dead"),
 };
+
+UENUM(BlueprintType)
+enum class EMonsterName : uint8
+{
+	Sevarog        UMETA(DisplayName = "Sevarog"),
+};
