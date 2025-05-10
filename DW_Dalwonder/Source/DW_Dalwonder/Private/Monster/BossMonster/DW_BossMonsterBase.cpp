@@ -44,6 +44,14 @@ int32 ADW_BossMonsterBase::GetCurrentPhase()
 void ADW_BossMonsterBase::SetCurrentPhase(int32 NewPhase)
 {
 	CurrentPhase = NewPhase;
+
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsInt(FName("CurrentPhase"), NewPhase);
+		}
+	}
 }
 
 void ADW_BossMonsterBase::SetBGM(USoundBase* NewBGM)

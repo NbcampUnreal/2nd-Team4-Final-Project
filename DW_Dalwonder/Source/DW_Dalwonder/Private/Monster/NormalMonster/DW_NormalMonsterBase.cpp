@@ -78,7 +78,9 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 	if (bIsFirstResponder)
 	{
 		PlayAlertMontage();
-		AlertNearbyMonsters(MonsterAlertDistance);
+
+		//AnimNotify를 통해 Alert함. MonsterAlertDistance 변수는 더미
+		//AlertNearbyMonsters(MonsterAlertDistance);
 	}
 }
 
