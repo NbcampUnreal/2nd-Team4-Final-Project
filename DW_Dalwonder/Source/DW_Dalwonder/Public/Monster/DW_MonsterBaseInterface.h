@@ -49,6 +49,8 @@ public:
 
 	virtual void InitialSpawn() = 0;
 
+	virtual void PlayParryingMontage() = 0;
+
 	// 공격용 몽타주 인덱스 랜덤 반환
 	virtual int32 GetRandomMontage() = 0;
 

@@ -131,6 +131,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void InitialSpawn() override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void PlayParryingMontage() override;
 	
 	// 공격용 몽타주 인덱스 랜덤 반환
 	UFUNCTION(BlueprintCallable)
@@ -160,6 +163,7 @@ public:
 
 	virtual void PerformAttackTrace() override;
 
+	UFUNCTION(BlueprintCallable)
 	virtual void Parried() override;
 
 	// 데미지를 받을 때 호출

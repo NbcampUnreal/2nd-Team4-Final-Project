@@ -142,6 +142,19 @@ void ADW_MonsterBase::InitialSpawn()
 	}
 }
 
+void ADW_MonsterBase::PlayParryingMontage()
+{	
+	if (IsValid(ParriedMontage))
+	{
+		UAnimMontage* Montage = ParriedMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
 int32 ADW_MonsterBase::GetRandomMontage()
 {
 	if (AnimMontages.Num() > 0)
@@ -261,7 +274,17 @@ void ADW_MonsterBase::PerformAttackTrace()
 void ADW_MonsterBase::Parried()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Parry"));
-	// 패링당하는 함수
+
+	bIsAttacking = false;
+	bCanParried = false;
+
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("Parried"), true);
+		}
+	}
 }
 
 //데미지 받을 때의 함수, 구현 필요

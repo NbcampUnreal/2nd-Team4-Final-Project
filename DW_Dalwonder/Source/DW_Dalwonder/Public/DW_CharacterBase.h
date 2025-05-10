@@ -34,7 +34,7 @@ public:
 	void StopJump(const FInputActionValue& Value);
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
-	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
+	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Parrying;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetCombatState(ECharacterCombatState NewState);
