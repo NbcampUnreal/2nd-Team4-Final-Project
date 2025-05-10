@@ -37,6 +37,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	TArray<UAnimMontage*> AnimMontages;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* SpawnMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* ParriedMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
@@ -75,6 +81,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bCanParried;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	float DebugDrawTime = 1.0f;
@@ -119,6 +128,9 @@ public:
 	// 공격 실행 (패턴 인덱스 기반)
 	UFUNCTION(BlueprintCallable)
 	virtual void PerformAttack(int32 PatternIndex) override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void InitialSpawn() override;
 	
 	// 공격용 몽타주 인덱스 랜덤 반환
 	UFUNCTION(BlueprintCallable)
@@ -134,6 +146,12 @@ public:
 	// 피격 사운드 재생
 	virtual void PlayHitSound(int32 SoundIndex) override;
 
+	virtual void CanParry() override;
+
+	virtual void CantParry() override;
+
+	virtual bool GetCanParry() override;
+
 	// 공격 판정 시작
 	virtual void StartAttackTrace() override;
 
@@ -141,6 +159,8 @@ public:
 	virtual void EndAttackTrace() override;
 
 	virtual void PerformAttackTrace() override;
+
+	virtual void Parried() override;
 
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(
