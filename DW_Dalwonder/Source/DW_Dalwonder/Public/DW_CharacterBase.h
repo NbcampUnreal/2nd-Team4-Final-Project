@@ -41,6 +41,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PlayAttackMontage();
+
+	virtual float TakeDamage(
+	float DamageAmount,
+	struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator,
+	AActor* DamageCauser
+) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetParrying(bool bNewParrying);

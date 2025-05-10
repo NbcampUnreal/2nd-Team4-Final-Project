@@ -15,7 +15,7 @@
 
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
-                                    AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false),
+                                    AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
                                     PlayerCharacter(nullptr), MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -129,6 +129,32 @@ void ADW_MonsterBase::PerformAttack(int32 PatternIndex)
 	}
 }
 
+void ADW_MonsterBase::InitialSpawn()
+{
+	if (IsValid(SpawnMontage))
+	{
+		UAnimMontage* Montage = SpawnMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_MonsterBase::PlayParryingMontage()
+{	
+	if (IsValid(ParriedMontage))
+	{
+		UAnimMontage* Montage = ParriedMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
 int32 ADW_MonsterBase::GetRandomMontage()
 {
 	if (AnimMontages.Num() > 0)
@@ -172,6 +198,21 @@ void ADW_MonsterBase::PlayHitSound(int32 SoundIndex)
 		AttackSoundComponent->SetSound(HitSounds[SoundIndex]);
 		AttackSoundComponent->Play();
 	}
+}
+
+void ADW_MonsterBase::CanParry()
+{
+	bCanParried = true;
+}
+
+void ADW_MonsterBase::CantParry()
+{
+	bCanParried = false;
+}
+
+bool ADW_MonsterBase::GetCanParry()
+{
+	return bCanParried;
 }
 
 void ADW_MonsterBase::StartAttackTrace()
@@ -230,6 +271,22 @@ void ADW_MonsterBase::PerformAttackTrace()
 	}
 }
 
+void ADW_MonsterBase::Parried()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Parry"));
+
+	bIsAttacking = false;
+	bCanParried = false;
+
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("Parried"), true);
+		}
+	}
+}
+
 //데미지 받을 때의 함수, 구현 필요
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
@@ -237,7 +294,7 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	return 0;
 }
 
-//데미지 가할 떄의 함수, 구현 필요
+//데미지 가할 때의 함수, 구현 필요
 float ADW_MonsterBase::ApplyDamage(AActor* DamagedActor, float BaseDamage, AController* EventInstigator,
 	AActor* DamageCauser, TSubclassOf<UDamageType> DamageTypeClass)
 {

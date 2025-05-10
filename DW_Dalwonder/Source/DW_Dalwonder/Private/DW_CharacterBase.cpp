@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "DW_PlayerController.h"
+#include "Monster/DW_MonsterBase.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -120,6 +121,30 @@ void ADW_CharacterBase::PlayAttackMontage()
 	{
 		PlayAnimMontage(AttackMontage);
 	}
+}
+
+float ADW_CharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
+
+	if (IsValid(Monster))
+	{
+		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
+		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+		{
+			Monster->Parried();
+		}
+		else
+		{
+			//데미지 받는 로직
+		}
+	}
+	else
+	{
+		//데미지 받는 로직
+	}
+	return 0;
 }
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)

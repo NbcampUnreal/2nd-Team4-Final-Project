@@ -47,6 +47,10 @@ public:
 	// 공격 실행 (패턴 인덱스 기반)
 	virtual void PerformAttack(int32 PatternIndex) = 0;
 
+	virtual void InitialSpawn() = 0;
+
+	virtual void PlayParryingMontage() = 0;
+
 	// 공격용 몽타주 인덱스 랜덤 반환
 	virtual int32 GetRandomMontage() = 0;
 
@@ -59,6 +63,14 @@ public:
 	// 피격 사운드 재생
 	virtual void PlayHitSound(int32 SoundIndex) = 0;
 
+	// 패링 판정 시작(AnimNotify에서 실행 되어야 함)
+	virtual void CanParry() = 0;
+
+	// 패링 판정 종료(AnimNotify에서 실행 되어야 함)
+	virtual void CantParry() = 0;
+
+	virtual bool GetCanParry() = 0;
+
 	// 공격 판정 시작(AnimNotify에서 실행 되어야 함)
 	virtual void StartAttackTrace() = 0;
 
@@ -66,6 +78,8 @@ public:
 	virtual void EndAttackTrace() = 0;
 
 	virtual void PerformAttackTrace() = 0;
+
+	virtual void Parried() = 0;
 
 	// 데미지를 받을 때 호출
 	// virtual float TakeDamage(
