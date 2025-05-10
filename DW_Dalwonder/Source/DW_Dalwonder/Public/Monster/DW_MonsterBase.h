@@ -43,6 +43,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* ParriedMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* DeadMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
@@ -69,6 +72,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	FName MonsterName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	float MonsterMaxHP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterHP;
@@ -144,9 +150,11 @@ public:
 	// virtual void SetRandomAttackKey(int32 PatternIndex) override;
 
 	// 공격 사운드 재생
+	UFUNCTION(BlueprintCallable)
 	virtual void PlayAttackSound(int32 SoundIndex) override;
 
 	// 피격 사운드 재생
+	UFUNCTION(BlueprintCallable)
 	virtual void PlayHitSound(int32 SoundIndex) override;
 
 	virtual void CanParry() override;
@@ -165,6 +173,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Parried() override;
+
+	virtual void Dead() override;
 
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(

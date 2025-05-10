@@ -2,6 +2,10 @@
 
 
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
+
+#include "AIController.h"
+#include "DW_CharacterBase.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/AudioComponent.h"
 
 
@@ -23,6 +27,13 @@ void ADW_BossMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+		}
+	}
 }
 
 int32 ADW_BossMonsterBase::GetCurrentPhase()

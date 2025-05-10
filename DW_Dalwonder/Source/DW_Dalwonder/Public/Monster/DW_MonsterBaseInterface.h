@@ -81,6 +81,8 @@ public:
 
 	virtual void Parried() = 0;
 
+	virtual void Dead() = 0;
+
 	// 데미지를 받을 때 호출
 	// virtual float TakeDamage(
 	// 	float DamageAmount,
