@@ -15,7 +15,7 @@
 
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
-                                    AttackSoundComponent(nullptr), HitSoundComponent(nullptr),
+                                    AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false),
                                     PlayerCharacter(nullptr), MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -28,6 +28,14 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+
+	//★★★TraceStart와 End는 자식 클래스에서 필요한 Bone에 SetupAttachment가 필요함. Base에서는 임시로 RootComponent에 부착함.★★★
+	//★★★Monster/BossMonster/Sevarog/DW_Sevarog.cpp의 생성자에서 부착 해 놓은 예시가 있음★★★
+	TraceStart = CreateDefaultSubobject<USceneComponent>(TEXT("TraceStart"));
+	TraceStart->SetupAttachment(RootComponent);
+
+	TraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEnd"));
+	TraceEnd->SetupAttachment(RootComponent);
 
 	Tags.Add(TEXT("Monster"));
 	
@@ -49,6 +57,18 @@ void ADW_MonsterBase::BeginPlay()
 
 	CastPlayerCharacter();
 	
+}
+
+void ADW_MonsterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsAttacking)
+	{
+		PerformAttackTrace();
+		PrevTraceStartVector = TraceStart->GetComponentLocation();
+		PrevTraceEndVector = TraceEnd->GetComponentLocation();
+	}
 }
 
 void ADW_MonsterBase::SetMovementSpeed(int32 const NewSpeed)
@@ -151,6 +171,62 @@ void ADW_MonsterBase::PlayHitSound(int32 SoundIndex)
 	{
 		AttackSoundComponent->SetSound(HitSounds[SoundIndex]);
 		AttackSoundComponent->Play();
+	}
+}
+
+void ADW_MonsterBase::StartAttackTrace()
+{
+	bIsAttacking = true;
+	AlreadyAttackingActors.Empty();
+
+	PrevTraceStartVector = TraceStart->GetComponentLocation();
+	PrevTraceEndVector = TraceEnd->GetComponentLocation();
+	
+}
+
+void ADW_MonsterBase::EndAttackTrace()
+{
+	bIsAttacking = false;
+	AlreadyAttackingActors.Empty();
+}
+
+void ADW_MonsterBase::PerformAttackTrace()
+{
+	const FVector CurrStart = TraceStart->GetComponentLocation();
+	const FVector CurrEnd = TraceEnd->GetComponentLocation();
+
+	const int NumSteps = 3;
+	for (int i = 0; i < NumSteps; ++i)
+	{
+		float Alpha = static_cast<float>(i) / (NumSteps - 1);
+		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceStartVector, Alpha);
+		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
+
+		FHitResult Hit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		if (bDrawDebugTrace)
+		{
+			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
+			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+		}
+
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
+		{
+			if (AActor* HitActor = Hit.GetActor())
+			{
+				if (!AlreadyAttackingActors.Contains(HitActor))
+				{
+					AlreadyAttackingActors.Add(HitActor);
+
+					// 데미지 처리
+					UGameplayStatics::ApplyDamage(HitActor, 20.f, nullptr, this, nullptr);
+
+					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
+				}
+			}
+		}
 	}
 }
 

@@ -27,6 +27,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
 public:
 	
 
@@ -43,6 +45,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* HitSoundComponent;
+
+	UPROPERTY(VIsibleAnywhere, Category = "Component")
+	USceneComponent* TraceStart;
+
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	USceneComponent* TraceEnd;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Base")
 	TArray<USoundBase*> AttackSounds;
@@ -64,6 +72,20 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bIsAttacking;
+
+	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
+	float DebugDrawTime = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
+	bool bDrawDebugTrace = true;
+
+	FVector PrevTraceStartVector;
+	FVector PrevTraceEndVector;
+
+	TSet<AActor*> AlreadyAttackingActors;
 
 	// 몬스터의 최대 속도 정의
 	UFUNCTION(BlueprintCallable)
@@ -111,6 +133,14 @@ public:
 
 	// 피격 사운드 재생
 	virtual void PlayHitSound(int32 SoundIndex) override;
+
+	// 공격 판정 시작
+	virtual void StartAttackTrace() override;
+
+	// 공격 판정 종료
+	virtual void EndAttackTrace() override;
+
+	virtual void PerformAttackTrace() override;
 
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(

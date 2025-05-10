@@ -59,6 +59,14 @@ public:
 	// 피격 사운드 재생
 	virtual void PlayHitSound(int32 SoundIndex) = 0;
 
+	// 공격 판정 시작(AnimNotify에서 실행 되어야 함)
+	virtual void StartAttackTrace() = 0;
+
+	// 공격 판정 종료(AnimNotify에서 실행 되어야 함)
+	virtual void EndAttackTrace() = 0;
+
+	virtual void PerformAttackTrace() = 0;
+
 	// 데미지를 받을 때 호출
 	// virtual float TakeDamage(
 	// 	float DamageAmount,
