@@ -199,7 +199,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
-		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceStartVector, Alpha);
+		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceEndVector, Alpha);
 		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
 
 		FHitResult Hit;
