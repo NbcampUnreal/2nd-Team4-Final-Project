@@ -10,13 +10,14 @@
 #include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 
 
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
-                                    PlayerCharacter(nullptr), MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
+                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -56,6 +57,8 @@ void ADW_MonsterBase::BeginPlay()
 	}
 
 	CastPlayerCharacter();
+
+	SetStats(DataTable);
 	
 }
 
@@ -93,12 +96,32 @@ void ADW_MonsterBase::SetCurrentState(EMonsterState MonsterState)
 
 void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 {
-	//데이터 테이블 완성 후, MonsterName, MonsterHP, MonsterDamage, MonsterSpeed 초기화 예정
+	if (IsValid(NewDataTable))
+	{
+		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+
+		const FString ContextString(TEXT("Monster Stat Lookup"));
+		FMonsterStatsTable* StatRow = DataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
+
+		if (StatRow)
+		{
+			// 스탯 적용
+			MonsterMaxHP = StatRow->MaxHP;
+			MonsterHP = StatRow->HP;
+			MonsterDamage = StatRow->Damage;
+			MonsterSpeed = StatRow->MoveSpeed;
+			MonsterAccelSpeed = StatRow->AccelSpeed;
+		}
+	}
+
+	SetMovementSpeed(MonsterSpeed);
+	SetAccelerationSpeed(MonsterAccelSpeed);
 }
 
 FName ADW_MonsterBase::GetMonsterName() const
 {
-	return MonsterName;
+	return FName("");
+	//이 함수는 더미 함수임.	
 }
 
 float ADW_MonsterBase::GetMonsterHP() const
@@ -236,7 +259,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 	const FVector CurrStart = TraceStart->GetComponentLocation();
 	const FVector CurrEnd = TraceEnd->GetComponentLocation();
 
-	const int NumSteps = 3;
+	const int NumSteps = 5;
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
@@ -287,17 +310,30 @@ void ADW_MonsterBase::Parried()
 	}
 }
 
-//데미지 받을 때의 함수, 구현 필요
+void ADW_MonsterBase::Dead()
+{
+	if (IsValid(DeadMontage))
+	{
+		UAnimMontage* Montage = DeadMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	return 0;
-}
 
-//데미지 가할 때의 함수, 구현 필요
-float ADW_MonsterBase::ApplyDamage(AActor* DamagedActor, float BaseDamage, AController* EventInstigator,
-	AActor* DamageCauser, TSubclassOf<UDamageType> DamageTypeClass)
-{
+	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
+
+	if (MonsterHP <= 0)
+	{
+		Dead();
+	}
+	
 	return 0;
 }
 
@@ -311,13 +347,13 @@ void ADW_MonsterBase::CastPlayerCharacter()
 		if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(Actor))
 		{
 			PlayerCharacter = Character;
-				if (AAIController* Ctr = Cast<AAIController>(GetController()))
-				{
-					if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
-					{
-						BBC->SetValueAsObject(FName("TargetActor"), Actor);
-					}
-				}
+				// if (AAIController* Ctr = Cast<AAIController>(GetController()))
+				// {
+				// 	if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+				// 	{
+				// 		BBC->SetValueAsObject(FName("TargetActor"), Actor);
+				// 	}
+				// }
 		}
 	}
 }

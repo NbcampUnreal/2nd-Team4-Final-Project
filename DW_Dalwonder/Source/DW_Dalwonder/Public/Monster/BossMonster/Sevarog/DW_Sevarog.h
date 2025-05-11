@@ -15,9 +15,5 @@ public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

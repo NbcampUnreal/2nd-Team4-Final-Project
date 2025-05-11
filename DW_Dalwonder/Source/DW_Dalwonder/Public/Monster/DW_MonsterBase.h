@@ -43,6 +43,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* ParriedMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* DeadMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
@@ -67,8 +70,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	EMonsterName MonsterName;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	FName MonsterName;
+	float MonsterMaxHP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterHP;
@@ -78,6 +84,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MonsterSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MonsterAccelSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
@@ -144,9 +153,11 @@ public:
 	// virtual void SetRandomAttackKey(int32 PatternIndex) override;
 
 	// 공격 사운드 재생
+	UFUNCTION(BlueprintCallable)
 	virtual void PlayAttackSound(int32 SoundIndex) override;
 
 	// 피격 사운드 재생
+	UFUNCTION(BlueprintCallable)
 	virtual void PlayHitSound(int32 SoundIndex) override;
 
 	virtual void CanParry() override;
@@ -166,6 +177,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void Parried() override;
 
+	virtual void Dead() override;
+
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(
 		float DamageAmount,
@@ -173,15 +186,6 @@ public:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 	) override;
-
-	// 데미지를 가할 때 호출
-	virtual float ApplyDamage(
-		AActor* DamagedActor,
-		float BaseDamage,
-		AController* EventInstigator,
-		AActor* DamageCauser,
-		TSubclassOf<UDamageType> DamageTypeClass
-	);
 
 	// 플레이어 캐릭터 캐스팅
 	virtual void CastPlayerCharacter() override;

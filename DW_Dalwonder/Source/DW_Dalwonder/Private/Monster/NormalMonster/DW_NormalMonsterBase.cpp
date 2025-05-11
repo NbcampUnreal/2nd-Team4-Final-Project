@@ -3,11 +3,16 @@
 
 #include "Monster/NormalMonster/DW_NormalMonsterBase.h"
 
+#include "AIController.h"
+#include "DW_CharacterBase.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
 // Sets default values
-ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), MonsterAlertDistance(0)
+ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
+                                                AlertMontage(nullptr)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -19,46 +24,88 @@ ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), MonsterAlertD
 void ADW_NormalMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 AlertDistance)
 {
-
-	// 주변 몬스터들에게 알리는 PerformAttack 시행하게 될 것
-	
 	TArray<AActor*> OutActors;
-	
+
 	UKismetSystemLibrary::SphereOverlapActors(
 		GetWorld(),
 		GetActorLocation(),
 		AlertDistance,
 		{ UEngineTypes::ConvertToObjectType(ECC_Pawn) },
 		nullptr,
-		{ this }, // 자기 자신 제외
+		{ this },
 		OutActors
 	);
 
 	for (AActor* Actor : OutActors)
 	{
-		if (Actor->ActorHasTag("Monster") && Actor->Implements<UDW_NormalMonsterBaseInterface>())
+		if (Actor->ActorHasTag("NormalMonster") && Actor->Implements<UDW_NormalMonsterBaseInterface>())
 		{
-			Execute_SetAlerted(Actor, true);
-			Execute_FoundPlayer(Actor);
+			if (ADW_NormalMonsterBase* Other = Cast<ADW_NormalMonsterBase>(Actor))
+			{
+				Other->bIsFirstResponder = false; // 경보 받은 애는 false
+
+				if (AAIController* AICon = Cast<AAIController>(Other->GetController()))
+				{
+					if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+					{
+						BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+						BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+					}
+				}
+				
+				Execute_FoundPlayer(Other);
+			}
 		}
 	}
 }
 
 void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 {
-	if (!bIsAlerted)
+	if (bIsAlerted)
 	{
-		AlertNearbyMonsters(MonsterAlertDistance);
-		//플레이어를 추적하도록 함
+		return;
+	}
+	
+	bIsAlerted = true;
+	
+	// 최초 감지자만 몽타주 재생
+	if (bIsFirstResponder)
+	{
+
+		UE_LOG(LogTemp, Error, TEXT("TT"));
+		
+		PlayAlertMontage();
+		
+		// 블랙보드 설정
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+			{
+				BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+				BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+			}
+		}
 	}
 }
 
 void ADW_NormalMonsterBase::SetAlerted_Implementation(const bool AlertValue)
 {
 	bIsAlerted = AlertValue;
+}
+
+void ADW_NormalMonsterBase::PlayAlertMontage()
+{
+	if (IsValid(AlertMontage))
+	{
+		UAnimMontage* Montage = AlertMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
 }

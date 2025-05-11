@@ -30,5 +30,7 @@ public:
 	void FoundPlayer();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Monster")
-	void SetAlerted(bool AlertValue);
+	void SetAlerted(const bool AlertValue);
+	
+	virtual void PlayAlertMontage() = 0;
 };

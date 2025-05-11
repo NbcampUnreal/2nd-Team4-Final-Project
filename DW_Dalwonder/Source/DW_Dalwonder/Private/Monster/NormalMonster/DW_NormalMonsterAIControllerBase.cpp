@@ -29,7 +29,7 @@ ADW_NormalMonsterAIControllerBase::ADW_NormalMonsterAIControllerBase()
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
-	HearingConfig->HearingRange = 1200.0f;
+	HearingConfig->HearingRange = 100.0f;
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
@@ -46,12 +46,18 @@ ADW_NormalMonsterAIControllerBase::ADW_NormalMonsterAIControllerBase()
 
 void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	if (!IsValid(Actor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("유효한 액터 아님"));
+		return;
+	}
+
 	if (Stimulus.WasSuccessfullySensed())
 	{
 		if (Actor->ActorHasTag("Player"))
 		{
-			GetBlackboardComponent()->SetValueAsObject("TargetActor", Actor);
 
+			UE_LOG(LogTemp, Warning, TEXT("타겟 찾음"));
 			APawn* ControlledPawn = GetPawn();
 			if (ControlledPawn && ControlledPawn->Implements<UDW_NormalMonsterBaseInterface>())
 			{
@@ -59,11 +65,10 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 			}
 		}
 	}
-	else
-	{
-		//임시로 제거하게 함. 추후 수정 예정
-		GetBlackboardComponent()->ClearValue("TargetActor");
-	}
+	// else
+	// {
+	// 	GetBlackboardComponent()->ClearValue("TargetActor");
+	// }
 }
 
 void ADW_NormalMonsterAIControllerBase::OnPossess(APawn* InPawn)
