@@ -14,4 +14,6 @@ class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
 public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

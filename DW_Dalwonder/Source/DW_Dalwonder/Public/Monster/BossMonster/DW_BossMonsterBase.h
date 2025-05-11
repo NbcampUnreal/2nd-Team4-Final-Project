@@ -33,8 +33,9 @@ public:
 
 	virtual int32 GetCurrentPhase() override;
 
+	// C++, Blackboard의 CurrentPhase 값을 바꿈
 	virtual void SetCurrentPhase(int32 NewPhase) override;
-
+	
 	virtual void SetBGM(USoundBase* NewBGM) override;
 	
 };
