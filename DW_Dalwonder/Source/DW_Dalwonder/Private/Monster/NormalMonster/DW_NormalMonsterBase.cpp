@@ -24,7 +24,6 @@ ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstRespo
 void ADW_NormalMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 AlertDistance)
@@ -48,7 +47,16 @@ void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 Alert
 			if (ADW_NormalMonsterBase* Other = Cast<ADW_NormalMonsterBase>(Actor))
 			{
 				Other->bIsFirstResponder = false; // 경보 받은 애는 false
-				Other->PlayerCharacter = PlayerCharacter;
+
+				if (AAIController* AICon = Cast<AAIController>(Other->GetController()))
+				{
+					if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+					{
+						BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+						BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+					}
+				}
+				
 				Execute_FoundPlayer(Other);
 			}
 		}
@@ -62,25 +70,25 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 		return;
 	}
 	
-	SetAlerted(true);
-
-	// 블랙보드 설정
-	if (AAIController* AICon = Cast<AAIController>(GetController()))
-	{
-		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
-		{
-			BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
-			BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
-		}
-	}
-
+	bIsAlerted = true;
+	
 	// 최초 감지자만 몽타주 재생
 	if (bIsFirstResponder)
 	{
-		PlayAlertMontage();
 
-		//AnimNotify를 통해 Alert함. MonsterAlertDistance 변수는 더미
-		//AlertNearbyMonsters(MonsterAlertDistance);
+		UE_LOG(LogTemp, Error, TEXT("TT"));
+		
+		PlayAlertMontage();
+		
+		// 블랙보드 설정
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+			{
+				BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+				BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+			}
+		}
 	}
 }
 
