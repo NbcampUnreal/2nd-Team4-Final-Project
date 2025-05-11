@@ -131,7 +131,7 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent cons
 	if (IsValid(Monster))
 	{
 		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
-		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Idle)
 		{
 			Monster->Parried();
 		}

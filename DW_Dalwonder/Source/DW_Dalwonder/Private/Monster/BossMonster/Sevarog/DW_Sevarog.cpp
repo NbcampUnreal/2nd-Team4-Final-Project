@@ -4,6 +4,7 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Monster/MonsterStatsTable.h"
 
 
 // Sets default values
@@ -17,12 +18,15 @@ ADW_Sevarog::ADW_Sevarog()
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 }
 
-// Called when the game starts or when spawned
-void ADW_Sevarog::BeginPlay()
+float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
 {
-	Super::BeginPlay();
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	SetMovementSpeed(400);
-	SetAccelerationSpeed(200);
+	if (CurrentPhase == 1 && MonsterHP * 2 <= MonsterMaxHP)
+	{
+		SetCurrentPhase(2);
+	}
+	
+	return 0;
 }
-

@@ -10,7 +10,7 @@
 
 
 // Sets default values
-ADW_BossMonsterBase::ADW_BossMonsterBase(): CurrentPhase(0), BGM(nullptr)
+ADW_BossMonsterBase::ADW_BossMonsterBase(): CurrentPhase(1), BGM(nullptr)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -44,12 +44,15 @@ int32 ADW_BossMonsterBase::GetCurrentPhase()
 void ADW_BossMonsterBase::SetCurrentPhase(int32 NewPhase)
 {
 	CurrentPhase = NewPhase;
-}
 
-// void ADW_BossMonsterBase::SetPhaseBlackboardValues(int32 NewPhase)
-// {
-// 	//Blackboard의 값을 바꿀 예정
-// }
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsInt(FName("CurrentPhase"), NewPhase);
+		}
+	}
+}
 
 void ADW_BossMonsterBase::SetBGM(USoundBase* NewBGM)
 {
