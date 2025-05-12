@@ -121,7 +121,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 FName ADW_MonsterBase::GetMonsterName() const
 {
 	return FName("");
-	//이 함수는 더미 함수임.	
+	//이 함수는 더미 함수임.
 }
 
 float ADW_MonsterBase::GetMonsterHP() const
@@ -170,6 +170,27 @@ void ADW_MonsterBase::PlayParryingMontage()
 	if (IsValid(ParriedMontage))
 	{
 		UAnimMontage* Montage = ParriedMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_MonsterBase::PlayHitMontage()
+{
+	int32 RandomValue = 0;
+	
+	if (AnimMontages.Num() > 0)
+	{
+		int32 const MontageSize = AnimMontages.Num();
+		RandomValue = FMath::RandRange(0, MontageSize - 1);
+	}
+	
+	if (IsValid(HitMontages[RandomValue]))
+	{
+		UAnimMontage* Montage = HitMontages[RandomValue];
 		
 		if (Montage && GetMesh())
 		{
@@ -305,6 +326,8 @@ void ADW_MonsterBase::Parried()
 	{
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
 		{
+			//상태이상은 2가지이므로 하나가 True 된다면 나머지가 false 되어야 함
+			BBC->SetValueAsBool(FName("bIsStaggered"), false);
 			BBC->SetValueAsBool(FName("Parried"), true);
 		}
 	}
@@ -326,12 +349,24 @@ void ADW_MonsterBase::Dead()
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
 	if (MonsterHP <= 0)
 	{
 		Dead();
+	}
+
+	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	{
+		if (AAIController* Ctr = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+			{
+				//상태이상은 2가지이므로 하나가 True 된다면 나머지가 false 되어야 함
+				BBC->SetValueAsBool(FName("bIsStaggered"), true);
+				BBC->SetValueAsBool(FName("Parried"), false);
+			}
+		}
 	}
 	
 	return 0;
