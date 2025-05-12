@@ -75,9 +75,6 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 	// 최초 감지자만 몽타주 재생
 	if (bIsFirstResponder)
 	{
-
-		UE_LOG(LogTemp, Error, TEXT("TT"));
-		
 		PlayAlertMontage();
 		
 		// 블랙보드 설정

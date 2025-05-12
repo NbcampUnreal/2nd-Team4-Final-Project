@@ -181,10 +181,13 @@ void ADW_MonsterBase::PlayParryingMontage()
 void ADW_MonsterBase::PlayHitMontage()
 {
 	int32 RandomValue = 0;
+
+	bIsAttacking = false;
+	bCanParried = false;
 	
-	if (AnimMontages.Num() > 0)
+	if (HitMontages.Num() > 0)
 	{
-		int32 const MontageSize = AnimMontages.Num();
+		int32 const MontageSize = HitMontages.Num();
 		RandomValue = FMath::RandRange(0, MontageSize - 1);
 	}
 	
@@ -402,6 +405,7 @@ float ADW_MonsterBase::GetPlayerDistance()
 {
 	if (!IsValid(PlayerCharacter))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("GetPlayerDistance: PlayerCharacter 참조 실패, -1.0f 반환"));
 		return -1.0f; // 유효하지 않으면 음수 리턴
 	}
 
