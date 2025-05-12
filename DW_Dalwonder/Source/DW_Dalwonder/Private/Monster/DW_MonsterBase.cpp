@@ -182,9 +182,9 @@ void ADW_MonsterBase::PlayHitMontage()
 {
 	int32 RandomValue = 0;
 	
-	if (AnimMontages.Num() > 0)
+	if (HitMontages.Num() > 0)
 	{
-		int32 const MontageSize = AnimMontages.Num();
+		int32 const MontageSize = HitMontages.Num();
 		RandomValue = FMath::RandRange(0, MontageSize - 1);
 	}
 	
