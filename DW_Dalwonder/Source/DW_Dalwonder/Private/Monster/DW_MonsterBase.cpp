@@ -402,6 +402,7 @@ float ADW_MonsterBase::GetPlayerDistance()
 {
 	if (!IsValid(PlayerCharacter))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("GetPlayerDistance: PlayerCharacter 참조 실패, -1.0f 반환"));
 		return -1.0f; // 유효하지 않으면 음수 리턴
 	}
 
