@@ -76,6 +76,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void KnockBackCharacter();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void BlockCharacterControl(bool bShouldBlock);
 	
 protected:
 

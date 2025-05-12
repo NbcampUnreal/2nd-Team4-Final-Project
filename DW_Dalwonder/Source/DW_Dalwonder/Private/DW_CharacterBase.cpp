@@ -183,7 +183,7 @@ void ADW_CharacterBase::EndGuard()
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
-	bCanControl = false;
+	BlockCharacterControl(false);
 	
 	const float KnockBackMultiplier = 50.f;
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
@@ -195,9 +195,14 @@ void ADW_CharacterBase::KnockBackCharacter()
 		FTimerHandle KnockBackTimerHandle;
 		GetWorldTimerManager().SetTimer(KnockBackTimerHandle, FTimerDelegate::CreateLambda([&]
 		{
-			bCanControl = true;
+			BlockCharacterControl(true);
 		}
 		), KnockBackLength, false, 0.f);
 		PlayAnimMontage(KnockBackMontage);
 	}
+}
+
+void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
+{
+	bCanControl = bShouldBlock;
 }
