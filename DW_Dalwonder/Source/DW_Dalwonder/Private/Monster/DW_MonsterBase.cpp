@@ -121,7 +121,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 FName ADW_MonsterBase::GetMonsterName() const
 {
 	return FName("");
-	//이 함수는 더미 함수임.	
+	//이 함수는 더미 함수임.
 }
 
 float ADW_MonsterBase::GetMonsterHP() const
