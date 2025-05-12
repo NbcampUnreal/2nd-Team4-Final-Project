@@ -20,10 +20,6 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-protected:
-	virtual void BeginPlay() override;
-
-public:
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
 	UFUNCTION()
@@ -32,7 +28,11 @@ public:
 	void StartJump(const FInputActionValue& Value);
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);
-	
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Parrying;
 
@@ -63,7 +63,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndGuard();
-
+  
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
 	
