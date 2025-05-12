@@ -4,6 +4,8 @@
 #include "EnhancedInputComponent.h"
 #include "DW_PlayerController.h"
 #include "Monster/DW_MonsterBase.h"
+#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
+#include "Monster/DW_MonsterBaseInterface.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -71,6 +73,8 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void ADW_CharacterBase::Move(const FInputActionValue& Value)
 {
 	if (!Controller) return;
+
+	if (!bCanControl) return;
 
 	FVector2D MoveInput = Value.Get<FVector2D>();
 
@@ -175,4 +179,30 @@ void ADW_CharacterBase::StartGuard()
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
+}
+
+void ADW_CharacterBase::KnockBackCharacter()
+{
+	BlockCharacterControl(false);
+	
+	const float KnockBackMultiplier = 50.f;
+	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
+	
+	LaunchCharacter(KnockBackDirection, true, true);
+	if (IsValid(KnockBackMontage) == true)
+	{
+		float KnockBackLength = KnockBackMontage->GetPlayLength();
+		FTimerHandle KnockBackTimerHandle;
+		GetWorldTimerManager().SetTimer(KnockBackTimerHandle, FTimerDelegate::CreateLambda([&]
+		{
+			BlockCharacterControl(true);
+		}
+		), KnockBackLength, false, 0.f);
+		PlayAnimMontage(KnockBackMontage);
+	}
+}
+
+void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
+{
+	bCanControl = bShouldBlock;
 }
