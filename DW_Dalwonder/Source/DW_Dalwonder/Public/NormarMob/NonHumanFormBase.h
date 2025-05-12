@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_NormalMonsterBase.h"
+#include "Monster/NormalMonster/DW_NormalMonsterBase.h"
 #include "NonHumanFormBase.generated.h"
 
 /**
