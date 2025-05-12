@@ -56,8 +56,6 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 	{
 		if (Actor->ActorHasTag("Player"))
 		{
-
-			UE_LOG(LogTemp, Warning, TEXT("타겟 찾음"));
 			APawn* ControlledPawn = GetPawn();
 			if (ControlledPawn && ControlledPawn->Implements<UDW_NormalMonsterBaseInterface>())
 			{
