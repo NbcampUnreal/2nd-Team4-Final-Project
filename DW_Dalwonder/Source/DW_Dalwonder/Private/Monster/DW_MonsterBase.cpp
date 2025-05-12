@@ -181,6 +181,9 @@ void ADW_MonsterBase::PlayParryingMontage()
 void ADW_MonsterBase::PlayHitMontage()
 {
 	int32 RandomValue = 0;
+
+	bIsAttacking = false;
+	bCanParried = false;
 	
 	if (HitMontages.Num() > 0)
 	{
