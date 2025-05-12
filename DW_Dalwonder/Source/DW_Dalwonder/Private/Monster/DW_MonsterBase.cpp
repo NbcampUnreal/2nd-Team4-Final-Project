@@ -189,15 +189,15 @@ void ADW_MonsterBase::PlayHitMontage()
 	{
 		int32 const MontageSize = HitMontages.Num();
 		RandomValue = FMath::RandRange(0, MontageSize - 1);
-	}
-	
-	if (IsValid(HitMontages[RandomValue]))
-	{
-		UAnimMontage* Montage = HitMontages[RandomValue];
-		
-		if (Montage && GetMesh())
+
+		if (IsValid(HitMontages[RandomValue]))
 		{
-			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+			UAnimMontage* Montage = HitMontages[RandomValue];
+		
+			if (Montage && GetMesh())
+			{
+				GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+			}
 		}
 	}
 }
