@@ -2,8 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
-#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
-#include "Monster/DW_MonsterBaseInterface.h"
 #include "GameFramework/Character.h"
 #include "DW_CharacterBase.generated.h"
 
@@ -29,19 +27,6 @@ public:
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);
 
-protected:
-	virtual void BeginPlay() override;
-
-public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
-	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
-
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void SetCombatState(ECharacterCombatState NewState);
-	
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void PlayAttackMontage();
-
 	virtual float TakeDamage(
 	float DamageAmount,
 	struct FDamageEvent const& DamageEvent,
@@ -49,6 +34,31 @@ public:
 	AActor* DamageCauser
 ) override;
 	
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	USpringArmComponent* SpringArm;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	UCameraComponent* Camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* Weapon;
+
+	bool bCanControl = true;
+
+#pragma region Combat
+public:
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetCombatState(ECharacterCombatState NewState);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PlayAttackMontage();
+
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetParrying(bool bNewParrying);
 
@@ -63,20 +73,26 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndGuard();
-  
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* AttackMontage;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void KnockBackCharacter();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void BlockCharacterControl(bool bShouldBlock);
 	
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* Camera;
+public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UChildActorComponent* Weapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* KnockBackMontage;
 	
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsParrying = false;
 
@@ -85,5 +101,5 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsInvincible = false;
-
+#pragma endregion
 };
