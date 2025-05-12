@@ -36,6 +36,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	TArray<UAnimMontage*> AnimMontages;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	TArray<UAnimMontage*> HitMontages;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* SpawnMontage;
@@ -143,6 +146,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PlayParryingMontage() override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void PlayHitMontage() override;
 	
 	// 공격용 몽타주 인덱스 랜덤 반환
 	UFUNCTION(BlueprintCallable)
