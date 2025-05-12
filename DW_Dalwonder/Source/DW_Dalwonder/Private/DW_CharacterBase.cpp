@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "DW_PlayerController.h"
+#include "Monster/DW_MonsterBase.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -120,4 +121,58 @@ void ADW_CharacterBase::PlayAttackMontage()
 	{
 		PlayAnimMontage(AttackMontage);
 	}
+}
+
+float ADW_CharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
+
+	if (IsValid(Monster))
+	{
+		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
+		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Idle)
+		{
+			Monster->Parried();
+		}
+		else
+		{
+			//데미지 받는 로직
+		}
+	}
+	else
+	{
+		//데미지 받는 로직
+	}
+	return 0;
+}
+
+void ADW_CharacterBase::SetParrying(bool bNewParrying)
+{
+	bIsParrying = bNewParrying;
+
+	UE_LOG(LogTemp, Log, TEXT("패링 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
+{
+	bIsGuarding = bNewGuarding;
+	UE_LOG(LogTemp, Log, TEXT("가드 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
+{
+	bIsInvincible = bNewInvincible;
+	UE_LOG(LogTemp, Log, TEXT("회피 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+}
+
+void ADW_CharacterBase::StartGuard()
+{
+	SetGuarding(true);
+	// PlayAnimMontage(GuardMontage);
+}
+
+void ADW_CharacterBase::EndGuard()
+{
+	SetGuarding(false);
 }

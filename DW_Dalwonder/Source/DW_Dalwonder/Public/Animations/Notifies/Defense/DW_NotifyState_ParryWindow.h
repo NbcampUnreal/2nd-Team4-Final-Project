@@ -13,5 +13,7 @@ UCLASS()
 class DW_DALWONDER_API UDW_NotifyState_ParryWindow : public UAnimNotifyState
 {
 	GENERATED_BODY()
-	
+
+	void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration);
+	void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation);
 };
