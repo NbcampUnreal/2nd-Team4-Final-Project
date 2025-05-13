@@ -22,4 +22,6 @@ enum class EMonsterName : uint8
 	SKnight		UMETA(DisplayName = "SKnight"),
 	TestNormal    UMETA(DisplayName = "TestNormal"),
 	Dog1			UMETA(DisplayName = "Dog1"),
+	StickMan		UMETA(DisplayName = "Stickman"),
+	WoodMonster	UMETA(DisplayName = "WoodMonster"),
 };
