@@ -19,4 +19,5 @@ UENUM(BlueprintType)
 enum class EMonsterName : uint8
 {
 	Sevarog        UMETA(DisplayName = "Sevarog"),
+	TestNormal     UMETA(DisplayName = "TestNormal"),
 };
