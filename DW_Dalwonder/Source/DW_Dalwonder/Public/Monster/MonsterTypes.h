@@ -18,5 +18,7 @@ enum class EMonsterState : uint8
 UENUM(BlueprintType)
 enum class EMonsterName : uint8
 {
-	Sevarog        UMETA(DisplayName = "Sevarog"),
+	Sevarog			UMETA(DisplayName = "Sevarog"),
+	Stickman		UMETA(DisplayName = "Stickman"),
+	WoodMonster		UMETA(DisplayName = "WoodMonster"),
 };
