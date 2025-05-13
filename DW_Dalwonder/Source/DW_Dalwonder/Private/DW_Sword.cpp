@@ -1,5 +1,7 @@
 #include "DW_Sword.h"
+#include "Monster/DW_MonsterBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ADW_Sword::ADW_Sword()
@@ -53,7 +55,13 @@ void ADW_Sword::OnSwordBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	{
 		if (IsValid(HitResult.GetActor()) == true)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Hit!"));
+			ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(HitResult.GetActor());
+			if (IsValid(Monster) == true)
+			{
+				//*@TODO : 여기 부분 나중에 자세히 수정할 것 */
+				FDamageEvent DamageEvent;
+				Monster->TakeDamage(10.f, DamageEvent, this->GetOwner()->GetInstigatorController(), this);
+			}
 		}
 	}
 }
