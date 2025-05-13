@@ -17,7 +17,7 @@
 // Sets default values
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
-                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0), MonsterSpeed(0)
+                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0), MonsterSpeed(100), MonsterAccelSpeed(100)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -137,6 +137,18 @@ float ADW_MonsterBase::GetMonsterDamage() const
 float ADW_MonsterBase::GetMonsterSpeed() const
 {
 	return MonsterSpeed;
+}
+
+void ADW_MonsterBase::SetMonsterSpeed(float NewSpeed)
+{
+	MonsterSpeed = NewSpeed;
+	SetMovementSpeed(MonsterSpeed);
+}
+
+void ADW_MonsterBase::SetMonsterAccelSpeed(float NewAccelSpeed)
+{
+	MonsterAccelSpeed = NewAccelSpeed;
+	SetAccelerationSpeed(MonsterAccelSpeed);
 }
 
 void ADW_MonsterBase::PerformAttack(int32 PatternIndex)
@@ -309,7 +321,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 					AlreadyAttackingActors.Add(HitActor);
 
 					// 데미지 처리
-					UGameplayStatics::ApplyDamage(HitActor, 20.f, nullptr, this, nullptr);
+					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage, nullptr, this, nullptr);
 
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				}

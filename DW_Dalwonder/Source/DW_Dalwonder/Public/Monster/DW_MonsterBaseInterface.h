@@ -44,6 +44,10 @@ public:
 	// 몬스터 이동 속도 반환
 	virtual float GetMonsterSpeed() const = 0;
 
+	virtual void SetMonsterSpeed(float NewSpeed) = 0;
+
+	virtual void SetMonsterAccelSpeed(float NewAccelSpeed) = 0;
+
 	// 공격 실행 (패턴 인덱스 기반)
 	virtual void PerformAttack(int32 PatternIndex) = 0;
 
