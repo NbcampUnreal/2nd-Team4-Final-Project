@@ -127,8 +127,13 @@ void ADW_CharacterBase::PlayAttackMontage()
 	}
 }
 
-float ADW_CharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+float ADW_CharacterBase::TakeDamage
+	(
+	float DamageAmount,
+	struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator,
+	AActor* DamageCauser
+	)
 {
 	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 
