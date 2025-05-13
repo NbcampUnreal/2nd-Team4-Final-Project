@@ -139,6 +139,18 @@ float ADW_MonsterBase::GetMonsterSpeed() const
 	return MonsterSpeed;
 }
 
+void ADW_MonsterBase::SetMonsterSpeed(float NewSpeed)
+{
+	MonsterSpeed = NewSpeed;
+	SetMovementSpeed(MonsterSpeed);
+}
+
+void ADW_MonsterBase::SetMonsterAccelSpeed(float NewAccelSpeed)
+{
+	MonsterAccelSpeed = NewAccelSpeed;
+	SetAccelerationSpeed(MonsterAccelSpeed);
+}
+
 void ADW_MonsterBase::PerformAttack(int32 PatternIndex)
 {
 	if (IsValid(AnimMontages[PatternIndex]))
@@ -309,7 +321,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 					AlreadyAttackingActors.Add(HitActor);
 
 					// 데미지 처리
-					UGameplayStatics::ApplyDamage(HitActor, 20.f, nullptr, this, nullptr);
+					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage, nullptr, this, nullptr);
 
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				}
