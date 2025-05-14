@@ -103,7 +103,6 @@ void ADW_GmBase::CloseLastPopupUI()
 }
 
 
-//아래는 플레이어 컨트롤러에서 UI를 esc로 닫는 로직.
 //void ADW_PlayerController::SetupInputComponent()
 //{
 //    Super::SetupInputComponent();
