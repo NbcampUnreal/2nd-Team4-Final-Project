@@ -17,6 +17,8 @@ class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
 public:
 	ADW_CharacterBase();
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	// ▶ 게임 시작 시 초기 설정 (예: 상태 초기화)
 	virtual void BeginPlay() override;
@@ -140,10 +142,20 @@ protected:
 	UFUNCTION()
 	void Interact();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	float SphereRadius = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> InteractionWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* InteractionWidget;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	float InteractDistance = 300.f;
+
+	AActor* CurrentInteractTarget = nullptr;
 
 #pragma endregion
 };

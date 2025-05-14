@@ -1,4 +1,6 @@
 #include "Character/DW_CharacterBase.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
@@ -24,7 +26,6 @@ ADW_CharacterBase::ADW_CharacterBase()
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -268,5 +269,81 @@ void ADW_CharacterBase::Interact()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스에 아무것도 맞지 않음."));
+	}
+}
+
+void ADW_CharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector End = Start + GetActorForwardVector() * InteractDistance;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(SphereRadius),
+		Params
+	);
+
+	AActor* NewInteractTarget = nullptr;
+
+	if (bHit && Hit.bBlockingHit && Hit.GetActor())
+	{
+		if (Hit.GetActor()->Implements<UDW_InteractInterface>())
+		{
+			NewInteractTarget = Hit.GetActor();
+
+			if (CurrentInteractTarget != NewInteractTarget)
+			{
+				if (CurrentInteractTarget && CurrentInteractTarget->Implements<UDW_InteractInterface>())
+				{
+					IDW_InteractInterface::Execute_HideInteractionWidget(CurrentInteractTarget);
+				}
+
+				IDW_InteractInterface::Execute_ShowInteractionWidget(NewInteractTarget);
+			}
+		}
+	}
+
+	if (!NewInteractTarget && CurrentInteractTarget)
+	{
+		if (CurrentInteractTarget->Implements<UDW_InteractInterface>())
+		{
+			IDW_InteractInterface::Execute_HideInteractionWidget(CurrentInteractTarget);
+		}
+	}
+
+	CurrentInteractTarget = NewInteractTarget;
+
+	// 디버그 구체
+	DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
+
+	// 화면 좌표로 변환하여 UI 업데이트
+	if (CurrentInteractTarget)
+	{
+		FVector ActorLocation = CurrentInteractTarget->GetActorLocation();
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+
+		if (PlayerController)
+		{
+			FVector2D ScreenPosition;
+			if (PlayerController->ProjectWorldLocationToScreen(ActorLocation, ScreenPosition))
+			{
+				// 여기서 UI를 화면 상에 표시
+				if (InteractionWidget)
+				{
+					InteractionWidget->SetPositionInViewport(ScreenPosition);
+					InteractionWidget->SetVisibility(ESlateVisibility::Visible);
+				}
+			}
+		}
 	}
 }
