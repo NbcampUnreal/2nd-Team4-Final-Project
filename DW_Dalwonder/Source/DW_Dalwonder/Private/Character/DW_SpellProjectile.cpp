@@ -1,4 +1,4 @@
-#include "DW_SpellProjectile.h"
+#include "Character/DW_SpellProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"

@@ -1,5 +1,5 @@
-#include "DW_Mage.h"
-#include "DW_SpellProjectile.h"
+#include "Character/DW_Mage.h"
+#include "Character/DW_SpellProjectile.h"
 #include "GameFramework/SpringArmComponent.h"
 
 ADW_Mage::ADW_Mage()

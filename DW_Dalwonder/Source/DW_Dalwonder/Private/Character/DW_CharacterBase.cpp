@@ -1,8 +1,10 @@
-#include "DW_CharacterBase.h"
+#include "Character/DW_CharacterBase.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
-#include "DW_PlayerController.h"
+#include "Character/DW_PlayerController.h"
+#include "DW_InteractInterface.h"
+#include "DrawDebugHelpers.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
@@ -65,7 +67,23 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::StopJump);
 			}
-			
+
+			if (PlayerController->InteractAction)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
+
+				EnhancedInputComponent->BindAction(
+					PlayerController->InteractAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Interact);
+
+				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
+			}
 		}
 	}
 }
@@ -210,4 +228,45 @@ void ADW_CharacterBase::KnockBackCharacter()
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
 	bCanControl = bShouldBlock;
+}
+
+void ADW_CharacterBase::Interact()
+{
+	FVector Start = GetActorLocation() + FVector(0, 0, 50);
+	FVector ForwardVector = GetActorForwardVector();
+
+	const FVector End = Start + ForwardVector * InteractDistance;
+
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 시작 위치: %s"), *Start.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 끝 위치: %s"), *End.ToString());
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f, 0, 2.f);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+
+	if (bHit && Hit.bBlockingHit)
+	{
+		AActor* HitActor = Hit.GetActor();
+		FString ActorName = HitActor ? HitActor->GetName() : TEXT("없음");
+
+		UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *ActorName);
+
+		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 상호작용 인터페이스 구현됨. Interact 실행."));
+			IDW_InteractInterface::Execute_Interact(HitActor, this);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터가 상호작용 인터페이스를 구현하지 않음."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스에 아무것도 맞지 않음."));
+	}
 }

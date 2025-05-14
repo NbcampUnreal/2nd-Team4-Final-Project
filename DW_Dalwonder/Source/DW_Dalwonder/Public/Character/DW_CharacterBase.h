@@ -133,4 +133,17 @@ protected:
 	bool bIsInvincible = false;
 
 #pragma endregion
+
+#pragma region Interact
+
+	public:
+	UFUNCTION()
+	void Interact();
+
+
+private:
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float InteractDistance = 300.f;
+
+#pragma endregion
 };
