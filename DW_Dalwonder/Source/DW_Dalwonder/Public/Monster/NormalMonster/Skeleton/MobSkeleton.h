@@ -17,4 +17,7 @@ class DW_DALWONDER_API AMobSkeleton : public ADW_NormalMonsterBase
 private:
 	AMobSkeleton();
 
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 };
