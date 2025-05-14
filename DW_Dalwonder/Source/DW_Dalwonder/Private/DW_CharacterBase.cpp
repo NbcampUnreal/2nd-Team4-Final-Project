@@ -3,6 +3,8 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "DW_PlayerController.h"
+#include "DW_InteractInterface.h"
+#include "DrawDebugHelpers.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
@@ -65,7 +67,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::StopJump);
 			}
-			
+
+			if (PlayerController->InteractAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->InteractAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Interact);
+			}
 		}
 	}
 }
@@ -210,4 +220,38 @@ void ADW_CharacterBase::KnockBackCharacter()
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
 	bCanControl = bShouldBlock;
+}
+
+void ADW_CharacterBase::Interact()
+{
+	FVector Start;
+	FRotator ViewRot;
+
+	if (Controller)
+	{
+		Controller->GetPlayerViewPoint(Start, ViewRot);
+	}
+	else
+	{
+		return;
+	}
+
+	const FVector End = Start + ViewRot.Vector() * InteractDistance;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f);
+
+	if (Hit.bBlockingHit)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
+		{
+			IDW_InteractInterface::Execute_Interact(HitActor, this);
+		}
+	}
 }
