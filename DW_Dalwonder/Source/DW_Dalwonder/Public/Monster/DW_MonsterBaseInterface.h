@@ -48,6 +48,8 @@ public:
 
 	virtual void SetMonsterAccelSpeed(float NewAccelSpeed) = 0;
 
+	virtual void SetMonsterDamageMultiplier(float NewMultiplier) = 0;
+
 	// 공격 실행 (패턴 인덱스 기반)
 	virtual void PerformAttack(int32 PatternIndex) = 0;
 
