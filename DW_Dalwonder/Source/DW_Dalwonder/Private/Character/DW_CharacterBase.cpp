@@ -70,11 +70,19 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 			if (PlayerController->InteractAction)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
+
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
 					ETriggerEvent::Started,
 					this,
 					&ADW_CharacterBase::Interact);
+
+				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
 			}
 		}
 	}
@@ -224,34 +232,41 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 
 void ADW_CharacterBase::Interact()
 {
-	FVector Start;
-	FRotator ViewRot;
+	FVector Start = GetActorLocation() + FVector(0, 0, 50);
+	FVector ForwardVector = GetActorForwardVector();
 
-	if (Controller)
-	{
-		Controller->GetPlayerViewPoint(Start, ViewRot);
-	}
-	else
-	{
-		return;
-	}
+	const FVector End = Start + ForwardVector * InteractDistance;
 
-	const FVector End = Start + ViewRot.Vector() * InteractDistance;
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 시작 위치: %s"), *Start.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 끝 위치: %s"), *End.ToString());
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f, 0, 2.f);
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
 	FHitResult Hit;
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f);
-
-	if (Hit.bBlockingHit)
+	if (bHit && Hit.bBlockingHit)
 	{
 		AActor* HitActor = Hit.GetActor();
+		FString ActorName = HitActor ? HitActor->GetName() : TEXT("없음");
+
+		UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *ActorName);
+
 		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 상호작용 인터페이스 구현됨. Interact 실행."));
 			IDW_InteractInterface::Execute_Interact(HitActor, this);
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터가 상호작용 인터페이스를 구현하지 않음."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스에 아무것도 맞지 않음."));
 	}
 }
