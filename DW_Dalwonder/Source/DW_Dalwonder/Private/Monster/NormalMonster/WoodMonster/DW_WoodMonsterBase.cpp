@@ -2,8 +2,8 @@
 
 ADW_WoodMonsterBase::ADW_WoodMonsterBase()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
-	TraceStart->SetupAttachment(GetMesh());
-	TraceEnd->SetupAttachment(GetMesh());
+	TraceStart->SetupAttachment(GetMesh(), TEXT("index_01_l"));
+	TraceEnd->SetupAttachment(GetMesh(), TEXT("index_01_r"));
 }
