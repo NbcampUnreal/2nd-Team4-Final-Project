@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "DW_CharacterBase.generated.h"
 
+struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -134,6 +135,9 @@ protected:
 
 #pragma endregion
 
+	// -----------------------------
+	// 🙋 상호작용 관련 시스템 (Interact)
+	// -----------------------------
 #pragma region Interact
 
 	public:
