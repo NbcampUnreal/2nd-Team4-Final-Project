@@ -8,6 +8,7 @@
 #include "Monster/DW_MonsterBase.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
+#include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -24,7 +25,15 @@ ADW_CharacterBase::ADW_CharacterBase()
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	GetWorld()->GetTimerManager().SetTimer  //아이템 업그레이드 타이머
+	(
+		ItemScanTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateClosestItem,
+		0.1f,         
+		true          
+	);
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -269,4 +278,49 @@ void ADW_CharacterBase::Interact()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스에 아무것도 맞지 않음."));
 	}
+
+	if (CurrentItem)
+	{
+		CurrentItem->Interact(this);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
+	}
+}
+
+void ADW_CharacterBase::AddNearbyItem(AWorldItemActor* Item)
+{
+	if (Item && !NearbyItems.Contains(Item))
+	{
+		NearbyItems.Add(Item);
+	}
+}
+
+void ADW_CharacterBase::RemoveNearbyItem(AWorldItemActor* Item)
+{
+	if (Item)
+	{
+		NearbyItems.Remove(Item);
+	}
+}
+
+void ADW_CharacterBase::UpdateClosestItem()
+{
+	float ClosestDistance = TNumericLimits<float>::Max();
+	AWorldItemActor* ClosestItem = nullptr;
+
+	for (AWorldItemActor* Item : NearbyItems)
+	{
+		if (!IsValid(Item)) continue;
+
+		float Dist = FVector::Dist(this->GetActorLocation(), Item->GetActorLocation());
+		if (Dist < ClosestDistance)
+		{
+			ClosestDistance = Dist;
+			ClosestItem = Item;
+		}
+	}
+
+	CurrentItem = ClosestItem;
 }

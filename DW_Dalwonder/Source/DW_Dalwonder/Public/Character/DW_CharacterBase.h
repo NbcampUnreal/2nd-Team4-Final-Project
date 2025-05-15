@@ -135,10 +135,26 @@ protected:
 #pragma endregion
 
 #pragma region Interact
-
-	public:
+	// -----------------------------
+	//  상호작용 관련
+	// -----------------------------
+public:
+	
+	FTimerHandle ItemScanTimerHandle;
+	
 	UFUNCTION()
 	void Interact();
+	void AddNearbyItem(class AWorldItemActor* Item);
+	void RemoveNearbyItem(AWorldItemActor* Item);
+	void UpdateClosestItem();
+
+protected:	
+	UPROPERTY(VisibleAnywhere, Category = "Item")
+	AWorldItemActor* CurrentItem = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Item")
+	TArray<AWorldItemActor*> NearbyItems;
+
 
 
 private:
