@@ -1,26 +1,19 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "Monster/NormalMonster/DW_NormalMonsterBase.h"
+﻿#include "Monster/NormalMonster/DW_NormalMonsterBase.h"
 
 #include "AIController.h"
-#include "DW_CharacterBase.h"
+#include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-
-// Sets default values
 ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
                                                 AlertMontage(nullptr)
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Tags.Add(TEXT("NormalMonster"));
 }
 
-// Called when the game starts or when spawned
 void ADW_NormalMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
