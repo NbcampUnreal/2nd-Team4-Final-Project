@@ -1,4 +1,6 @@
 #include "Character/DW_CharacterBase.h"
+#include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
@@ -241,42 +243,121 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 
 void ADW_CharacterBase::Interact()
 {
-	FVector Start = GetActorLocation() + FVector(0, 0, 50);
-	FVector ForwardVector = GetActorForwardVector();
+	FVector Start = GetActorLocation() + FVector(0.f, 0.f, BaseEyeHeight);
+	FRotator ControlRot = GetControlRotation();
+	FVector End = Start + ControlRot.Vector() * InteractDistance;
 
-	const FVector End = Start + ForwardVector * InteractDistance;
-
-	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 시작 위치: %s"), *Start.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스 끝 위치: %s"), *End.ToString());
-
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f, 0, 2.f);
+	const float realSphereRadius = 50.f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
 	FHitResult Hit;
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(realSphereRadius),
+		Params
+	);
+
+	DrawDebugSphere(GetWorld(), End, realSphereRadius, 12, FColor::Green, false, 1.0f);
 
 	if (bHit && Hit.bBlockingHit)
 	{
 		AActor* HitActor = Hit.GetActor();
-		FString ActorName = HitActor ? HitActor->GetName() : TEXT("없음");
-
-		UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *ActorName);
-
 		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Interact] 상호작용 인터페이스 구현됨. Interact 실행."));
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *HitActor->GetName());
 			IDW_InteractInterface::Execute_Interact(HitActor, this);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터가 상호작용 인터페이스를 구현하지 않음."));
+			UE_LOG(LogTemp, Warning, TEXT("[Interact] 인터페이스 미구현 액터: %s"), *GetNameSafe(HitActor));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Interact] 라인트레이스에 아무것도 맞지 않음."));
+		UE_LOG(LogTemp, Warning, TEXT("[Interact] 아무것도 맞지 않음."));
+	}
+}
+
+
+void ADW_CharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector End = Start + GetActorForwardVector() * InteractDistance;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	FHitResult Hit;
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		FCollisionShape::MakeSphere(SphereRadius),
+		Params
+	);
+
+	AActor* NewInteractTarget = nullptr;
+
+	if (bHit && Hit.bBlockingHit && Hit.GetActor())
+	{
+		if (Hit.GetActor()->Implements<UDW_InteractInterface>())
+		{
+			NewInteractTarget = Hit.GetActor();
+
+			if (CurrentInteractTarget != NewInteractTarget)
+			{
+				if (CurrentInteractTarget && CurrentInteractTarget->Implements<UDW_InteractInterface>())
+				{
+					IDW_InteractInterface::Execute_HideInteractionWidget(CurrentInteractTarget);
+				}
+
+				IDW_InteractInterface::Execute_ShowInteractionWidget(NewInteractTarget);
+			}
+		}
+	}
+
+	if (!NewInteractTarget && CurrentInteractTarget)
+	{
+		if (CurrentInteractTarget->Implements<UDW_InteractInterface>())
+		{
+			IDW_InteractInterface::Execute_HideInteractionWidget(CurrentInteractTarget);
+		}
+	}
+
+	CurrentInteractTarget = NewInteractTarget;
+
+	// 디버그 구체
+	DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
+
+	// 화면 좌표로 변환하여 UI 업데이트
+	if (CurrentInteractTarget)
+	{
+		FVector ActorLocation = CurrentInteractTarget->GetActorLocation();
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+
+		if (PlayerController)
+		{
+			FVector2D ScreenPosition;
+			if (PlayerController->ProjectWorldLocationToScreen(ActorLocation, ScreenPosition))
+			{
+				// 여기서 UI를 화면 상에 표시
+				if (InteractionWidget)
+				{
+					InteractionWidget->SetPositionInViewport(ScreenPosition);
+					InteractionWidget->SetVisibility(ESlateVisibility::Visible);
+				}
+			}
+		}
 	}
 
 	if (CurrentItem)

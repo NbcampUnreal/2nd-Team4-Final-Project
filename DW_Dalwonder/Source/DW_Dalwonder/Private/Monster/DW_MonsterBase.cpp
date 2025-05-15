@@ -12,7 +12,8 @@
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
-                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0), MonsterSpeed(100), MonsterAccelSpeed(100)
+                                    PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0),
+									MonsterSpeed(100), MonsterAccelSpeed(100), MonsterDamageMultiplier(1.0f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -130,6 +131,11 @@ float ADW_MonsterBase::GetMonsterDamage() const
 float ADW_MonsterBase::GetMonsterSpeed() const
 {
 	return MonsterSpeed;
+}
+
+void ADW_MonsterBase::SetMonsterDamageMultiplier(float NewMultiplier)
+{
+	MonsterDamageMultiplier = NewMultiplier;
 }
 
 void ADW_MonsterBase::SetMonsterSpeed(float NewSpeed)
@@ -314,7 +320,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 					AlreadyAttackingActors.Add(HitActor);
 
 					// 데미지 처리
-					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage, nullptr, this, nullptr);
+					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
 
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
 				}

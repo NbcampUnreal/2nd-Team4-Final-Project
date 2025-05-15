@@ -91,6 +91,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MonsterAccelSpeed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MonsterDamageMultiplier;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
 
@@ -136,6 +139,9 @@ public:
 
 	// 몬스터 이동 속도 반환
 	virtual float GetMonsterSpeed() const override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SetMonsterDamageMultiplier(float NewMultiplier) override;
 
 	// 몬스터 최대 속도 설정
 	UFUNCTION(BlueprintCallable)
