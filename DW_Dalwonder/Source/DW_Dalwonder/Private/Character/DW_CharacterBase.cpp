@@ -282,6 +282,11 @@ void ADW_CharacterBase::Interact()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 아무것도 맞지 않음."));
 	}
+
+	if (CurrentItem)
+	{
+		CurrentItem->Interact(this);
+	}
 }
 
 
@@ -358,15 +363,6 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 				}
 			}
 		}
-	}
-
-	if (CurrentItem)
-	{
-		CurrentItem->Interact(this);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
 	}
 }
 
