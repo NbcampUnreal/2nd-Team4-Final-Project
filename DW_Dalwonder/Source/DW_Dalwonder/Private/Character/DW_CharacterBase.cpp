@@ -298,7 +298,7 @@ void ADW_CharacterBase::Interact()
 	FRotator ControlRot = GetControlRotation();
 	FVector End = Start + ControlRot.Vector() * InteractDistance;
 
-	const float realSphereRadius = 50.f;
+	const float realSphereRadius = 90.f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -349,7 +349,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector Start = GetActorLocation() + FVector(0, 0, 10.f);
 	FVector End = Start + GetActorForwardVector() * InteractDistance;
 
 	FCollisionQueryParams Params;
