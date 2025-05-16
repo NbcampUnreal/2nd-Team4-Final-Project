@@ -1,5 +1,3 @@
-// WorldItemActor.cpp
-
 #include "WorldItemActor.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -25,7 +23,7 @@ AWorldItemActor::AWorldItemActor()
     InteractionWidget->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
-    InteractionWidget->SetVisibility(false); // 처음엔 비활성화
+    InteractionWidget->SetVisibility(false);
 }
 
 void AWorldItemActor::BeginPlay()
@@ -56,7 +54,7 @@ void AWorldItemActor::OnPlayerEnterRadius(UPrimitiveComponent* OverlappedComp, A
         bCanInteract = true;
         InteractionWidget->SetVisibility(true);
         Player->AddNearbyItem(this);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("아이템 : %s 등록"), *ItemData.ItemName.ToString()));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("아이템 : %s 등록"), *ItemData.ItemName.ToString()));
 
     }
 }
@@ -69,7 +67,7 @@ void AWorldItemActor::OnPlayerExitRadius(UPrimitiveComponent* OverlappedComp, AA
         bCanInteract = false;
         InteractionWidget->SetVisibility(false);
         Player->RemoveNearbyItem(this);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("아이템 : %s 퇴출"), *ItemData.ItemName.ToString()));
+       // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("아이템 : %s 퇴출"), *ItemData.ItemName.ToString()));
     }
 }
 

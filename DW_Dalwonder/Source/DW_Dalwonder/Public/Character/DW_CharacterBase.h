@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
 #include "GameFramework/Character.h"
+#include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
 class USpringArmComponent;
@@ -156,6 +157,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	TArray<AWorldItemActor*> NearbyItems;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UInventoryComponent* InventoryComponent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
