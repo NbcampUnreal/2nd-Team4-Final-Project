@@ -10,6 +10,7 @@
 #include "Monster/DW_MonsterBase.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
+#include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -170,12 +171,18 @@ float ADW_CharacterBase::TakeDamage
 {
 	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 
+	if (bIsInvincible)
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적"));
+		return 0;
+	}
 	if (IsValid(Monster))
 	{
 		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
 		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 		{
 			Monster->Parried();
+			PlayAnimMontage(ParryMontage);
 		}
 		else
 		{
@@ -191,27 +198,71 @@ float ADW_CharacterBase::TakeDamage
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
 {
+	if (bIsParrying == bNewParrying)
+		return;
+	
 	bIsParrying = bNewParrying;
+	
+	if (bNewParrying)
+	{
+		CurrentCombatState = ECharacterCombatState::Parrying;
 
-	UE_LOG(LogTemp, Log, TEXT("패링 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
+	}
+	else
+	{
+		CurrentCombatState = ECharacterCombatState::Idle;
+
+		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
+	}
 }
 
 void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 {
+	if (bIsGuarding == bNewGuarding)
+		return;
+
 	bIsGuarding = bNewGuarding;
-	UE_LOG(LogTemp, Log, TEXT("가드 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+
+	if (UDW_AnimInstance* AnimInst = Cast<UDW_AnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		AnimInst->bIsGuarding = bNewGuarding;
+	}
+
+	if (bNewGuarding)
+	{
+		CurrentCombatState = ECharacterCombatState::Guarding;
+
+		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
+	}
+	else
+	{
+		CurrentCombatState = ECharacterCombatState::Idle;
+		UE_LOG(LogTemp, Log, TEXT("가드 종료"));
+	}
 }
 
 void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 {
+	if (bIsInvincible == bNewInvincible)
+		return;
+
 	bIsInvincible = bNewInvincible;
-	UE_LOG(LogTemp, Log, TEXT("회피 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+
+	if (bNewInvincible)
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적 상태 ON"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적 상태 OFF"));
+	}
 }
 
 void ADW_CharacterBase::StartGuard()
 {
 	SetGuarding(true);
-	// PlayAnimMontage(GuardMontage);
+	PlayAnimMontage(GuardMontage);
 }
 
 void ADW_CharacterBase::EndGuard()
@@ -251,7 +302,7 @@ void ADW_CharacterBase::Interact()
 	FRotator ControlRot = GetControlRotation();
 	FVector End = Start + ControlRot.Vector() * InteractDistance;
 
-	const float realSphereRadius = 50.f;
+	const float realSphereRadius = 90.f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -319,7 +370,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector Start = GetActorLocation() + FVector(0, 0, 10.f);
 	FVector End = Start + GetActorForwardVector() * InteractDistance;
 
 	FCollisionQueryParams Params;

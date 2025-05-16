@@ -19,5 +19,9 @@ private:
 
 	virtual void BeginPlay() override;
 
-	virtual void Tick(float DeltaTime) override;
+public:
+	float GetStrafeVector();
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bIsStrafe;
 };
