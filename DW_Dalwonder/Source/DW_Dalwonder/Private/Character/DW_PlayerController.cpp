@@ -24,6 +24,4 @@ void ADW_PlayerController::BeginPlay()
 			}
 		}
 	}
-
-
 }
