@@ -1,10 +1,12 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
 #include "DW_SmiteUI.generated.h"
+
+class UButton;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SmiteUI : public UUserWidget
@@ -15,25 +17,31 @@ public:
 	virtual void NativeConstruct() override;
 
 protected:
-	// ¹öÆ° ¹ÙÀÎµù
+	// ë²„íŠ¼ ë°”ì¸ë”©
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button_Smite;
 
-	// ½ÃÄö¼­ ÀÚ»ê (ºí·çÇÁ¸°Æ®¿¡¼­ ÇÒ´ç)
+	// ì‹œí€€ì„œ ìì‚° (ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ í• ë‹¹)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enhance")
 	ULevelSequence* SuccessSequence;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enhance")
 	ULevelSequence* FailSequence;
 
-	// Å¬¸¯ ÀÌº¥Æ® ÇÔ¼ö
+	// í´ë¦­ ì´ë²¤íŠ¸ í•¨ìˆ˜
 	UFUNCTION()
 	void OnSmiteButtonClicked();
 
-	// ½ÃÄö¼­ Àç»ı ÇÔ¼ö
+	UFUNCTION()
+	void OnExitButtonClicked();
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* Button_Exit;
+
+	// ì‹œí€€ì„œ ì¬ìƒ í•¨ìˆ˜
 	void PlaySequence(ULevelSequence* Sequence);
 
-	// UI º¹¿ø ÇÔ¼ö
+	// UI ë³µì› í•¨ìˆ˜
 	UFUNCTION()
 	void UnhideUI();
 

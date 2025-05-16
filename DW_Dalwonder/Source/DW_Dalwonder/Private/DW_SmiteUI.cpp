@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "LevelSequenceActor.h"
 #include "TimerManager.h"
+#include "DW_GmBase.h"
 
 void UDW_SmiteUI::NativeConstruct()
 {
@@ -11,6 +12,10 @@ void UDW_SmiteUI::NativeConstruct()
 	if (Button_Smite)
 	{
 		Button_Smite->OnClicked.AddDynamic(this, &UDW_SmiteUI::OnSmiteButtonClicked);
+	}
+	if (Button_Exit)
+	{
+		Button_Exit->OnClicked.AddDynamic(this, &UDW_SmiteUI::OnExitButtonClicked);
 	}
 }
 
@@ -52,4 +57,15 @@ void UDW_SmiteUI::PlaySequence(ULevelSequence* Sequence)
 void UDW_SmiteUI::UnhideUI()
 {
 	this->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UDW_SmiteUI::OnExitButtonClicked()
+{
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ClosePopupUI(this);
+		}
+	}
 }
