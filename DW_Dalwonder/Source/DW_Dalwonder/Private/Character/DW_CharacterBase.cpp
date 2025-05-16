@@ -10,6 +10,7 @@
 #include "Monster/DW_MonsterBase.h"
 #include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
 #include "Monster/DW_MonsterBaseInterface.h"
+#include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -22,6 +23,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void ADW_CharacterBase::BeginPlay()
@@ -36,6 +39,8 @@ void ADW_CharacterBase::BeginPlay()
 		0.1f,         
 		true          
 	);
+
+	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -106,14 +111,18 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 	if (!bCanControl) return;
 
 	FVector2D MoveInput = Value.Get<FVector2D>();
-
+	FRotator ControlRotation = Controller->GetControlRotation();
+	FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+	
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(ForwardVector, MoveInput.X);
 	}
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(RightVector, MoveInput.Y);
 	}
 }
 
@@ -166,12 +175,18 @@ float ADW_CharacterBase::TakeDamage
 {
 	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 
+	if (bIsInvincible)
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적"));
+		return 0;
+	}
 	if (IsValid(Monster))
 	{
 		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
 		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 		{
 			Monster->Parried();
+			PlayAnimMontage(ParryMontage);
 		}
 		else
 		{
@@ -187,27 +202,71 @@ float ADW_CharacterBase::TakeDamage
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
 {
+	if (bIsParrying == bNewParrying)
+		return;
+	
 	bIsParrying = bNewParrying;
+	
+	if (bNewParrying)
+	{
+		CurrentCombatState = ECharacterCombatState::Parrying;
 
-	UE_LOG(LogTemp, Log, TEXT("패링 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
+	}
+	else
+	{
+		CurrentCombatState = ECharacterCombatState::Idle;
+
+		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
+	}
 }
 
 void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 {
+	if (bIsGuarding == bNewGuarding)
+		return;
+
 	bIsGuarding = bNewGuarding;
-	UE_LOG(LogTemp, Log, TEXT("가드 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+
+	if (UDW_AnimInstance* AnimInst = Cast<UDW_AnimInstance>(GetMesh()->GetAnimInstance()))
+	{
+		AnimInst->bIsGuarding = bNewGuarding;
+	}
+
+	if (bNewGuarding)
+	{
+		CurrentCombatState = ECharacterCombatState::Guarding;
+
+		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
+	}
+	else
+	{
+		CurrentCombatState = ECharacterCombatState::Idle;
+		UE_LOG(LogTemp, Log, TEXT("가드 종료"));
+	}
 }
 
 void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 {
+	if (bIsInvincible == bNewInvincible)
+		return;
+
 	bIsInvincible = bNewInvincible;
-	UE_LOG(LogTemp, Log, TEXT("회피 상태: %s"), bIsParrying ? TEXT("On") : TEXT("Off"));
+
+	if (bNewInvincible)
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적 상태 ON"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("무적 상태 OFF"));
+	}
 }
 
 void ADW_CharacterBase::StartGuard()
 {
 	SetGuarding(true);
-	// PlayAnimMontage(GuardMontage);
+	PlayAnimMontage(GuardMontage);
 }
 
 void ADW_CharacterBase::EndGuard()
@@ -247,7 +306,7 @@ void ADW_CharacterBase::Interact()
 	FRotator ControlRot = GetControlRotation();
 	FVector End = Start + ControlRot.Vector() * InteractDistance;
 
-	const float realSphereRadius = 50.f;
+	const float realSphereRadius = 90.f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -285,7 +344,28 @@ void ADW_CharacterBase::Interact()
 
 	if (CurrentItem)
 	{
-		CurrentItem->Interact(this);
+
+		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		bool bAdded = InventoryComponent->AddItem(Data);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, bAdded ? FColor::Green : FColor::Red,
+				FString::Printf(TEXT("Item %s %s"),
+					*Data.ItemName.ToString(),
+					bAdded ? TEXT("added to inventory!") : TEXT("failed to add!")
+				));
+		}
+
+		if (bAdded)
+		{
+			CurrentItem->Destroy();
+			CurrentItem = nullptr;
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
 	}
 }
 
@@ -294,7 +374,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector Start = GetActorLocation() + FVector(0, 0, 10.f);
 	FVector End = Start + GetActorForwardVector() * InteractDistance;
 
 	FCollisionQueryParams Params;
@@ -342,7 +422,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 	CurrentInteractTarget = NewInteractTarget;
 
 	// 디버그 구체
-	DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
+	//DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
 
 	// 화면 좌표로 변환하여 UI 업데이트
 	if (CurrentInteractTarget)
@@ -364,6 +444,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 			}
 		}
 	}
+
 }
 
 void ADW_CharacterBase::AddNearbyItem(AWorldItemActor* Item)

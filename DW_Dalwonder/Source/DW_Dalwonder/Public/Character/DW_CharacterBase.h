@@ -3,8 +3,10 @@
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
 #include "GameFramework/Character.h"
+#include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
+struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -113,6 +115,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	bool bIsLockOn = false;
+
 	// 공격 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
@@ -120,6 +125,12 @@ public:
 	// 넉백 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* KnockBackMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* GuardMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* ParryMontage;
 
 protected:
 	// 패링 중 여부
@@ -136,6 +147,9 @@ protected:
 
 #pragma endregion
 
+	// -----------------------------
+	// 🙋 상호작용 관련 시스템 (Interact)
+	// -----------------------------
 #pragma region Interact
 	// -----------------------------
 	//  상호작용 관련
@@ -157,9 +171,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Item")
 	TArray<AWorldItemActor*> NearbyItems;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UInventoryComponent* InventoryComponent;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
-	float SphereRadius = 90.f;
+	float SphereRadius = 200.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> InteractionWidgetClass;
