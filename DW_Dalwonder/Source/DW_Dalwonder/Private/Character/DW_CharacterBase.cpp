@@ -95,14 +95,18 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 	if (!bCanControl) return;
 
 	FVector2D MoveInput = Value.Get<FVector2D>();
-
+	FRotator ControlRotation = Controller->GetControlRotation();
+	FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+	
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(ForwardVector, MoveInput.X);
 	}
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(RightVector, MoveInput.Y);
 	}
 }
 

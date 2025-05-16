@@ -112,6 +112,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	bool bIsLockOn = false;
+
 	// 공격 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;

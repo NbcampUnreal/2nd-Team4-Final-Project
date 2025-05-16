@@ -21,14 +21,25 @@ void UDW_AnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (IsValid(OwnerCharacter) == false || IsValid(OwnerCharacterMovementComponent) == false)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Unvalid OwnerCharacter or OwnerCharacterMovementComponent!"));
 		return;
 	}
-
-	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
-	Velocity = OwnerCharacterMovementComponent->Velocity;
-	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size();
-	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, GetOwningActor()->GetActorRotation());
-	bShouldCombat = OwnerCharacter->CurrentCombatState != ECharacterCombatState::Idle;
 	
+	Velocity = OwnerCharacterMovementComponent->Velocity;
+	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, GetOwningActor()->GetActorRotation());
+	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size();
 	bShouldMove = ((OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) == false) && (GroundSpeed > 3.f);
+	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
+	bShouldCombat = OwnerCharacter->CurrentCombatState != ECharacterCombatState::Idle;
+	bIsLockOn = OwnerCharacter->bIsLockOn;
+
+	//@TODO : 여기 아래에 있는 로직을 CharacterBase의 Tick 또는 Timer 이용하여 옮겨야 함
+	if (bIsLockOn == true)
+	{
+		OwnerCharacter->bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		OwnerCharacter->bUseControllerRotationYaw = false;
+	}
 }
