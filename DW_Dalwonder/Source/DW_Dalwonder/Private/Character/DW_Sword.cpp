@@ -21,7 +21,7 @@ ADW_Sword::ADW_Sword()
 	SwordTraceEndPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEndPoint"));
 	SwordTraceEndPoint->SetupAttachment(Root);
 
-	WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ADW_Sword::OnSwordBeginOverlap);
+	//WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &ADW_Sword::OnSwordBeginOverlap);
 }
 
 void ADW_Sword::BeginPlay()
@@ -30,7 +30,7 @@ void ADW_Sword::BeginPlay()
 	
 }
 
-void ADW_Sword::OnSwordBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+/*void ADW_Sword::OnSwordBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	const FVector Start = SwordTraceStartPoint->GetComponentLocation();
@@ -58,10 +58,10 @@ void ADW_Sword::OnSwordBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 			ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(HitResult.GetActor());
 			if (IsValid(Monster) == true)
 			{
-				//*@TODO : 여기 부분 나중에 자세히 수정할 것 */
+				@TODO : 여기 부분 나중에 자세히 수정할 것
 				FDamageEvent DamageEvent;
 				Monster->TakeDamage(10.f, DamageEvent, this->GetOwner()->GetInstigatorController(), this);
 			}
 		}
 	}
-}
+}*/
