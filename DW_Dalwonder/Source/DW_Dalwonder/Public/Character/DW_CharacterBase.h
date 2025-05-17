@@ -6,6 +6,7 @@
 #include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
+struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -114,6 +115,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
+	bool bIsLockOn = false;
+
 	// 공격 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
@@ -143,6 +147,9 @@ protected:
 
 #pragma endregion
 
+	// -----------------------------
+	// 🙋 상호작용 관련 시스템 (Interact)
+	// -----------------------------
 #pragma region Interact
 	// -----------------------------
 	//  상호작용 관련
