@@ -31,7 +31,7 @@ public:
     UDataTable* ItemDataTable;
 
     // 아이템 실제 데이터 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere)
     FItemData ItemData;
 
     // 감지 범위 
@@ -61,4 +61,9 @@ public:
 
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
+
+	FItemData GetItemData() const
+	{
+		return ItemData;
+	}
 };
