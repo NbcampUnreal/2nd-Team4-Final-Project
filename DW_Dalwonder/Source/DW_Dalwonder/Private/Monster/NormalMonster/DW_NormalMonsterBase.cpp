@@ -58,6 +58,16 @@ void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 Alert
 
 void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 {
+	// 블랙보드 설정
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+		{
+			BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+			BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+		}
+	}
+
 	if (bIsAlerted)
 	{
 		return;
@@ -70,17 +80,20 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 	{
 		PlayAlertMontage();
 		
-		// 블랙보드 설정
-		if (AAIController* AICon = Cast<AAIController>(GetController()))
-		{
-			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
-			{
-				BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
-				BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
-			}
-		}
 	}
 }
+
+//void ADW_NormalMonsterBase::LosePlayer_Implementation()
+//{
+//	if (AAIController* AICon = Cast<AAIController>(GetController()))
+//	{
+//		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+//		{
+//			BBC->SetValueAsObject(FName("TargetActor"), nullptr);
+//			BBC->SetValueAsBool(FName("bIsPlayerFound"), false);
+//		}
+//	}
+//}
 
 void ADW_NormalMonsterBase::SetAlerted_Implementation(const bool AlertValue)
 {
