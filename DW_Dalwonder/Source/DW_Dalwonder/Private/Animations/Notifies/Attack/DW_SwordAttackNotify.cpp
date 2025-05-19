@@ -2,6 +2,7 @@
 #include "DrawDebugHelpers.h"
 #include "Character/DW_Warrior.h"
 #include "Character/DW_Sword.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UDW_SwordAttackNotify::UDW_SwordAttackNotify()
 {
@@ -23,11 +24,6 @@ void UDW_SwordAttackNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 		if (IsValid(PlayerCharacter))
 		{
 			CharacterWeapon = Cast<ADW_Sword>(PlayerCharacter->GetWeapon());
-			if (IsValid(CharacterWeapon))
-			{
-				PrevTraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
-				PrevTraceEnd = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
-			}
 		}
 	}
 }
@@ -37,38 +33,29 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (IsValid(PlayerCharacter))
+	UWorld* World = MeshComp->GetWorld();
+
+	if (IsValid(PlayerCharacter) && IsValid(CharacterWeapon))
 	{
-		if (IsValid(CharacterWeapon))
+		const FVector TraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
+		const FVector TraceEnd = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
+	
+		TArray<FHitResult> HitResults;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(PlayerCharacter);
+		Params.AddIgnoredActor(CharacterWeapon);
+		
+		DrawDebugLine(World, TraceStart, TraceEnd, FColor::Red, false, 1.f, -1, 2.f);
+		DrawDebugSphere(World, TraceStart, 5.f, 12, FColor::Yellow, false, 1.f);
+		DrawDebugSphere(World, TraceEnd, 5.f, 12, FColor::Yellow, false, 1.f);
+
+		World->LineTraceMultiByChannel(HitResults, TraceStart, TraceEnd, ECC_Pawn, Params);
+		for (FHitResult& HitResult : HitResults)
 		{
-			const FVector CurTraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
-			const FVector CurTraceEnd = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
-
-			const int NumSteps = 5;
-			for (int i = 0; i < NumSteps; ++i)
+			if (AActor* HitActor = HitResult.GetActor())
 			{
-				float Alpha = static_cast<float>(i) / (NumSteps - 1);
-				FVector Prev = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
-				FVector Curr = FMath::Lerp(CurTraceStart, CurTraceEnd, Alpha);
-
-				FHitResult Hit;
-				FCollisionQueryParams Params;
-				Params.AddIgnoredActor(PlayerCharacter);
-				
-				DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, 1.f, 0, 2.f);
-				DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, 1.f);
-
-				if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
-				{
-					if (AActor* HitActor = Hit.GetActor())
-					{
-						PlayerCharacter->AttackingActors.Add(HitActor);
-					}
-				}
+				PlayerCharacter->AttackingActors.Add(HitActor);
 			}
-			
-			PrevTraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
-			PrevTraceEnd = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
 		}
 	}
 }
@@ -78,14 +65,8 @@ void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
-	if (IsValid(MeshComp) && IsValid(MeshComp->GetOwner()))
+	if (IsValid(PlayerCharacter))
 	{
-		AActor* Owner = MeshComp->GetOwner();
-		ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(Owner);
-
-		if (IsValid(Character))
-		{
-			Character->AttackEnemy(AttackDamage);
-		}
+		PlayerCharacter->AttackEnemy(AttackDamage);
 	}
 }

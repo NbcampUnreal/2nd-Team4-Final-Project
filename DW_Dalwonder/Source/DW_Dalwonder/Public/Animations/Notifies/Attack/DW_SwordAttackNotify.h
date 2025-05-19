@@ -28,12 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
 	float AttackDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+	UPROPERTY()
 	ADW_Warrior* PlayerCharacter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+	
+	UPROPERTY()
 	ADW_Sword* CharacterWeapon;
-
-	FVector PrevTraceStart;
-	FVector PrevTraceEnd;
 };
