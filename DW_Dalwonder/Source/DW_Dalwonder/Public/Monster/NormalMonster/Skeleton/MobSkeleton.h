@@ -19,5 +19,60 @@ private:
 
 	virtual void BeginPlay() override;
 
-	virtual void Tick(float DeltaTime) override;
+public:
+	virtual void PlayAlertMontage() override;
+
+	// ---------- Animation Function ----------
+	// Use first skill anim montage.
+	UFUNCTION(BlueprintCallable)
+	void UseFirstSkill();
+	// Use second skill anim montage.
+	UFUNCTION(BlueprintCallable)
+	void UseSecondSkill();
+	// ---------- -------------------- ----------
+
+	// ----------  Function ----------
+	// 
+	
+	// ---------- -------------------- ----------
+
+	// ---------- Stat & Data Function ----------
+	// Set charcter movement mode [ Walk ]
+	void SetMovementWalk();
+
+	// Cached spawn location.
+	UFUNCTION(BlueprintCallable)
+	FVector GetSpawnLocation();
+	void SetSpawnLocation();
+
+	// Generate two patrol point at another location.
+	UFUNCTION(BlueprintCallable)
+	bool SetRandomLocations(float RanRadius, float DistanceFromMe);
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetPatrolPointFront();
+	UFUNCTION(BlueprintCallable)
+	FVector GetPatrolPointBack();
+	// ---------- -------------------- ----------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* FirstSkill;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* SecondSkill;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Propertys|Patrol")
+	bool bUsePatrol;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Propertys|Patrol")
+	float GeneratDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Propertys|Patrol")
+	float GeneratRandomRadius;*/
+
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bIsStrafe;
+
+	FVector SpawnLocation;
+	FVector RandomLocation1;
+	FVector RandomLocation2;
+
 };

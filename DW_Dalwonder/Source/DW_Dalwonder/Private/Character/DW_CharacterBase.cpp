@@ -23,6 +23,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void ADW_CharacterBase::BeginPlay()
@@ -37,6 +39,8 @@ void ADW_CharacterBase::BeginPlay()
 		0.1f,         
 		true          
 	);
+
+	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -107,14 +111,18 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 	if (!bCanControl) return;
 
 	FVector2D MoveInput = Value.Get<FVector2D>();
-
+	FRotator ControlRotation = Controller->GetControlRotation();
+	FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+	
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(ForwardVector, MoveInput.X);
 	}
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(RightVector, MoveInput.Y);
 	}
 }
 
@@ -298,7 +306,7 @@ void ADW_CharacterBase::Interact()
 	FRotator ControlRot = GetControlRotation();
 	FVector End = Start + ControlRot.Vector() * InteractDistance;
 
-	const float realSphereRadius = 50.f;
+	const float realSphereRadius = 90.f;
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -336,7 +344,24 @@ void ADW_CharacterBase::Interact()
 
 	if (CurrentItem)
 	{
-		CurrentItem->Interact(this);
+
+		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		bool bAdded = InventoryComponent->AddItem(Data);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, bAdded ? FColor::Green : FColor::Red,
+				FString::Printf(TEXT("Item %s %s"),
+					*Data.ItemName.ToString(),
+					bAdded ? TEXT("added to inventory!") : TEXT("failed to add!")
+				));
+		}
+
+		if (bAdded)
+		{
+			CurrentItem->Destroy();
+			CurrentItem = nullptr;
+		}
 	}
 	else
 	{
@@ -349,7 +374,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Start = GetActorLocation() + FVector(0, 0, 50.f);
+	FVector Start = GetActorLocation() + FVector(0, 0, 10.f);
 	FVector End = Start + GetActorForwardVector() * InteractDistance;
 
 	FCollisionQueryParams Params;
@@ -397,7 +422,7 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 	CurrentInteractTarget = NewInteractTarget;
 
 	// 디버그 구체
-	DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
+	//DrawDebugSphere(GetWorld(), End, SphereRadius, 12, FColor::Yellow, false, 0.1f);
 
 	// 화면 좌표로 변환하여 UI 업데이트
 	if (CurrentInteractTarget)

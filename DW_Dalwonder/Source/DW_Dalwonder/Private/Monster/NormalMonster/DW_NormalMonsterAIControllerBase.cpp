@@ -42,6 +42,7 @@ ADW_NormalMonsterAIControllerBase::ADW_NormalMonsterAIControllerBase()
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 
 	AIPerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated);
+
 }
 
 void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -63,10 +64,11 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 			}
 		}
 	}
-	// else
-	// {
-	// 	GetBlackboardComponent()->ClearValue("TargetActor");
-	// }
+	 else
+	 {
+	 	//GetBlackboardComponent()->ClearValue("TargetActor");
+		GetBlackboardComponent()->SetValueAsBool("bIsPlayerFound", false);
+	 }
 }
 
 void ADW_NormalMonsterAIControllerBase::OnPossess(APawn* InPawn)

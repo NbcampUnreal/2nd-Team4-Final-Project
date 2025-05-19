@@ -1,5 +1,3 @@
-// WorldItemActor.cpp
-
 #include "WorldItemActor.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -8,8 +6,11 @@
 #include "Character/DW_CharacterBase.h"
 
 AWorldItemActor::AWorldItemActor()
+    : Super()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+	ItemDataTable = CreateDefaultSubobject<UDataTable>(TEXT("ItemDataTable"));
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     RootComponent = MeshComponent;
@@ -25,7 +26,7 @@ AWorldItemActor::AWorldItemActor()
     InteractionWidget->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
-    InteractionWidget->SetVisibility(false); // 처음엔 비활성화
+    InteractionWidget->SetVisibility(false);
 }
 
 void AWorldItemActor::BeginPlay()
@@ -38,14 +39,8 @@ void AWorldItemActor::BeginPlay()
         if (FoundData)
         {
             ItemData = *FoundData;
-            // 추후 Mesh나 Material도 바꾸고 싶다면 여기에 처리
         }
     }
-}
-
-void AWorldItemActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
 }
 
 void AWorldItemActor::OnPlayerEnterRadius(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -56,7 +51,7 @@ void AWorldItemActor::OnPlayerEnterRadius(UPrimitiveComponent* OverlappedComp, A
         bCanInteract = true;
         InteractionWidget->SetVisibility(true);
         Player->AddNearbyItem(this);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("아이템 : %s 등록"), *ItemData.ItemName.ToString()));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("아이템 : %s 등록"), *ItemData.ItemName.ToString()));
 
     }
 }
@@ -69,7 +64,7 @@ void AWorldItemActor::OnPlayerExitRadius(UPrimitiveComponent* OverlappedComp, AA
         bCanInteract = false;
         InteractionWidget->SetVisibility(false);
         Player->RemoveNearbyItem(this);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("아이템 : %s 퇴출"), *ItemData.ItemName.ToString()));
+       // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("아이템 : %s 퇴출"), *ItemData.ItemName.ToString()));
     }
 }
 

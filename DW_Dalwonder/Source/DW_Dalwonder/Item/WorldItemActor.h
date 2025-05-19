@@ -20,7 +20,6 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    virtual void Tick(float DeltaTime) override;
 
     // 아이템 데이터 이름 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
@@ -31,12 +30,8 @@ public:
     UDataTable* ItemDataTable;
 
     // 아이템 실제 데이터 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere)
     FItemData ItemData;
-
-    // 감지 범위 
-    UPROPERTY(VisibleAnywhere)
-    class USphereComponent* DetectionSphere;
 
     // 상호작용 문구 위젯 
     UPROPERTY(VisibleAnywhere)
@@ -45,6 +40,10 @@ public:
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)
     class UStaticMeshComponent* MeshComponent;
+
+    // 감지 범위 
+    UPROPERTY(VisibleAnywhere)
+    class USphereComponent* DetectionSphere;
 
     // 플레이어 감지 
     UFUNCTION()
@@ -61,4 +60,9 @@ public:
 
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
+
+	FItemData GetItemData() const
+	{
+		return ItemData;
+	}
 };
