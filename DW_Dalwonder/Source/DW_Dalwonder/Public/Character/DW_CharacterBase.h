@@ -44,6 +44,11 @@ public:
 	UFUNCTION()
 	void StopJump(const FInputActionValue& Value);         // 점프 중지
 
+	UFUNCTION()
+	void Attack(const FInputActionValue& Value);
+
+	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
+	
 	// -----------------------------
 	// 📌 데미지 처리 함수
 	// -----------------------------
@@ -110,6 +115,14 @@ public:
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void BlockCharacterControl(bool bShouldBlock);
+
+	// 공격한 대상에게 대미지 적용
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void AttackEnemy(float Damage);
+
+	// 공격한 대상 저장하기 위한 Set
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	TSet<AActor*> AttackingActors;
 
 	// 현재 전투 상태 (Idle, Attacking 등)
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
