@@ -1,4 +1,4 @@
-#include "AlchemyUI.h"
+ï»¿#include "AlchemyUI.h"
 #include "Starcatcher.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -21,11 +21,11 @@ void UAlchemyUI::OnStartButtonClicked()
 
     if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(GetWorld())))
     {
-        // ¹İÈ¯°ªÀ¸·Î ¹æ±İ ¸¸µç À§Á¬À» ¹Ù·Î ¹ŞÀ½
+        // ë°˜í™˜ê°’ìœ¼ë¡œ ë°©ê¸ˆ ë§Œë“  ìœ„ì ¯ì„ ë°”ë¡œ ë°›ìŒ
         if (UStarcatcher* StarUI = Cast<UStarcatcher>(GM->ShowPopupUI(StarcatcherClass)))
         {
             StarUI->OnStarCatcherFinished.AddDynamic(this, &UAlchemyUI::OnStarcatcherFinished);
-            StarUI->SetFocus();   // Å° ÀÔ·Â¡¤½ºÆäÀÌ½º Ã³¸®µµ ¹Ù·Î È°¼º
+            StarUI->SetFocus();   // í‚¤ ì…ë ¥Â·ìŠ¤í˜ì´ìŠ¤ ì²˜ë¦¬ë„ ë°”ë¡œ í™œì„±
         }
     }
 }
@@ -34,17 +34,19 @@ void UAlchemyUI::OnStarcatcherFinished(int32 SuccessCount)
 {
     if (ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(GetWorld())))
     {
-        // °¡Àå ¸¶Áö¸·¿¡ ¶ç¿î ÆË¾÷ ´İ±â
+        // ê°€ì¥ ë§ˆì§€ë§‰ì— ë„ìš´ íŒì—… ë‹«ê¸°
         GameMode->CloseLastPopupUI();
     }
+
+
 
     FString NewPercentText;
     switch (SuccessCount)
     {
-    case 3: NewPercentText = TEXT("15%"); break;
-    case 2: NewPercentText = TEXT("10%"); break;
-    case 1: NewPercentText = TEXT("5%"); break;
-    default: NewPercentText = TEXT("0%"); break;
+    case 3: NewPercentText = TEXT("ì„±ê³µ íšŸìˆ˜ 3 íšŒ"); break;
+    case 2: NewPercentText = TEXT("ì„±ê³µ íšŸìˆ˜ 2 íšŒ"); break;
+    case 1: NewPercentText = TEXT("ì„±ê³µ íšŸìˆ˜ 1 íšŒ"); break;
+    default: NewPercentText = TEXT("ì„±ê³µ íšŸìˆ˜ 0 íšŒ"); break;
     }
 
     if (Percent)
