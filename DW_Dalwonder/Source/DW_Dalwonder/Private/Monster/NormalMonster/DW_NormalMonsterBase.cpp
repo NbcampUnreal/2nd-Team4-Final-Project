@@ -112,3 +112,9 @@ void ADW_NormalMonsterBase::PlayAlertMontage()
 		}
 	}
 }
+
+void ADW_NormalMonsterBase::ResetAlert()
+{
+	bIsAlerted = false;
+	bIsFirstResponder = true;
+}
