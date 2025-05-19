@@ -19,18 +19,13 @@ void UAlchemyUI::OnStartButtonClicked()
 {
     if (!StarcatcherClass) return;
 
-    // 팝업 UI 열기 (생성은 GameMode 내부에서)
-    if (ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(GetWorld())))
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(GetWorld())))
     {
-        GameMode->ShowPopupUI(StarcatcherClass);
-
-        // 팝업 리스트 중 마지막(방금 띄운 것)을 가져와서 바인딩
-        if (GameMode->PopupWidgets.Num() > 0)
+        // 반환값으로 방금 만든 위젯을 바로 받음
+        if (UStarcatcher* StarUI = Cast<UStarcatcher>(GM->ShowPopupUI(StarcatcherClass)))
         {
-            if (UStarcatcher* StarcatcherUI = Cast<UStarcatcher>(GameMode->PopupWidgets.Last()))
-            {
-                StarcatcherUI->OnStarCatcherFinished.AddDynamic(this, &UAlchemyUI::OnStarcatcherFinished);
-            }
+            StarUI->OnStarCatcherFinished.AddDynamic(this, &UAlchemyUI::OnStarcatcherFinished);
+            StarUI->SetFocus();   // 키 입력·스페이스 처리도 바로 활성
         }
     }
 }

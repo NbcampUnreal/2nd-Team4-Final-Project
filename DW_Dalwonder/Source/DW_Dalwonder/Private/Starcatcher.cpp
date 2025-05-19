@@ -1,11 +1,11 @@
-#include "Starcatcher.h"
+ï»¿#include "Starcatcher.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
-
+#include "StarEffectActor.h"
 
 void UStarcatcher::NativeConstruct()
 {
@@ -16,103 +16,187 @@ void UStarcatcher::NativeConstruct()
     SuccessCount = 0;
     CurrentTry = 0;
     bIsGameFinished = false;
+    bZoneReady = false;
 }
 
 void UStarcatcher::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
-    if (!StarCanvas || !StarImage || bIsGameFinished)
-        return;
-
-    float CanvasWidth = StarCanvas->GetCachedGeometry().GetLocalSize().X;
-    float MoveDistance = StarMoveSpeed * InDeltaTime;
-
-    if (bGoingRight)
+    // ì„±ê³µ ì¡´ ì´ˆê¸°í™”
+    if (!bZoneReady && StarCanvas && SuccessZoneImage)
     {
-        CurrentStarX += MoveDistance;
-        if (CurrentStarX >= CanvasWidth)
-        {
-            CurrentStarX = CanvasWidth;
-            bGoingRight = false;
-        }
-    }
-    else
-    {
-        CurrentStarX -= MoveDistance;
-        if (CurrentStarX <= 0.f)
-        {
-            CurrentStarX = 0.f;
-            bGoingRight = true;
-        }
+        InitSuccessZone();
     }
 
-    // º° À§Ä¡ °»½Å
-    if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(StarImage->Slot))
+    if (!StarCanvas || !StarImage || bIsGameFinished) return;
+
+    const float CanvasWidth = StarCanvas->GetCachedGeometry().GetLocalSize().X;
+    const float MoveDistance = StarMoveSpeed * InDeltaTime;
+
+    CurrentStarX += (bGoingRight ? MoveDistance : -MoveDistance);
+    if (CurrentStarX >= CanvasWidth) { CurrentStarX = CanvasWidth; bGoingRight = false; }
+    if (CurrentStarX <= 0.f) { CurrentStarX = 0.f; bGoingRight = true; }
+
+    if (UCanvasPanelSlot* StarSlot = Cast<UCanvasPanelSlot>(StarImage->Slot))
     {
-        CanvasSlot->SetPosition(FVector2D(CurrentStarX, CanvasSlot->GetPosition().Y));
+        StarSlot->SetPosition({ CurrentStarX, StarSlot->GetPosition().Y });
     }
 }
 
-void UStarcatcher::HandleInput()
+void UStarcatcher::InitSuccessZone()
 {
-    if (bIsGameFinished || !StarCanvas)
-        return;
+    const FVector2D CanvasSize = StarCanvas->GetCachedGeometry().GetLocalSize();
+    if (CanvasSize.X <= 0.f) return;
 
-    float CanvasWidth = StarCanvas->GetCachedGeometry().GetLocalSize().X;
-    float TargetX = CanvasWidth * SuccessZoneRatio;
-    float Left = TargetX - (SuccessZoneWidth * 0.5f);
-    float Right = TargetX + (SuccessZoneWidth * 0.5f);
-
-    CurrentTry++;
-
-    // ¼º°ø ÆÇÁ¤
-    if (CurrentStarX >= Left && CurrentStarX <= Right)
+    if (!SuccessZoneImage->GetParent())
     {
-        SuccessCount++;
-
-        // ÀÌÆåÆ® Ãâ·Â
-        if (SuccessEffects.IsValidIndex(SuccessCount - 1))
-        {
-            AActor* Owner = GetOwningPlayerPawn();
-            if (Owner && SuccessEffects.IsValidIndex(SuccessCount - 1) && SuccessEffects[SuccessCount - 1])
-            {
-                UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-                    GetWorld(),
-                    SuccessEffects[SuccessCount - 1],
-                    Owner->GetActorLocation(),
-                    FRotator::ZeroRotator,
-                    FVector(1.f),
-                    true,
-                    true
-                );
-            }
-        }
+        StarCanvas->AddChild(SuccessZoneImage);
     }
 
-    // 3¹ø ½Ãµµ ÈÄ °ÔÀÓ Á¾·á
-    if (CurrentTry >= MaxTry)
+    if (UCanvasPanelSlot* ZoneSlot = Cast<UCanvasPanelSlot>(SuccessZoneImage->Slot))
     {
-        FinishGame();
+        const float MaxX = CanvasSize.X - SuccessZoneWidth;
+        const float RandX = FMath::FRandRange(0.f, FMath::Max(0.f, MaxX));
+
+        ZoneSlot->SetAutoSize(false);
+        ZoneSlot->SetSize({ SuccessZoneWidth, CanvasSize.Y });
+        ZoneSlot->SetPosition({ RandX, 0.f });
+
+        SuccessLeft = RandX;
+        SuccessRight = RandX + SuccessZoneWidth;
+        bZoneReady = true;
     }
 }
 
 void UStarcatcher::FinishGame()
 {
     bIsGameFinished = true;
+    FinalSuccessCount = SuccessCount;
+
+    // ì„±ê³µ íšŸìˆ˜ ë¡œê·¸ ì¶œë ¥
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow,
+            FString::Printf(TEXT("Final Success Count: %d"), FinalSuccessCount));
+    }
+
     OnStarCatcherFinished.Broadcast(SuccessCount);
 }
 
-FReply UStarcatcher::NativeOnKeyDown(const FGeometry& InGeometry,
-    const FKeyEvent& InKeyEvent)
+FReply UStarcatcher::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
-    /* SpaceBar ´­·¶´Ù¸é HandleInput() ½ÇÇà */
     if (InKeyEvent.GetKey() == EKeys::SpaceBar)
     {
         HandleInput();
-        return FReply::Handled();   // ¡ç ´õ ÀÌ»ó ¾Æ·¡·Î Å° ÀÌº¥Æ® Àü´Þ ¾È ÇÔ
+        return FReply::Handled();
     }
 
-    /* ±× ¿Ü Å°´Â ±âº» Ã³¸® */
     return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+
+void UStarcatcher::HandleInput()
+{
+    if (!bZoneReady || bIsGameFinished || !StarImage) return;
+
+    const float StarWidth = StarImage->GetDesiredSize().X;
+    const float StarCenterX = CurrentStarX + (StarWidth * 0.5f);
+
+    CurrentTry++;
+
+    /* â”€â”€â”€â”€â”€ ì„±ê³µ íŒì • â”€â”€â”€â”€â”€ */
+    if (StarCenterX >= SuccessLeft && StarCenterX <= SuccessRight)
+    {
+        SuccessCount++;
+        if (SuccessSound)
+        {
+            UGameplayStatics::PlaySound2D(this, SuccessSound);
+        }
+        // ì´íŽ™íŠ¸
+        if (SuccessEffects.IsValidIndex(SuccessCount - 1))
+        {
+            if (AActor* Owner = GetOwningPlayerPawn())
+            {
+                FVector SpawnLoc = Owner->GetActorLocation();
+                FRotator SpawnRot = FRotator::ZeroRotator;
+
+                AStarEffectActor* EffectActor = GetWorld()->SpawnActor<AStarEffectActor>(
+                    AStarEffectActor::StaticClass(), SpawnLoc, SpawnRot
+                );
+
+                if (EffectActor)
+                {
+                    EffectActor->InitEffect(SuccessEffects[SuccessCount - 1], SpawnLoc, SpawnRot);
+                }
+            }
+        }
+
+        StarImage->SetVisibility(ESlateVisibility::Hidden);
+
+        EndRound(/*bDelayRestart=*/true);
+        return;
+    }
+
+    if (CurrentTry >= MaxTry)
+    {
+        if (FailSound)
+        {
+            UGameplayStatics::PlaySound2D(this, FailSound);
+        }
+        if (FailEffect)
+        {
+            if (AActor* Owner = GetOwningPlayerPawn())
+            {
+                FVector SpawnLoc = Owner->GetActorLocation();
+                FRotator SpawnRot = FRotator::ZeroRotator;
+
+                if (AStarEffectActor* FXActor = GetWorld()->SpawnActor<AStarEffectActor>(
+                    AStarEffectActor::StaticClass(), SpawnLoc, SpawnRot))
+                {
+                    FXActor->InitEffect(FailEffect, SpawnLoc, SpawnRot);
+                }
+            }
+        }
+        EndRound(/*bDelayRestart=*/false);
+    }
+}
+
+void UStarcatcher::RestartGame()
+{
+    GetWorld()->GetTimerManager().ClearTimer(RestartTimerHandle);
+
+    CurrentTry = 0;
+    CurrentStarX = 0.f;
+    bGoingRight = true;
+    bZoneReady = false;
+
+    if (StarImage)
+        StarImage->SetVisibility(ESlateVisibility::Visible);
+
+    UE_LOG(LogTemp, Warning, TEXT("ê²Œìž„ ìž¬ì‹œìž‘! ë‹¤ìŒ ë¼ìš´ë“œ ë²ˆí˜¸ = %d"), CurrentGame + 1);
+}
+
+void UStarcatcher::EndRound(bool bDelayRestart)
+{
+    GetWorld()->GetTimerManager().ClearTimer(RestartTimerHandle);
+
+    ++CurrentGame;
+    UE_LOG(LogTemp, Warning, TEXT("ë¼ìš´ë“œ ì¢…ë£Œ âžœ í˜„ìž¬ ê²Œìž„ ë²ˆí˜¸: %d"), CurrentGame);
+
+    if (CurrentGame >= MaxGame)
+    {
+        FinishGame();
+        return;
+    }
+
+    if (bDelayRestart)
+    {
+        GetWorld()->GetTimerManager().SetTimer(
+            RestartTimerHandle, this, &UStarcatcher::RestartGame, 1.f, false);
+    }
+    else
+    {
+        RestartGame();
+    }
 }

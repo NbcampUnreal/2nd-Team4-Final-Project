@@ -1,64 +1,83 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+癤�#pragma once
 
 #include "CoreMinimal.h"
-#include "NiagaraSystem.h"
-#include "Input/Reply.h"
 #include "Blueprint/UserWidget.h"
+#include "NiagaraSystem.h"
 #include "Starcatcher.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStarCatcherFinished, int32, SuccessCount);
 
 UCLASS()
 class DW_DALWONDER_API UStarcatcher : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+
 public:
     virtual void NativeConstruct() override;
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+    virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
-    virtual FReply NativeOnKeyDown(const FGeometry& InGeometry,const FKeyEvent& InKeyEvent) override;
+    UFUNCTION(BlueprintCallable)
+    void HandleInput();
 
-    /** 별 이동 속도 (초당 픽셀) */
+    UFUNCTION(BlueprintCallable)
+    void RestartGame();
+
+    UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Starcatcher")
+    class UCanvasPanel* StarCanvas;
+
+    UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Starcatcher")
+    class UImage* StarImage;
+
+    UPROPERTY(meta = (BindWidget), BlueprintReadWrite, Category = "Starcatcher")
+    class UImage* SuccessZoneImage;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starcatcher")
     float StarMoveSpeed = 300.f;
 
-    /** 성공 영역의 크기 (픽셀 단위) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starcatcher")
     float SuccessZoneWidth = 100.f;
 
-    /** 성공 영역의 위치 (0 ~ 1) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starcatcher")
-    float SuccessZoneRatio = 0.5f;
-
-    /** 성공 시 발생할 이펙트 배열 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starcatcher")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
     TArray<UNiagaraSystem*> SuccessEffects;
 
-    /** 별 이미지 위젯 */
-    UPROPERTY(meta = (BindWidget))
-    class UImage* StarImage;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+    UNiagaraSystem* FailEffect = nullptr;
 
-    /** 별이 움직이는 캔버스 */
-    UPROPERTY(meta = (BindWidget))
-    class UCanvasPanel* StarCanvas;
-
-    /** 성공 구역 이미지 */
-    UPROPERTY(meta = (BindWidgetOptional))
-    class UImage* SuccessZoneImage;
-
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStarCatcherFinished, int32, SuccessBonus);
-    UPROPERTY(BlueprintAssignable, Category = "Starcatcher")
+    UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnStarCatcherFinished OnStarCatcherFinished;
 
-private:
+    UPROPERTY(BlueprintReadOnly)
+    int32 FinalSuccessCount;
+
+    UFUNCTION()
+    void EndRound(bool bDelayRestart);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* SuccessSound = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* FailSound = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* MakingSound = nullptr;
+
+protected:
+    void InitSuccessZone();
+    void FinishGame();
+
     float CurrentStarX = 0.f;
     bool bGoingRight = true;
 
     int32 SuccessCount = 0;
-    int32 CurrentTry = 0;
-    const int32 MaxTry = 3;
-    bool bIsGameFinished = false;
+    int32 CurrentTry = 0;    
+    int32 CurrentGame = 0;   
+    int32 MaxTry = 1;        
+    int32 MaxGame = 3;       
+    FTimerHandle RestartTimerHandle;
 
-    void HandleInput();
-    void FinishGame();
+    float SuccessLeft = 0.f;
+    float SuccessRight = 0.f;
+    bool bZoneReady = false;
+    bool bIsGameFinished = false;
 };

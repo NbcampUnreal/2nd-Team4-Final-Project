@@ -26,7 +26,7 @@ public:
     TArray<UUserWidget*> PopupWidgets;
 
     UFUNCTION(BlueprintCallable, Category = "UI")
-    void ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
+    UUserWidget* ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ClosePopupUI(UUserWidget* WidgetToRemove);
