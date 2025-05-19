@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "SavedGameWidget.generated.h"
 
+class UCustomButtonWidget;
+
 /**
  * 
  */
@@ -15,16 +17,19 @@ class DW_DALWONDER_API USavedGameWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+
+public:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* SaveData1;
+	class UCustomButtonWidget* SaveData1;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* SaveData2;
+	class UCustomButtonWidget* SaveData2;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* SaveData3;
+	class UCustomButtonWidget* SaveData3;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* SaveData4;
+	class UCustomButtonWidget* SaveData4;
 };
