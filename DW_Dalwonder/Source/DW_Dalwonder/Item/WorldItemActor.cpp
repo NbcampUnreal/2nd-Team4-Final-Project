@@ -6,8 +6,11 @@
 #include "Character/DW_CharacterBase.h"
 
 AWorldItemActor::AWorldItemActor()
+    : Super()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+	ItemDataTable = CreateDefaultSubobject<UDataTable>(TEXT("ItemDataTable"));
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     RootComponent = MeshComponent;
@@ -36,14 +39,8 @@ void AWorldItemActor::BeginPlay()
         if (FoundData)
         {
             ItemData = *FoundData;
-            // 추후 Mesh나 Material도 바꾸고 싶다면 여기에 처리
         }
     }
-}
-
-void AWorldItemActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
 }
 
 void AWorldItemActor::OnPlayerEnterRadius(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

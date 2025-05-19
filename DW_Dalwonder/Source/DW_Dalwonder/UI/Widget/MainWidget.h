@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "MainWidget.generated.h"
 
+class UCustomButtonWidget;
+
 /**
  * 
  */
@@ -15,17 +17,42 @@ class DW_DALWONDER_API UMainWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
+
+protected:
+	// 버튼 클릭 이벤트 함수
+	UFUNCTION()
+	void OnNewGameClicked();
+
+	UFUNCTION()
+	void OnContinueGameClicked();
+
+	UFUNCTION()
+	void OnOptionClicked();
+
+	UFUNCTION()
+	void OnExitClicked();
+
+public:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* NewGameButton;
+	class UCustomButtonWidget* NewGameButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ContinueGameButton;
+	class UCustomButtonWidget* ContinueGameButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* OptionButton;
+	class UCustomButtonWidget* OptionButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ExitButton;
+	class UCustomButtonWidget* ExitButton;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> CharacterWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> SavedGameWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+	TSubclassOf<UUserWidget> OptionMenuWidgetClass;
 };
