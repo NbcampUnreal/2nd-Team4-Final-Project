@@ -42,4 +42,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	virtual void PlayAlertMontage() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void ResetAlert();
 };

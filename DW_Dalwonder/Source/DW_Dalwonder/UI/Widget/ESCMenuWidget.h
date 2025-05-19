@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "ESCMenuWidget.generated.h"
 
+class UCustomButtonWidget;
+
 /**
  * 
  */
@@ -13,22 +15,46 @@ UCLASS()
 class DW_DALWONDER_API UESCMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-protected:
+
+public:
     virtual void NativeConstruct() override;
 
-    UPROPERTY(meta = (BindWidget))
-    class UButton* InfoButton;
+    UFUNCTION()
+    void OnInfoClicked();
+
+    UFUNCTION()
+    void OnInventoryClicked();
+
+    UFUNCTION()
+    void OnOptionClicked();
+
+    UFUNCTION()
+    void OnExitClicked();
+	
+protected:
+    
 
     UPROPERTY(meta = (BindWidget))
-    class UButton* SkillTreeButton;
+    class UCustomButtonWidget* InfoButton;
 
     UPROPERTY(meta = (BindWidget))
-    class UButton* InventoryButton;
+    class UCustomButtonWidget* SkillTreeButton;
 
     UPROPERTY(meta = (BindWidget))
-    class UButton* OptionButton;
+    class UCustomButtonWidget* InventoryButton;
 
     UPROPERTY(meta = (BindWidget))
-    class UButton* ExitButton;
+    class UCustomButtonWidget* OptionButton;
+
+    UPROPERTY(meta = (BindWidget))
+    class UCustomButtonWidget* ExitButton;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> PlayerInfoWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> OptionMenuWidgetClass;
 };
