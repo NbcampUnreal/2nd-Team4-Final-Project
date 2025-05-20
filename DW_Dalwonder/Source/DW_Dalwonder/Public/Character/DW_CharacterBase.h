@@ -9,6 +9,7 @@
 struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
+class UCharacterStatComponent;
 
 // ✅ 캐릭터의 기본 클래스: 이동, 전투, 입력 처리 등 공통 기능 포함
 UCLASS()
@@ -48,6 +49,8 @@ public:
 	void Attack(const FInputActionValue& Value);
 
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
+
+	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }
 	
 	// -----------------------------
 	// 📌 데미지 처리 함수
@@ -71,6 +74,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	UChildActorComponent* Weapon;                          // 캐릭터의 무기 액터
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	UCharacterStatComponent* StatComponent;				   // 캐릭터의 스탯 컴포넌트
 
 	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
 

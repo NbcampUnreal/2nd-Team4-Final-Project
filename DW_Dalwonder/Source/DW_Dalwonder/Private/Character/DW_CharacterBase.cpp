@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Character/DW_PlayerController.h"
+#include "Character/CharacterStatComponent.h"
 #include "DW_InteractInterface.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Animations/AnimInstance/DW_AnimInstance.h"
@@ -25,6 +26,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
+
+	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
