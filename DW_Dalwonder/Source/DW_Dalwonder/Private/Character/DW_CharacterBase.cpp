@@ -1,15 +1,15 @@
 #include "Character/DW_CharacterBase.h"
-#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
-#include "Character/DW_PlayerController.h"
-#include "DW_InteractInterface.h"
+#include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "Character/DW_PlayerController.h"
+#include "Character/CharacterStatComponent.h"
+#include "DW_InteractInterface.h"
 #include "Monster/DW_MonsterBase.h"
-#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
-#include "Monster/DW_MonsterBaseInterface.h"
 #include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
@@ -23,6 +23,11 @@ ADW_CharacterBase::ADW_CharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->JumpZVelocity = 500.f;
+
+	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
@@ -46,7 +51,7 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ADW_CharacterBase::PlayAttackMontage);
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
@@ -73,7 +78,7 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			{
 				EnhancedInputComponent->BindAction(
 					PlayerController->JumpAction,
-					ETriggerEvent::Started,
+					ETriggerEvent::Triggered,
 					this,
 					&ADW_CharacterBase::StartJump);
 	
@@ -84,13 +89,22 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::StopJump);
 			}
 
+			if (PlayerController->AttackAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->AttackAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Attack);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
-					ETriggerEvent::Started,
+					ETriggerEvent::Triggered,
 					this,
 					&ADW_CharacterBase::Interact);
 
@@ -150,6 +164,14 @@ void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Attack(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		StartAttack();
+	}
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
@@ -157,11 +179,39 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
 }
 
-void ADW_CharacterBase::PlayAttackMontage()
+void ADW_CharacterBase::StartAttack()
 {
-	if (AttackMontage)
+	SetCombatState(ECharacterCombatState::Attacking);
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AttackMontage)
 	{
-		PlayAnimMontage(AttackMontage);
+		FOnMontageEnded MontageEndedDelegate;
+		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
+		int ComboTotalNum = AttackMontage->GetNumSections();
+
+		if (ComboIndex == 0)
+		{
+			ComboIndex++;
+			AnimInstance->Montage_Play(AttackMontage);
+		}
+		else if (ComboIndex < ComboTotalNum && bCanCombo)
+		{
+			bCanCombo = false;
+			AnimInstance->Montage_JumpToSection(FName(FString::Printf(TEXT("Attack%d"), ComboIndex)), AttackMontage);
+			ComboIndex++;
+		}
+	}
+}
+
+void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == AttackMontage)
+	{
+		SetCombatState(ECharacterCombatState::Idle);
+		ComboIndex = 0;
+		bCanCombo = false;
 	}
 }
 
@@ -190,14 +240,14 @@ float ADW_CharacterBase::TakeDamage
 		}
 		else
 		{
-			//데미지 받는 로직
+			StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 		}
 	}
 	else
 	{
-		//데미지 받는 로직
+		StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 	}
-	return 0;
+	return DamageAmount;
 }
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
@@ -298,6 +348,16 @@ void ADW_CharacterBase::KnockBackCharacter()
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
 	bCanControl = bShouldBlock;
+}
+
+void ADW_CharacterBase::AttackEnemy(float Damage)
+{
+	for (AActor* HitActor : AttackingActors)
+	{
+		UGameplayStatics::ApplyDamage(HitActor, Damage, GetController(), this, UDamageType::StaticClass());
+	}
+
+	AttackingActors.Empty();
 }
 
 void ADW_CharacterBase::Interact()
@@ -445,6 +505,15 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 		}
 	}
 
+	// 락온 상태에 따라 컨트롤러 로테이션 Yaw 사용 전환 로직
+	if (bIsLockOn == true)
+	{
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+	}
 }
 
 void ADW_CharacterBase::AddNearbyItem(AWorldItemActor* Item)
