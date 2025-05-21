@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Character/DW_PlayerController.h"
+#include "Character/CharacterStatComponent.h"
 #include "DW_InteractInterface.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Animations/AnimInstance/DW_AnimInstance.h"
@@ -25,6 +26,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
+
+	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
@@ -165,7 +168,7 @@ void ADW_CharacterBase::Attack(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		PlayAttackMontage();
+		StartAttack();
 	}
 }
 
@@ -176,20 +179,39 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
 }
 
-void ADW_CharacterBase::PlayAttackMontage()
+void ADW_CharacterBase::StartAttack()
 {
 	SetCombatState(ECharacterCombatState::Attacking);
 	
-	if (AttackMontage)
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AttackMontage)
 	{
-		float AttackLength = AttackMontage->GetPlayLength();
-		FTimerHandle TimerHandle;
-		
-		PlayAnimMontage(AttackMontage);
-		GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([&]
-			{
-				SetCombatState(ECharacterCombatState::Idle);
-			}), AttackLength, false);
+		FOnMontageEnded MontageEndedDelegate;
+		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
+		int ComboTotalNum = AttackMontage->GetNumSections();
+
+		if (ComboIndex == 0)
+		{
+			ComboIndex++;
+			AnimInstance->Montage_Play(AttackMontage);
+		}
+		else if (ComboIndex < ComboTotalNum && bCanCombo)
+		{
+			bCanCombo = false;
+			AnimInstance->Montage_JumpToSection(FName(FString::Printf(TEXT("Attack%d"), ComboIndex)), AttackMontage);
+			ComboIndex++;
+		}
+	}
+}
+
+void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == AttackMontage)
+	{
+		SetCombatState(ECharacterCombatState::Idle);
+		ComboIndex = 0;
+		bCanCombo = false;
 	}
 }
 
@@ -218,14 +240,14 @@ float ADW_CharacterBase::TakeDamage
 		}
 		else
 		{
-			//데미지 받는 로직
+			StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 		}
 	}
 	else
 	{
-		//데미지 받는 로직
+		StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 	}
-	return 0;
+	return DamageAmount;
 }
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
