@@ -118,3 +118,16 @@ void ADW_NormalMonsterBase::ResetAlert()
 	bIsAlerted = false;
 	bIsFirstResponder = true;
 }
+
+void ADW_NormalMonsterBase::SaveRoot()
+{
+	//InitialRotation = GetActorRotation();
+}
+
+void ADW_NormalMonsterBase::ResetRoot()
+{
+	FRotator InitialRotation = GetActorRotation();
+	InitialRotation.Pitch = 0.f;
+	InitialRotation.Roll = 0.f;
+	SetActorRotation(InitialRotation);
+}

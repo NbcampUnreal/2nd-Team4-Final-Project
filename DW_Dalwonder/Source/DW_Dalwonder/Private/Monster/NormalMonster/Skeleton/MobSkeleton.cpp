@@ -26,7 +26,7 @@ void AMobSkeleton::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetSpawnLocation();
+	//SetSpawnLocation();
 
 }
 
