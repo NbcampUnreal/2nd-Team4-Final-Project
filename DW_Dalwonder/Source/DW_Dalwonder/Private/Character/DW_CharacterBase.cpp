@@ -191,12 +191,16 @@ void ADW_CharacterBase::StartAttack()
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
 		int ComboTotalNum = AttackMontage->GetNumSections();
 
-		if (ComboIndex < ComboTotalNum && bCanCombo)
+		if (ComboIndex == 0)
 		{
 			ComboIndex++;
-			bCanCombo = false;
 			AnimInstance->Montage_Play(AttackMontage);
+		}
+		else if (ComboIndex < ComboTotalNum && bCanCombo)
+		{
+			bCanCombo = false;
 			AnimInstance->Montage_JumpToSection(FName(FString::Printf(TEXT("Attack%d"), ComboIndex)), AttackMontage);
+			ComboIndex++;
 		}
 	}
 }
