@@ -18,8 +18,7 @@ void UDW_SwordAttackNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 
 	if (IsValid(MeshComp) && IsValid(MeshComp->GetOwner()))
 	{
-		AActor* Owner = MeshComp->GetOwner();
-		PlayerCharacter = Cast<ADW_Warrior>(Owner);
+		PlayerCharacter = Cast<ADW_Warrior>(MeshComp->GetOwner());
 
 		if (IsValid(PlayerCharacter))
 		{
