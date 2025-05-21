@@ -14,6 +14,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+#pragma region GetterSetter
 	float GetHealth() const
 	{
 		return Health;
@@ -113,7 +114,8 @@ public:
 	{
 		WalkSpeed = Value;
 	}
-
+#pragma endregion
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -128,6 +130,9 @@ protected:
 	float HealthGenRate = 1.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	bool bEnableHealthGen = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Stamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
@@ -135,6 +140,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float StaminaGenRate = 1.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	bool bEnableStaminaGen = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Attack = 10.f;

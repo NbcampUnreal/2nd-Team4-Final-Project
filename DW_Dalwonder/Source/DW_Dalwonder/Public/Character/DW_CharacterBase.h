@@ -92,7 +92,10 @@ public:
 
 	// 공격 애니메이션 재생
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void PlayAttackMontage();
+	void StartAttack();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void EndAttack(UAnimMontage* Montage, bool bInterrupted);
 
 	// 패링 상태 설정
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -136,6 +139,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	bool bIsLockOn = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bCanCombo = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	int32 ComboIndex = 0;
 
 	// 공격 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
