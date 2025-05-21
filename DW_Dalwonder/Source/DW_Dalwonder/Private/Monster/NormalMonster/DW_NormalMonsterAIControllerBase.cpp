@@ -52,7 +52,6 @@ void ADW_NormalMonsterAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetBlackboardComponent()->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Idle);
 };
 
 void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -135,6 +134,11 @@ void ADW_NormalMonsterAIControllerBase::OnPossess(APawn* InPawn)
 	if (BehaviorTreeAsset)
 	{
 		RunBehaviorTree(BehaviorTreeAsset);
+	}
+
+	if (GetBlackboardComponent())
+	{
+		GetBlackboardComponent()->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Idle);
 	}
 }
 
