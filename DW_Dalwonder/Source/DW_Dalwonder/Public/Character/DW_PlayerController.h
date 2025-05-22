@@ -18,6 +18,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* InputMappingContext;
@@ -37,13 +39,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InteractAction;
 
-protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ESCAction;
+
+	// -----------------------------
+	// UI 관련
+	// -----------------------------
+#pragma region
+public:
 	// HUD
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 
-private:
 	//HUD
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
+
+public:
+	// HUD 표시
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ShowGameHUD();
+
+#pragma endregion
 };
