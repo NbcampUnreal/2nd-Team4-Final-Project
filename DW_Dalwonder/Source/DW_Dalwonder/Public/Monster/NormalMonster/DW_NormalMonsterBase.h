@@ -34,6 +34,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Montage")
 	UAnimMontage* AlertMontage;
 
+
 	virtual void AlertNearbyMonsters_Implementation(const int32 AlertDistance) override;
 
 	virtual void FoundPlayer_Implementation() override;
@@ -45,4 +46,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void ResetAlert();
+
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void SaveRoot();
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void ResetRoot();
 };

@@ -9,15 +9,19 @@
 #include "Character/DW_PlayerController.h"
 #include "Character/CharacterStatComponent.h"
 #include "DW_InteractInterface.h"
+#include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
+	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 300.f;
+	SpringArm->SocketOffset = FVector(0.f, 50.f, 50.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -26,9 +30,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
-
-	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
-
+	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
+	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
@@ -96,6 +99,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					ETriggerEvent::Started,
 					this,
 					&ADW_CharacterBase::Attack);
+			}
+
+			if (PlayerController->SprintAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->SprintAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Sprint);
 			}
 
 			if (PlayerController->InteractAction)
@@ -172,6 +184,41 @@ void ADW_CharacterBase::Attack(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		if (bIsSprinting == false)
+		{
+			bIsSprinting = true;
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		}
+		else
+		{
+			bIsSprinting = false;
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
+		}
+	}
+}
+
+void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance))
+	{
+		if (SectionIndex != 0)
+		{
+			FName SectionName = Montage->GetSectionName(SectionIndex);
+			AnimInstance->Montage_Play(Montage);
+			AnimInstance->Montage_JumpToSection(SectionName);
+		}
+		else
+		{
+			AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
+		}
+	}
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
@@ -182,10 +229,37 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 void ADW_CharacterBase::StartAttack()
 {
 	SetCombatState(ECharacterCombatState::Attacking);
-	
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && AttackMontage)
+
+	if (GetMovementComponent()->IsFalling())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Falling"));
+		//check(IsValid(FallingAttackMontage));
+		PlayMontage(FallingAttackMontage);
+	}
+	else if (bIsGuarding)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Guard"));
+		//check(IsValid(GuardAttackMontage));
+		PlayMontage(GuardAttackMontage);
+	}
+	else if (bIsParrying)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Parry"));
+		//check(IsValid(ParryAttackMontage));
+		PlayMontage(ParryAttackMontage);
+	}
+	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
+		//check(IsValid(SprintAttackMontage));
+		PlayMontage(SprintAttackMontage);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("else"));
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		check(IsValid(AttackMontage) && IsValid(AnimInstance))
+		
 		FOnMontageEnded MontageEndedDelegate;
 		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
@@ -193,22 +267,34 @@ void ADW_CharacterBase::StartAttack()
 
 		if (ComboIndex == 0)
 		{
+			PlayMontage(AttackMontage);
 			ComboIndex++;
-			AnimInstance->Montage_Play(AttackMontage);
 		}
-		else if (ComboIndex < ComboTotalNum && bCanCombo)
+		else if (ComboIndex < ComboTotalNum)
 		{
-			bCanCombo = false;
-			AnimInstance->Montage_JumpToSection(FName(FString::Printf(TEXT("Attack%d"), ComboIndex)), AttackMontage);
-			ComboIndex++;
+			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage)
+			{
+				if (bCanCombo)
+				{
+					bCanCombo = false;
+					PlayMontage(AttackMontage, ComboIndex);
+					ComboIndex++;
+				}
+			}
+			else
+			{
+				PlayMontage(AttackMontage);
+			}
 		}
 	}
 }
 
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
+	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
 	if (Montage == AttackMontage)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Logic Enabled!!"));
 		SetCombatState(ECharacterCombatState::Idle);
 		ComboIndex = 0;
 		bCanCombo = false;
@@ -236,17 +322,17 @@ float ADW_CharacterBase::TakeDamage
 		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 		{
 			Monster->Parried();
-			PlayAnimMontage(ParryMontage);
+			PlayMontage(ParryMontage);
 		}
 		else
 		{
+			int32 HitSectionNum = HitMontage->GetNumSections();
+			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
+			PlayMontage(HitMontage, RandomHitSectionNum);
 			StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 		}
 	}
-	else
-	{
-		StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
-	}
+
 	return DamageAmount;
 }
 

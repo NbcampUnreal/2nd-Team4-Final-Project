@@ -48,6 +48,11 @@ public:
 	UFUNCTION()
 	void Attack(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void Sprint(const FInputActionValue& Value);
+
+	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = 0) const;
+	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
 	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }
@@ -77,6 +82,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	UCharacterStatComponent* StatComponent;				   // 캐릭터의 스탯 컴포넌트
+
+	bool bIsSprinting = false;
 
 	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
 
@@ -146,17 +153,39 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 ComboIndex = 0;
 
-	// 공격 애니메이션
+	// 기본 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
 
-	// 넉백 애니메이션
+	// 공중 공격
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* FallingAttackMontage;
+
+	// 가드 중 공격
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* GuardAttackMontage;
+
+	// 패링 공격
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* ParryAttackMontage;
+
+	// 달리기 중 공격
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* SprintAttackMontage;
+
+	// 피격 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* HitMontage;
+	
+	// 넉백(쓰러지는) 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* KnockBackMontage;
-	
+
+	// 가드 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardMontage;
 
+	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* ParryMontage;
 
