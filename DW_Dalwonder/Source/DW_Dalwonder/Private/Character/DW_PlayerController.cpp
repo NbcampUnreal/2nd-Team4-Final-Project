@@ -8,7 +8,8 @@ ADW_PlayerController::ADW_PlayerController()
 	LookAction(nullptr),
 	JumpAction(nullptr),
 	AttackAction(nullptr),
-	InteractAction(nullptr)
+	InteractAction(nullptr),
+	SprintAction(nullptr)
 {
 }
 

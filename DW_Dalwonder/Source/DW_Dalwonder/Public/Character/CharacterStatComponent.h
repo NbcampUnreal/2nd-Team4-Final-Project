@@ -114,6 +114,16 @@ public:
 	{
 		WalkSpeed = Value;
 	}
+
+	float GetSprintSpeed() const
+	{
+		return SprintSpeed;
+	}
+
+	void SetSprintSpeed(const float Value)
+	{
+		SprintSpeed = Value;
+	}
 #pragma endregion
 	
 protected:
@@ -155,4 +165,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float WalkSpeed = 300.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float SprintSpeed = 600.f;
 };
