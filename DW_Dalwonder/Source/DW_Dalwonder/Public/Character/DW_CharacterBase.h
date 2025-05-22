@@ -136,6 +136,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void AttackEnemy(float Damage);
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void Dead();
+
 	// 공격한 대상 저장하기 위한 Set
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TSet<AActor*> AttackingActors;
@@ -165,10 +168,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardAttackMontage;
 
-	// 패링 공격
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* ParryAttackMontage;
-
 	// 달리기 중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* SprintAttackMontage;
@@ -188,6 +187,10 @@ public:
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* ParryMontage;
+
+	// 사망 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* DeadMontage;
 
 protected:
 	// 패링 중 여부

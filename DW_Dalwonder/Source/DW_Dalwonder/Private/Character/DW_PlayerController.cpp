@@ -9,7 +9,8 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
-	SprintAction(nullptr)
+	SprintAction(nullptr),
+	GuardAction(nullptr)
 {
 }
 

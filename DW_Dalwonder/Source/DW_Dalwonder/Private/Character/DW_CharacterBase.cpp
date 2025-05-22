@@ -11,7 +11,6 @@
 #include "DW_InteractInterface.h"
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
-#include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -110,6 +109,21 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Sprint);
 			}
 
+			if (PlayerController->GuardAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->GuardAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::StartGuard);
+
+				EnhancedInputComponent->BindAction(
+					PlayerController->GuardAction,
+					ETriggerEvent::Completed,
+					this,
+					&ADW_CharacterBase::EndGuard);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
@@ -162,6 +176,8 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 {
+	if (!bCanControl) return;
+	
 	if (Value.Get<bool>())
 	{
 		Jump();
@@ -170,6 +186,8 @@ void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 
 void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 {
+	if (!bCanControl) return;
+	
 	if (Value.Get<bool>())
 	{
 		StopJumping();
@@ -206,6 +224,8 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) c
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (IsValid(AnimInstance))
 	{
+		if (!IsValid(Montage) || SectionIndex >= Montage->GetNumSections()) return;
+		
 		if (SectionIndex != 0)
 		{
 			FName SectionName = Montage->GetSectionName(SectionIndex);
@@ -233,25 +253,21 @@ void ADW_CharacterBase::StartAttack()
 	if (GetMovementComponent()->IsFalling())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Falling"));
-		//check(IsValid(FallingAttackMontage));
+		check(IsValid(FallingAttackMontage));
 		PlayMontage(FallingAttackMontage);
 	}
 	else if (bIsGuarding)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Guard"));
-		//check(IsValid(GuardAttackMontage));
+		check(IsValid(GuardAttackMontage));
 		PlayMontage(GuardAttackMontage);
-	}
-	else if (bIsParrying)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Parry"));
-		//check(IsValid(ParryAttackMontage));
-		PlayMontage(ParryAttackMontage);
+		SetGuarding(false);
+		BlockCharacterControl(false);
 	}
 	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
-		//check(IsValid(SprintAttackMontage));
+		check(IsValid(SprintAttackMontage));
 		PlayMontage(SprintAttackMontage);
 	}
 	else
@@ -272,14 +288,11 @@ void ADW_CharacterBase::StartAttack()
 		}
 		else if (ComboIndex < ComboTotalNum)
 		{
-			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage)
+			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage && bCanCombo)
 			{
-				if (bCanCombo)
-				{
-					bCanCombo = false;
-					PlayMontage(AttackMontage, ComboIndex);
-					ComboIndex++;
-				}
+				bCanCombo = false;
+				PlayMontage(AttackMontage, ComboIndex);
+				ComboIndex++;
 			}
 			else
 			{
@@ -304,8 +317,8 @@ void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 float ADW_CharacterBase::TakeDamage
 	(
 	float DamageAmount,
-	struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator,
+	FDamageEvent const& DamageEvent,
+	AController* EventInstigator,
 	AActor* DamageCauser
 	)
 {
@@ -333,6 +346,11 @@ float ADW_CharacterBase::TakeDamage
 		}
 	}
 
+	if (FMath::IsNearlyZero(StatComponent->GetHealth()))
+	{
+		Dead();
+	}
+	
 	return DamageAmount;
 }
 
@@ -343,7 +361,7 @@ void ADW_CharacterBase::SetParrying(bool bNewParrying)
 	
 	bIsParrying = bNewParrying;
 	
-	if (bNewParrying)
+	if (bIsParrying)
 	{
 		CurrentCombatState = ECharacterCombatState::Parrying;
 
@@ -364,15 +382,9 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 
 	bIsGuarding = bNewGuarding;
 
-	if (UDW_AnimInstance* AnimInst = Cast<UDW_AnimInstance>(GetMesh()->GetAnimInstance()))
-	{
-		AnimInst->bIsGuarding = bNewGuarding;
-	}
-
-	if (bNewGuarding)
+	if (bIsGuarding)
 	{
 		CurrentCombatState = ECharacterCombatState::Guarding;
-
 		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
 	}
 	else
@@ -402,12 +414,15 @@ void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 void ADW_CharacterBase::StartGuard()
 {
 	SetGuarding(true);
-	PlayAnimMontage(GuardMontage);
+	BlockCharacterControl(true);
+	PlayMontage(GuardMontage);
 }
 
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
+	BlockCharacterControl(false);
+	PlayMontage(GuardMontage, 2);
 }
 
 void ADW_CharacterBase::KnockBackCharacter()
@@ -433,7 +448,7 @@ void ADW_CharacterBase::KnockBackCharacter()
 
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
-	bCanControl = bShouldBlock;
+	bCanControl = !bShouldBlock;
 }
 
 void ADW_CharacterBase::AttackEnemy(float Damage)
@@ -444,6 +459,19 @@ void ADW_CharacterBase::AttackEnemy(float Damage)
 	}
 
 	AttackingActors.Empty();
+}
+
+void ADW_CharacterBase::Dead()
+{
+	if (CurrentCombatState == ECharacterCombatState::Attacking)
+	{
+		PlayMontage(DeadMontage, 1);
+	}
+	else
+	{
+		PlayMontage(DeadMontage);
+	}
+	BlockCharacterControl(true);
 }
 
 void ADW_CharacterBase::Interact()
