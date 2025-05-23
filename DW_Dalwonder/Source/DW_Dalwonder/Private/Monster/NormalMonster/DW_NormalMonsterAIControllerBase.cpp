@@ -52,7 +52,6 @@ void ADW_NormalMonsterAIControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetBlackboardComponent()->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Idle);
 };
 
 void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -71,8 +70,6 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 			BB = GetBlackboardComponent();
 			if (BB)
 			{
-				BB->SetValueAsBool("bIsPlayerFound", bCanSeePlayer);
-
 				if (bCanSeePlayer)
 				{
 					APawn* ControlledPawn = GetPawn();
@@ -83,7 +80,6 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 
 						IDW_NormalMonsterBaseInterface::Execute_FoundPlayer(ControlledPawn);
 
-						GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::White, TEXT("See Player"));
 						BB->SetValueAsVector(LastSeenLocationKey, Stimulus.StimulusLocation);
 						StartChasingPlayer();
 					}
@@ -108,6 +104,19 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 				}
 			}
 		}
+		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
+		{
+			if (BB)
+			{
+				APawn* ControlledPawn = GetPawn();
+				if (ControlledPawn && ControlledPawn->Implements<UDW_NormalMonsterBaseInterface>())
+				{
+					IDW_NormalMonsterBaseInterface::Execute_FoundPlayer(ControlledPawn);
+					BB->SetValueAsVector(LastSeenLocationKey, Stimulus.StimulusLocation);
+					StartChasingPlayer();
+				}
+			}
+		}
 	}
 }
 
@@ -116,10 +125,8 @@ void ADW_NormalMonsterAIControllerBase::HandleLoseSight()
 	ENormalMobState CurrentState = (ENormalMobState)BB->GetValueAsEnum(CurrentStateKey);
 	if (CurrentState == ENormalMobState::Chasing)
 	{
-		BB = GetBlackboardComponent();
 		if (BB)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::White, TEXT("Lose Player"));
 			BB->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Investigating);
 		}
 
@@ -135,6 +142,13 @@ void ADW_NormalMonsterAIControllerBase::OnPossess(APawn* InPawn)
 	if (BehaviorTreeAsset)
 	{
 		RunBehaviorTree(BehaviorTreeAsset);
+	}
+
+	if (GetBlackboardComponent())
+	{
+		BB = GetBlackboardComponent();
+
+		GetBlackboardComponent()->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Idle);
 	}
 }
 

@@ -3,12 +3,14 @@
 #include "AIController.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 #include "Engine/DataTable.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
+#include "Components/CapsuleComponent.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
@@ -315,7 +317,7 @@ void ADW_MonsterBase::PerformAttackTrace()
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
-				if (!AlreadyAttackingActors.Contains(HitActor))
+				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
 
@@ -356,9 +358,22 @@ void ADW_MonsterBase::Dead()
 		if (Montage && GetMesh())
 		{
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+
+			if (AAIController* AIController = Cast<AAIController>(GetController()))
+			{
+				if (UBehaviorTreeComponent* BTComp = Cast<UBehaviorTreeComponent>(AIController->GetBrainComponent()))
+				{
+					BTComp->StopTree(EBTStopMode::Forced);
+
+					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				}
+			}
+
+			
 		}
 	}
 }
+
 
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)

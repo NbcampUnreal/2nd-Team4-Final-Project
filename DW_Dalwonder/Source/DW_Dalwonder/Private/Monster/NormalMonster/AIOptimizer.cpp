@@ -16,10 +16,10 @@ UAIOptimizer::UAIOptimizer()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	LayerShort = 1000.f;
-	LayerMiddle = 2500.f;
-	LayerLong = 4000.f;
-	LayerMax = 5000.f;
+	LayerShort = 5000.f;
+	LayerMiddle = 8000.f;
+	LayerLong = 9000.f;
+	LayerMax = 10000.f;
 }
 
 void UAIOptimizer::BeginPlay()

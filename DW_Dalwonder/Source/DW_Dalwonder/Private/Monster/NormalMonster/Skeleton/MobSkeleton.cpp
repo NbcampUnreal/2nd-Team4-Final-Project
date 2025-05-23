@@ -8,6 +8,8 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "AI/Navigation/NavigationTypes.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "AIController.h"
 
 AMobSkeleton::AMobSkeleton()
 {
@@ -26,7 +28,7 @@ void AMobSkeleton::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetSpawnLocation();
+	//SetSpawnLocation();
 
 }
 
@@ -48,6 +50,35 @@ void AMobSkeleton::PlayAlertMontage()
 			false
 		);
 	}
+}
+
+float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	
+
+	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	{
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bCanBehavior"), false);
+
+				PlayHitMontage();
+
+				GetWorldTimerManager().SetTimer(HitDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, HitDelay, false);
+			}
+		}
+	}
+
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (MonsterHP <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(HitDelayTimer);
+	}
+
+    return 0.0f;
 }
 
 void AMobSkeleton::UseFirstSkill()
