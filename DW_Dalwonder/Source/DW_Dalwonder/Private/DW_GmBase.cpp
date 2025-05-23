@@ -1,4 +1,4 @@
-#include "DW_GmBase.h"
+﻿#include "DW_GmBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -32,28 +32,31 @@ void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
     }
 }
 
-void ADW_GmBase::ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass)
+UUserWidget* ADW_GmBase::ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass)
 {
-    if (!WidgetClass) return;
+    if (!WidgetClass) return nullptr;
 
+    // 위젯 생성
     UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
-    if (NewWidget)
+    if (!NewWidget) return nullptr;
+
+    // 화면에 추가
+    NewWidget->AddToViewport(10);
+    PopupWidgets.Add(NewWidget);
+
+    // 입력‧마우스 세팅
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
     {
-        NewWidget->AddToViewport(10);
-        PopupWidgets.Add(NewWidget);
+        PC->bShowMouseCursor = true;
 
-        APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-        if (PC)
-        {
-            PC->bShowMouseCursor = true;
-
-            FInputModeGameAndUI InputMode;
-            InputMode.SetWidgetToFocus(NewWidget->TakeWidget());
-            InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-            InputMode.SetHideCursorDuringCapture(false);
-            PC->SetInputMode(InputMode);
-        }
+        FInputModeGameAndUI InputMode;
+        InputMode.SetWidgetToFocus(NewWidget->TakeWidget());
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        InputMode.SetHideCursorDuringCapture(false);
+        PC->SetInputMode(InputMode);
     }
+
+    return NewWidget;   // 반환
 }
 
 
@@ -101,19 +104,3 @@ void ADW_GmBase::CloseLastPopupUI()
         }
     }
 }
-
-
-//void ADW_PlayerController::SetupInputComponent()
-//{
-//    Super::SetupInputComponent();
-//
-//    InputComponent->BindAction("ClosePopup", IE_Pressed, this, &AMyPlayerController::HandleClosePopup);
-//}
-//
-//void ADW_PlayerController::HandleClosePopup()
-//{
-//    if (AMyGameModeBase* GM = Cast<AMyGameModeBase>(UGameplayStatics::GetGameMode(this)))
-//    {
-//        GM->CloseLastPopupUI();
-//    }
-//}

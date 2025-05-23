@@ -1,29 +1,37 @@
 #include "Character/DW_CharacterBase.h"
-#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
-#include "Character/DW_PlayerController.h"
-#include "DW_InteractInterface.h"
+#include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "Character/DW_PlayerController.h"
+#include "Character/CharacterStatComponent.h"
+#include "DW_InteractInterface.h"
+#include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
-#include "Monster/BossMonster/DW_BossMonsterBaseInterface.h"
-#include "Monster/DW_MonsterBaseInterface.h"
 #include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
+	StatComponent = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("StatComponent"));
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 300.f;
+	SpringArm->SocketOffset = FVector(0.f, 50.f, 50.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
 
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->JumpZVelocity = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
+	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
@@ -46,7 +54,7 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ADW_CharacterBase::PlayAttackMontage);
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
@@ -73,7 +81,7 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			{
 				EnhancedInputComponent->BindAction(
 					PlayerController->JumpAction,
-					ETriggerEvent::Started,
+					ETriggerEvent::Triggered,
 					this,
 					&ADW_CharacterBase::StartJump);
 	
@@ -84,13 +92,31 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::StopJump);
 			}
 
+			if (PlayerController->AttackAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->AttackAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Attack);
+			}
+
+			if (PlayerController->SprintAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->SprintAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Sprint);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
-					ETriggerEvent::Started,
+					ETriggerEvent::Triggered,
 					this,
 					&ADW_CharacterBase::Interact);
 
@@ -150,6 +176,49 @@ void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Attack(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		StartAttack();
+	}
+}
+
+void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		if (bIsSprinting == false)
+		{
+			bIsSprinting = true;
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		}
+		else
+		{
+			bIsSprinting = false;
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
+		}
+	}
+}
+
+void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (IsValid(AnimInstance))
+	{
+		if (SectionIndex != 0)
+		{
+			FName SectionName = Montage->GetSectionName(SectionIndex);
+			AnimInstance->Montage_Play(Montage);
+			AnimInstance->Montage_JumpToSection(SectionName);
+		}
+		else
+		{
+			AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
+		}
+	}
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
@@ -157,11 +226,78 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
 }
 
-void ADW_CharacterBase::PlayAttackMontage()
+void ADW_CharacterBase::StartAttack()
 {
-	if (AttackMontage)
+	SetCombatState(ECharacterCombatState::Attacking);
+
+	if (GetMovementComponent()->IsFalling())
 	{
-		PlayAnimMontage(AttackMontage);
+		UE_LOG(LogTemp, Warning, TEXT("Falling"));
+		//check(IsValid(FallingAttackMontage));
+		PlayMontage(FallingAttackMontage);
+	}
+	else if (bIsGuarding)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Guard"));
+		//check(IsValid(GuardAttackMontage));
+		PlayMontage(GuardAttackMontage);
+	}
+	else if (bIsParrying)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Parry"));
+		//check(IsValid(ParryAttackMontage));
+		PlayMontage(ParryAttackMontage);
+	}
+	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
+		//check(IsValid(SprintAttackMontage));
+		PlayMontage(SprintAttackMontage);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("else"));
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		check(IsValid(AttackMontage) && IsValid(AnimInstance))
+		
+		FOnMontageEnded MontageEndedDelegate;
+		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
+		int ComboTotalNum = AttackMontage->GetNumSections();
+
+		if (ComboIndex == 0)
+		{
+			PlayMontage(AttackMontage);
+			ComboIndex++;
+		}
+		else if (ComboIndex < ComboTotalNum)
+		{
+			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage)
+			{
+				if (bCanCombo)
+				{
+					bCanCombo = false;
+					PlayMontage(AttackMontage, ComboIndex);
+					ComboIndex++;
+				}
+			}
+			else
+			{
+				PlayMontage(AttackMontage);
+			}
+		}
+	}
+}
+
+void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
+{
+	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
+	if (Montage == AttackMontage)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Logic Enabled!!"));
+		SetCombatState(ECharacterCombatState::Idle);
+		ComboIndex = 0;
+		bCanCombo = false;
 	}
 }
 
@@ -186,18 +322,18 @@ float ADW_CharacterBase::TakeDamage
 		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 		{
 			Monster->Parried();
-			PlayAnimMontage(ParryMontage);
+			PlayMontage(ParryMontage);
 		}
 		else
 		{
-			//데미지 받는 로직
+			int32 HitSectionNum = HitMontage->GetNumSections();
+			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
+			PlayMontage(HitMontage, RandomHitSectionNum);
+			StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
 		}
 	}
-	else
-	{
-		//데미지 받는 로직
-	}
-	return 0;
+
+	return DamageAmount;
 }
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
@@ -298,6 +434,16 @@ void ADW_CharacterBase::KnockBackCharacter()
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
 	bCanControl = bShouldBlock;
+}
+
+void ADW_CharacterBase::AttackEnemy(float Damage)
+{
+	for (AActor* HitActor : AttackingActors)
+	{
+		UGameplayStatics::ApplyDamage(HitActor, Damage, GetController(), this, UDamageType::StaticClass());
+	}
+
+	AttackingActors.Empty();
 }
 
 void ADW_CharacterBase::Interact()
@@ -445,6 +591,15 @@ void ADW_CharacterBase::Tick(float DeltaTime)
 		}
 	}
 
+	// 락온 상태에 따라 컨트롤러 로테이션 Yaw 사용 전환 로직
+	if (bIsLockOn == true)
+	{
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+	}
 }
 
 void ADW_CharacterBase::AddNearbyItem(AWorldItemActor* Item)

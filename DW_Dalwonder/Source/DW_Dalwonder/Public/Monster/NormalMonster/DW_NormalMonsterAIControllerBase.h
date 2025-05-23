@@ -6,6 +6,15 @@
 #include "AIController.h"
 #include "DW_NormalMonsterAIControllerBase.generated.h"
 
+UENUM(BlueprintType)
+enum class ENormalMobState : uint8
+{
+	Idle = 0,
+	Investigating = 1,
+	Chasing = 2,
+	Recall = 3
+};
+
 class UAISenseConfig_Damage;
 class UAISenseConfig_Hearing;
 class UAISenseConfig_Sight;
@@ -19,6 +28,8 @@ class DW_DALWONDER_API ADW_NormalMonsterAIControllerBase : public AAIController
 public:
 	// Sets default values for this actor's properties
 	ADW_NormalMonsterAIControllerBase();
+
+	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UAIPerceptionComponent* AIPerceptionComponent;
@@ -40,4 +51,22 @@ public:
 
 	UFUNCTION()
 	virtual void OnPossess(APawn* InPawn) override;
+
+public:
+	UFUNCTION()
+	void StartChasingPlayer();
+
+	UFUNCTION()
+	void StopChasingPlayer();
+
+private:
+	void HandleLoseSight();
+
+	UBlackboardComponent* BB = nullptr;
+
+	static const FName CurrentStateKey;
+	static const FName LastSeenLocationKey;
+
+	FTimerHandle ChaseStopTimer;
+	FTimerHandle DelayLoseSightTimer;
 };

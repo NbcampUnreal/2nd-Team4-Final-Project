@@ -6,7 +6,10 @@ ADW_PlayerController::ADW_PlayerController()
 	: InputMappingContext(nullptr),
 	MoveAction(nullptr),
 	LookAction(nullptr),
-	JumpAction(nullptr)
+	JumpAction(nullptr),
+	AttackAction(nullptr),
+	InteractAction(nullptr),
+	SprintAction(nullptr)
 {
 }
 
