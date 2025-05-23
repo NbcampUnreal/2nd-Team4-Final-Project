@@ -26,6 +26,8 @@ protected:
 	// ▶ 게임 시작 시 초기 설정 (예: 상태 초기화)
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 public:
 	// ▶ 플레이어 입력 바인딩 (InputAction → 함수 연결)
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -139,6 +141,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Dead();
 
+	UFUNCTION(blueprintCallable, Category = "Combat")
+	void SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex = -1);
+
 	// 공격한 대상 저장하기 위한 Set
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TSet<AActor*> AttackingActors;
@@ -151,10 +156,13 @@ public:
 	bool bIsLockOn = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanCombo = false;
+	bool bCanCombo = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 ComboIndex = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bCanAttack = true;
 
 	// 기본 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -204,6 +212,9 @@ protected:
 	// 무적 상태 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsInvincible = false;
+
+	UPROPERTY()
+	FTimerHandle AttackTimer;
 
 #pragma endregion
 

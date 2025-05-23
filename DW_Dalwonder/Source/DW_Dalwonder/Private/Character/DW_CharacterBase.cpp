@@ -50,6 +50,14 @@ void ADW_CharacterBase::BeginPlay()
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
 }
 
+void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorldTimerManager().ClearTimer(AttackTimer);
+	AttackTimer.Invalidate();
+}
+
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -248,19 +256,26 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 
 void ADW_CharacterBase::StartAttack()
 {
+	if (!bCanAttack) return;
+	
 	SetCombatState(ECharacterCombatState::Attacking);
+	bCanControl = false;
 
 	if (GetMovementComponent()->IsFalling())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Falling"));
 		check(IsValid(FallingAttackMontage));
+		bCanAttack = false;
 		PlayMontage(FallingAttackMontage);
+		SetAttackTimer(FallingAttackMontage);
 	}
 	else if (bIsGuarding)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Guard"));
 		check(IsValid(GuardAttackMontage));
+		bCanAttack = false;
 		PlayMontage(GuardAttackMontage);
+		SetAttackTimer(GuardAttackMontage);
 		SetGuarding(false);
 		BlockCharacterControl(false);
 	}
@@ -268,36 +283,23 @@ void ADW_CharacterBase::StartAttack()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
 		check(IsValid(SprintAttackMontage));
+		bCanAttack = false;
 		PlayMontage(SprintAttackMontage);
+		SetAttackTimer(SprintAttackMontage);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("else"));
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		check(IsValid(AttackMontage) && IsValid(AnimInstance))
+		check(IsValid(AttackMontage));
 		
-		FOnMontageEnded MontageEndedDelegate;
-		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
-		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
 		int ComboTotalNum = AttackMontage->GetNumSections();
-
-		if (ComboIndex == 0)
+		
+		if (bCanCombo && ComboIndex < ComboTotalNum)
 		{
-			PlayMontage(AttackMontage);
+			bCanCombo = false;
+			PlayMontage(AttackMontage, ComboIndex);
+			SetAttackTimer(AttackMontage, ComboIndex);
 			ComboIndex++;
-		}
-		else if (ComboIndex < ComboTotalNum)
-		{
-			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage && bCanCombo)
-			{
-				bCanCombo = false;
-				PlayMontage(AttackMontage, ComboIndex);
-				ComboIndex++;
-			}
-			else
-			{
-				PlayMontage(AttackMontage);
-			}
 		}
 	}
 }
@@ -305,13 +307,12 @@ void ADW_CharacterBase::StartAttack()
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
-	if (Montage == AttackMontage)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Logic Enabled!!"));
-		SetCombatState(ECharacterCombatState::Idle);
-		ComboIndex = 0;
-		bCanCombo = false;
-	}
+
+	SetCombatState(ECharacterCombatState::Idle);
+	bCanAttack = true;
+	ComboIndex = 0;
+	bCanCombo = true;
+	bCanControl = true;
 }
 
 float ADW_CharacterBase::TakeDamage
@@ -472,6 +473,27 @@ void ADW_CharacterBase::Dead()
 		PlayMontage(DeadMontage);
 	}
 	BlockCharacterControl(true);
+}
+
+void ADW_CharacterBase::SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex)
+{
+	float MontageLength;
+	
+	if (SectionIndex == -1)
+	{
+		MontageLength = Montage->GetPlayLength();
+	}
+	else
+	{
+		MontageLength = Montage->GetSectionLength(SectionIndex);
+	}
+	
+	check(IsValid(GetWorld()));
+	
+	GetWorldTimerManager().SetTimer(AttackTimer, FTimerDelegate::CreateLambda([&]()
+		{
+			EndAttack(Montage, false);
+		}), MontageLength, false);
 }
 
 void ADW_CharacterBase::Interact()
