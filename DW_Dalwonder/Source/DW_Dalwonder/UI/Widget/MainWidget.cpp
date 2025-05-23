@@ -29,7 +29,7 @@ void UMainWidget::NativeConstruct()
 void UMainWidget::OnNewGameClicked()
 {
 	//게임 시작 로직 (레벨이동? or UI없애기)
-	UGameplayStatics::OpenLevel(this, "TestGameMap");
+	UGameplayStatics::OpenLevel(this, "TestLoadingMap");
 	RemoveFromParent();
 }
 
