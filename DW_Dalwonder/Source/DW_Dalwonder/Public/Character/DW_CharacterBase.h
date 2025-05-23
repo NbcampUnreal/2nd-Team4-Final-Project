@@ -231,6 +231,7 @@ public:
 	void AddNearbyItem(class AWorldItemActor* Item);
 	void RemoveNearbyItem(AWorldItemActor* Item);
 	void UpdateClosestItem();
+	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")

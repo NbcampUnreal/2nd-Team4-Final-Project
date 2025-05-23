@@ -138,7 +138,7 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ADW_CharacterBase::Interact);
 
@@ -556,6 +556,11 @@ void ADW_CharacterBase::Interact()
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
+		}
+
+		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+		{
+			PC->RequestInventoryUIUpdate();
 		}
 	}
 	else
