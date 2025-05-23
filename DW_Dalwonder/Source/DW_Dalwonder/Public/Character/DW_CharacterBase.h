@@ -156,9 +156,6 @@ public:
 	bool bIsLockOn = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanCombo = true;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 ComboIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")

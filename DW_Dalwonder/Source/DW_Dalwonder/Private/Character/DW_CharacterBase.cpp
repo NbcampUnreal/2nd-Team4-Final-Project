@@ -294,9 +294,9 @@ void ADW_CharacterBase::StartAttack()
 		
 		int ComboTotalNum = AttackMontage->GetNumSections();
 		
-		if (bCanCombo && ComboIndex < ComboTotalNum)
+		if (bCanAttack && ComboIndex < ComboTotalNum)
 		{
-			bCanCombo = false;
+			bCanAttack = false;
 			PlayMontage(AttackMontage, ComboIndex);
 			SetAttackTimer(AttackMontage, ComboIndex);
 			ComboIndex++;
@@ -311,7 +311,6 @@ void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 	SetCombatState(ECharacterCombatState::Idle);
 	bCanAttack = true;
 	ComboIndex = 0;
-	bCanCombo = true;
 	bCanControl = true;
 }
 
