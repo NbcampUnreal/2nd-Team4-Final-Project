@@ -94,6 +94,26 @@ public:
 	{
 		Defense = Value;
 	}
+	
+	float GetWeight() const
+	{
+		return Weight;
+	}
+
+	void SetWeight(const float Value)
+	{
+		Weight = FMath::Clamp(Value, 0.f, MaxWeight);
+	}
+
+	float GetMaxWeight() const
+	{
+		return MaxWeight;
+	}
+
+	void SetMaxWeight(const float Value)
+	{
+		MaxWeight = Value;
+	}
 
 	float GetStaminaConsumption() const
 	{
@@ -113,6 +133,16 @@ public:
 	void SetWalkSpeed(const float Value)
 	{
 		WalkSpeed = Value;
+	}
+
+	float GetSprintSpeed() const
+	{
+		return SprintSpeed;
+	}
+
+	void SetSprintSpeed(const float Value)
+	{
+		SprintSpeed = Value;
 	}
 #pragma endregion
 	
@@ -149,10 +179,19 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Defense = 10.f;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float Weight = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float MaxWeight = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float StaminaConsumption = 10.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float WalkSpeed = 300.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float SprintSpeed = 600.f;
 };
