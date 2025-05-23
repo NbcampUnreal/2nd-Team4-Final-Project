@@ -9,7 +9,7 @@ void UInventoryComponent::InitializeSlots()
 {
     InventorySlots.Empty();
 
-    for (int32 i = 0; i < 3; ++i)
+    for (int32 i = 0; i < InventorySlotQuantity; ++i)
     {
         InventorySlots.Add(FInventorySlot());
     }
@@ -22,13 +22,13 @@ bool UInventoryComponent::AddItem(const FItemData& ItemData)
     // 먼저 같은 아이템이 있고 스택이 덜 찬 슬롯을 찾아서 추가
     for (FInventorySlot& Slot : InventorySlots)
     {
-        if (Slot.bIsOccupied && Slot.Item.ItemData.ItemName.EqualTo(ItemData.ItemName))
+        if (Slot.bIsOccupied && Slot.ItemData.ItemName.EqualTo(ItemData.ItemName))
         {
-            int32 StackRoom = Slot.Item.ItemData.MaxStackSize - Slot.Item.Quantity;
+            int32 StackRoom = Slot.ItemData.MaxStackSize - Slot.Quantity;
             if (StackRoom > 0)
             {
                 int32 ToAdd = FMath::Min(StackRoom, RemainingQuantity);
-                Slot.Item.Quantity += ToAdd;
+                Slot.Quantity += ToAdd;
                 RemainingQuantity -= ToAdd;
 
                 ShowInventoryStatus();
@@ -45,8 +45,8 @@ bool UInventoryComponent::AddItem(const FItemData& ItemData)
         {
             int32 ToAdd = FMath::Min(ItemData.MaxStackSize, RemainingQuantity);
 
-            Slot.Item.ItemData = ItemData;
-            Slot.Item.Quantity = ToAdd;
+            Slot.ItemData = ItemData;
+            Slot.Quantity = ToAdd;
             Slot.bIsOccupied = true;
 
             RemainingQuantity -= ToAdd;
@@ -86,8 +86,8 @@ void UInventoryComponent::ShowInventoryStatus()
         {
             Msg = FString::Printf(TEXT("[Slot %d] %s x%d"),
                 i,
-                *Slot.Item.ItemData.ItemName.ToString(),
-                Slot.Item.Quantity);
+                *Slot.ItemData.ItemName.ToString(),
+                Slot.Quantity);
         }
         else
         {
