@@ -10,6 +10,7 @@ struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
+class UUserWidget;
 
 // ✅ 캐릭터의 기본 클래스: 이동, 전투, 입력 처리 등 공통 기능 포함
 UCLASS()
@@ -258,6 +259,36 @@ private:
 	float InteractDistance = 300.f;
 
 	AActor* CurrentInteractTarget = nullptr;
+
+#pragma endregion
+
+	// -----------------------------
+	// UI 관련 시스템
+	// -----------------------------
+
+#pragma region UI
+public:
+	//타이머
+	FTimerHandle HUDUpdateTimerHandle;
+
+	//ESC메뉴
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* ESCMenuWidgetInstance;
+
+	bool bIsESCMenuOpen = false;
+
+public:
+
+	//HUD업데이트함수
+	UFUNCTION()
+	void UpdateHUD();
+
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
 
 #pragma endregion
 };

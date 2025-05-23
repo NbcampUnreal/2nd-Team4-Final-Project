@@ -1,6 +1,8 @@
 #include "Character/DW_PlayerController.h"
+#include "DW_GmBase.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "Inventory/InventoryMenuWidgetBase.h"
 #include "EnhancedInputComponent.h"
 #include "Character/DW_CharacterBase.h"
@@ -12,6 +14,7 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
+	ESCAction(nullptr),
 	SprintAction(nullptr),
 	GuardAction(nullptr)
 {
@@ -33,6 +36,9 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
+	//HUD 보여주기
+	ShowGameHUD();
+  
 	if (InventoryWidgetClass)
 	{
 		InventoryWidgetInstance = CreateWidget<UInventoryMenuWidgetBase>(this, InventoryWidgetClass);
@@ -112,3 +118,16 @@ void ADW_PlayerController::ToggleInventoryUI()
         UE_LOG(LogTemp, Warning, TEXT("Inventory Opened."));
     }
 }
+
+void ADW_PlayerController::ShowGameHUD()
+{
+	if (HUDWidgetClass && !HUDWidgetInstance)
+	{
+		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+		if (HUDWidgetInstance)
+		{
+			HUDWidgetInstance->AddToViewport();
+		}
+	}
+}
+
