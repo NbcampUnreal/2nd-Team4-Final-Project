@@ -43,6 +43,9 @@ void ADW_PlayerController::BeginPlay()
             UE_LOG(LogTemp, Warning, TEXT("Inventory Maked."));
 		}
 	}
+
+    SetInputMode(FInputModeGameOnly());
+    SetShowMouseCursor(false);
 }
 
 void ADW_PlayerController::SetupInputComponent()
