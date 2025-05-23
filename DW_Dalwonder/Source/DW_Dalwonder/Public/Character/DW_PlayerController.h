@@ -76,23 +76,21 @@ public:
 	// -----------------------------
 #pragma region UI
 public:
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* ESCAction;
-  
-  ADW_CharacterBase* GetControlledCharacter() const;
-  
-protected:
-
-	// HUD
-	UPROPERTY(EditDefaultsOnly, Category = UI)
-	TSubclassOf<UUserWidget> HUDWidgetClass;
 
 	//HUD
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
 
+protected:
+	// HUD
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<UUserWidget> HUDWidgetClass;
+
 public:
+	ADW_CharacterBase* GetControlledCharacter() const;
+	
 	// HUD 표시
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ShowGameHUD();
