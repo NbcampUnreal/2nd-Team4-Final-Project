@@ -49,6 +49,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* DeadMontage;
 
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
@@ -106,7 +108,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	bool bDrawDebugTrace = true;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack|Debug")
+	bool bUseOtherHand = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceStartVector;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
 
 	TSet<AActor*> AlreadyAttackingActors;
@@ -198,6 +205,8 @@ public:
 	virtual void Parried() override;
 
 	virtual void Dead() override;
+
+
 
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(
