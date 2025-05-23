@@ -17,6 +17,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FInventorySlot> InventorySlots;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 InventorySlotQuantity = 16;
+
     UFUNCTION(BlueprintCallable)
     void InitializeSlots();
 
