@@ -37,8 +37,7 @@ void ADW_GeometryCollectionActor::DestructActor()
 		GCComponent->SetCollisionProfileName("OverlapOnlyPawn");
 		GCComponent->SetCollisionObjectType(ECC_WorldDynamic);
 
-		FVector const LaunchDirection = FVector(0.0f, 0.0f, -1.0f).GetSafeNormal();
-		float const ImpulseStrength = 1000.0f;
+		FVector const LaunchDirection = FVector(VectorX, VectorY, VectorZ).GetSafeNormal();
 
 		GCComponent->AddImpulse(LaunchDirection * ImpulseStrength, NAME_None, true);
 		// 일정 시간 후 제거

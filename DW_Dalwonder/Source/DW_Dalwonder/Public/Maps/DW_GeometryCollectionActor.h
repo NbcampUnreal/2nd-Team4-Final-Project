@@ -23,5 +23,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DestroyActor();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 VectorX = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 VectorY = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 VectorZ = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 ImpulseStrength = 100;
+
 	// FTimerHandle DestroyTimerHandle;
 };
