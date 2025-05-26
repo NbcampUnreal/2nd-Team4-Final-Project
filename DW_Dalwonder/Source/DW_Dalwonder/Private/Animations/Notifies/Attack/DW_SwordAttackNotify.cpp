@@ -2,7 +2,7 @@
 #include "DrawDebugHelpers.h"
 #include "Character/DW_Warrior.h"
 #include "Character/DW_Sword.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 UDW_SwordAttackNotify::UDW_SwordAttackNotify()
 {
@@ -54,6 +54,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 			if (AActor* HitActor = HitResult.GetActor())
 			{
 				PlayerCharacter->AttackingActors.Add(HitActor);
+				UGameplayStatics::ApplyDamage(HitActor, AttackDamage, PlayerCharacter->GetController(), PlayerCharacter, UDamageType::StaticClass());
 			}
 		}
 	}
@@ -66,6 +67,6 @@ void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
 
 	if (IsValid(PlayerCharacter))
 	{
-		PlayerCharacter->AttackEnemy(AttackDamage);
+		PlayerCharacter->AttackingActors.Empty();
 	}
 }
