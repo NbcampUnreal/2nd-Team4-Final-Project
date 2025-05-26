@@ -10,6 +10,7 @@ struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
+class UUserWidget;
 
 // ✅ 캐릭터의 기본 클래스: 이동, 전투, 입력 처리 등 공통 기능 포함
 UCLASS()
@@ -25,6 +26,8 @@ public:
 protected:
 	// ▶ 게임 시작 시 초기 설정 (예: 상태 초기화)
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	// ▶ 플레이어 입력 바인딩 (InputAction → 함수 연결)
@@ -50,6 +53,12 @@ public:
 
 	UFUNCTION()
 	void Sprint(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Dodge(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Lockon(const FInputActionValue& Value);
 
 	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = 0) const;
 	
@@ -132,9 +141,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void BlockCharacterControl(bool bShouldBlock);
 
-	// 공격한 대상에게 대미지 적용
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void AttackEnemy(float Damage);
+	void Dead();
+
+	UFUNCTION(blueprintCallable, Category = "Combat")
+	void SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex = -1);
 
 	// 공격한 대상 저장하기 위한 Set
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -148,10 +159,10 @@ public:
 	bool bIsLockOn = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanCombo = false;
+	int32 ComboIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	int32 ComboIndex = 0;
+	bool bCanAttack = true;
 
 	// 기본 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -164,10 +175,6 @@ public:
 	// 가드 중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardAttackMontage;
-
-	// 패링 공격
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* ParryAttackMontage;
 
 	// 달리기 중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -185,9 +192,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardMontage;
 
+	// 구르기(회피) 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* DodgeMontage;
+	
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* ParryMontage;
+
+	// 사망 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* DeadMontage;
 
 protected:
 	// 패링 중 여부
@@ -201,6 +216,9 @@ protected:
 	// 무적 상태 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsInvincible = false;
+
+	UPROPERTY()
+	FTimerHandle AttackTimer;
 
 #pragma endregion
 
@@ -220,6 +238,7 @@ public:
 	void AddNearbyItem(class AWorldItemActor* Item);
 	void RemoveNearbyItem(AWorldItemActor* Item);
 	void UpdateClosestItem();
+	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")
@@ -246,6 +265,36 @@ private:
 	float InteractDistance = 300.f;
 
 	AActor* CurrentInteractTarget = nullptr;
+
+#pragma endregion
+
+	// -----------------------------
+	// UI 관련 시스템
+	// -----------------------------
+
+#pragma region UI
+public:
+	//타이머
+	FTimerHandle HUDUpdateTimerHandle;
+
+	//ESC메뉴
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* ESCMenuWidgetInstance;
+
+	bool bIsESCMenuOpen = false;
+
+public:
+
+	//HUD업데이트함수
+	UFUNCTION()
+	void UpdateHUD();
+
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
 
 #pragma endregion
 };

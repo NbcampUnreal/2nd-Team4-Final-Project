@@ -11,8 +11,9 @@
 #include "DW_InteractInterface.h"
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
-#include "Animations/AnimInstance/DW_AnimInstance.h"
 #include "Item/WorldItemActor.h"
+#include "UI/Widget/HUDWidget.h"
+#include "DW_GmBase.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -49,6 +50,23 @@ void ADW_CharacterBase::BeginPlay()
 	);
 
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
+
+	// HUD 타이머 설정 (0.1초 간격)
+	GetWorld()->GetTimerManager().SetTimer(
+		HUDUpdateTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateHUD,
+		0.1f,
+		true  // 반복 여부
+	);
+}
+
+void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorldTimerManager().ClearTimer(AttackTimer);
+	AttackTimer.Invalidate();
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -110,13 +128,46 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Sprint);
 			}
 
+			if (PlayerController->GuardAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->GuardAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::StartGuard);
+
+				EnhancedInputComponent->BindAction(
+					PlayerController->GuardAction,
+					ETriggerEvent::Completed,
+					this,
+					&ADW_CharacterBase::EndGuard);
+			}
+
+			if (PlayerController->DodgeAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->DodgeAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Dodge);
+			}
+
+			if (PlayerController->LockonAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->LockonAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Lockon);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&ADW_CharacterBase::Interact);
 
@@ -125,6 +176,17 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			else
 			{
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
+			}
+
+			if (PlayerController->ESCAction)
+			{
+				// ESC 바인딩
+				EnhancedInputComponent->BindAction(
+					PlayerController->ESCAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::ToggleESCMenu
+				);
 			}
 		}
 	}
@@ -162,6 +224,8 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 {
+	if (!bCanControl) return;
+	
 	if (Value.Get<bool>())
 	{
 		Jump();
@@ -170,6 +234,8 @@ void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 
 void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 {
+	if (!bCanControl) return;
+	
 	if (Value.Get<bool>())
 	{
 		StopJumping();
@@ -201,11 +267,31 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		//@TODO : Dodge 로직 구현
+		PlayMontage(DodgeMontage);
+	}
+}
+
+void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		/*@TODO : Lockon 함수 구현
+		 *bIsLockon 변수로 스위치하면 됨*/
+	}
+}
+
 void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (IsValid(AnimInstance))
 	{
+		if (!IsValid(Montage) || SectionIndex >= Montage->GetNumSections()) return;
+		
 		if (SectionIndex != 0)
 		{
 			FName SectionName = Montage->GetSectionName(SectionIndex);
@@ -228,63 +314,50 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 
 void ADW_CharacterBase::StartAttack()
 {
+	if (!bCanAttack) return;
+	
 	SetCombatState(ECharacterCombatState::Attacking);
+	bCanControl = false;
 
 	if (GetMovementComponent()->IsFalling())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Falling"));
-		//check(IsValid(FallingAttackMontage));
+		check(IsValid(FallingAttackMontage));
+		bCanAttack = false;
 		PlayMontage(FallingAttackMontage);
+		SetAttackTimer(FallingAttackMontage);
 	}
 	else if (bIsGuarding)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Guard"));
-		//check(IsValid(GuardAttackMontage));
+		check(IsValid(GuardAttackMontage));
+		bCanAttack = false;
 		PlayMontage(GuardAttackMontage);
+		SetAttackTimer(GuardAttackMontage);
+		SetGuarding(false);
+		BlockCharacterControl(false);
 	}
-	else if (bIsParrying)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Parry"));
-		//check(IsValid(ParryAttackMontage));
-		PlayMontage(ParryAttackMontage);
-	}
-	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
+	else if (bIsSprinting && GetCharacterMovement()->Velocity.Length() > GetCharacterStatComponent()->GetWalkSpeed())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
-		//check(IsValid(SprintAttackMontage));
+		check(IsValid(SprintAttackMontage));
+		bCanAttack = false;
 		PlayMontage(SprintAttackMontage);
+		SetAttackTimer(SprintAttackMontage);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("else"));
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		check(IsValid(AttackMontage) && IsValid(AnimInstance))
+		check(IsValid(AttackMontage));
 		
-		FOnMontageEnded MontageEndedDelegate;
-		MontageEndedDelegate.BindUObject(this, &ADW_CharacterBase::EndAttack);
-		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, AttackMontage);
 		int ComboTotalNum = AttackMontage->GetNumSections();
-
-		if (ComboIndex == 0)
+		
+		if (bCanAttack && ComboIndex < ComboTotalNum)
 		{
-			PlayMontage(AttackMontage);
+			bCanAttack = false;
+			PlayMontage(AttackMontage, ComboIndex);
+			SetAttackTimer(AttackMontage, ComboIndex);
 			ComboIndex++;
-		}
-		else if (ComboIndex < ComboTotalNum)
-		{
-			if (AnimInstance->GetCurrentActiveMontage() == AttackMontage)
-			{
-				if (bCanCombo)
-				{
-					bCanCombo = false;
-					PlayMontage(AttackMontage, ComboIndex);
-					ComboIndex++;
-				}
-			}
-			else
-			{
-				PlayMontage(AttackMontage);
-			}
 		}
 	}
 }
@@ -292,20 +365,18 @@ void ADW_CharacterBase::StartAttack()
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
-	if (Montage == AttackMontage)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Logic Enabled!!"));
-		SetCombatState(ECharacterCombatState::Idle);
-		ComboIndex = 0;
-		bCanCombo = false;
-	}
+
+	SetCombatState(ECharacterCombatState::Idle);
+	bCanAttack = true;
+	ComboIndex = 0;
+	bCanControl = true;
 }
 
 float ADW_CharacterBase::TakeDamage
 	(
 	float DamageAmount,
-	struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator,
+	FDamageEvent const& DamageEvent,
+	AController* EventInstigator,
 	AActor* DamageCauser
 	)
 {
@@ -333,6 +404,11 @@ float ADW_CharacterBase::TakeDamage
 		}
 	}
 
+	if (FMath::IsNearlyZero(StatComponent->GetHealth()))
+	{
+		Dead();
+	}
+	
 	return DamageAmount;
 }
 
@@ -343,7 +419,7 @@ void ADW_CharacterBase::SetParrying(bool bNewParrying)
 	
 	bIsParrying = bNewParrying;
 	
-	if (bNewParrying)
+	if (bIsParrying)
 	{
 		CurrentCombatState = ECharacterCombatState::Parrying;
 
@@ -364,15 +440,9 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 
 	bIsGuarding = bNewGuarding;
 
-	if (UDW_AnimInstance* AnimInst = Cast<UDW_AnimInstance>(GetMesh()->GetAnimInstance()))
-	{
-		AnimInst->bIsGuarding = bNewGuarding;
-	}
-
-	if (bNewGuarding)
+	if (bIsGuarding)
 	{
 		CurrentCombatState = ECharacterCombatState::Guarding;
-
 		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
 	}
 	else
@@ -402,12 +472,15 @@ void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 void ADW_CharacterBase::StartGuard()
 {
 	SetGuarding(true);
-	PlayAnimMontage(GuardMontage);
+	BlockCharacterControl(true);
+	PlayMontage(GuardMontage);
 }
 
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
+	BlockCharacterControl(false);
+	PlayMontage(GuardMontage, 2);
 }
 
 void ADW_CharacterBase::KnockBackCharacter()
@@ -433,17 +506,41 @@ void ADW_CharacterBase::KnockBackCharacter()
 
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
-	bCanControl = bShouldBlock;
+	bCanControl = !bShouldBlock;
 }
 
-void ADW_CharacterBase::AttackEnemy(float Damage)
+void ADW_CharacterBase::Dead()
 {
-	for (AActor* HitActor : AttackingActors)
+	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		UGameplayStatics::ApplyDamage(HitActor, Damage, GetController(), this, UDamageType::StaticClass());
+		PlayMontage(DeadMontage, 1);
 	}
+	else
+	{
+		PlayMontage(DeadMontage);
+	}
+	BlockCharacterControl(true);
+}
 
-	AttackingActors.Empty();
+void ADW_CharacterBase::SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex)
+{
+	float MontageLength;
+	
+	if (SectionIndex == -1)
+	{
+		MontageLength = Montage->GetPlayLength();
+	}
+	else
+	{
+		MontageLength = Montage->GetSectionLength(SectionIndex);
+	}
+	
+	check(IsValid(GetWorld()));
+	
+	GetWorldTimerManager().SetTimer(AttackTimer, FTimerDelegate::CreateLambda([&]()
+		{
+			EndAttack(Montage, false);
+		}), MontageLength, false);
 }
 
 void ADW_CharacterBase::Interact()
@@ -507,6 +604,11 @@ void ADW_CharacterBase::Interact()
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
+		}
+
+		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+		{
+			PC->RequestInventoryUIUpdate();
 		}
 	}
 	else
@@ -636,4 +738,62 @@ void ADW_CharacterBase::UpdateClosestItem()
 	}
 
 	CurrentItem = ClosestItem;
+}
+
+void ADW_CharacterBase::UpdateHUD()
+{
+	if (!StatComponent) return;
+
+	// 컨트롤러에서 HUD 가져오기
+	if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+	{
+		if (UHUDWidget* HUD = Cast<UHUDWidget>(PC->HUDWidgetInstance))  // 정확한 클래스 캐스팅
+		{
+			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetMaxHealth());
+			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetMaxStamina());
+		}
+		else {
+			//캐스팅 실패시 타이머 초기화
+			GetWorld()->GetTimerManager().ClearTimer(HUDUpdateTimerHandle);
+		}
+		//현재 HP, Stemina만 업데이트중 아이템(물약) 사용시도 필요하면 제작
+	}
+}
+
+void ADW_CharacterBase::ToggleESCMenu()
+{
+	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+	if (!GameMode || !ESCMenuWidgetClass) return;
+
+	if (!bIsESCMenuOpen)
+	{
+		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+		if (ESCMenuWidgetInstance)
+		{
+			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
+			bIsESCMenuOpen = true;
+
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				PC->SetShowMouseCursor(true);
+				PC->SetInputMode(FInputModeUIOnly());
+			}
+		}
+	}
+	else
+	{
+		if (ESCMenuWidgetInstance)
+		{
+			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
+			ESCMenuWidgetInstance = nullptr;
+		}
+
+		bIsESCMenuOpen = false;
+
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		{
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+		}
+	}
 }

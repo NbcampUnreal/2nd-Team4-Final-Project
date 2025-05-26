@@ -30,8 +30,8 @@ void UESCMenuWidget::OnInfoClicked()
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (GameMode && PlayerInfoWidgetClass)
     {
-        GameMode->SwitchUI(PlayerInfoWidgetClass);
-        GameMode->ClosePopupUI(this);
+        GameMode->ShowPopupUI(PlayerInfoWidgetClass);
+
     }
 }
 
@@ -41,7 +41,6 @@ void UESCMenuWidget::OnInventoryClicked()
     if (GameMode && InventoryWidgetClass)
     {
         GameMode->SwitchUI(InventoryWidgetClass);
-        GameMode->ClosePopupUI(this);
     }
 }
 
@@ -51,7 +50,6 @@ void UESCMenuWidget::OnOptionClicked()
     if (GameMode && OptionMenuWidgetClass)
     {
         GameMode->SwitchUI(OptionMenuWidgetClass);
-        GameMode->ClosePopupUI(this);
     }
 }
 

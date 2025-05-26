@@ -16,7 +16,7 @@ UAIOptimizer::UAIOptimizer()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	LayerShort = 1000.f;
+	LayerShort = 5000.f;
 	LayerMiddle = 8000.f;
 	LayerLong = 9000.f;
 	LayerMax = 10000.f;
