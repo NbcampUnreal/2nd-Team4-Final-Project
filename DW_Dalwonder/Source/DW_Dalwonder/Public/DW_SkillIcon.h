@@ -17,18 +17,16 @@ class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
 	GENERATED_BODY()
 
 public:
-    // 스킬 ID (DataTable Key)
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
     FName SkillID;
 
-    // 플레이어의 스킬 컴포넌트
     UPROPERTY(BlueprintReadWrite)
     UDW_SkillComponent* SkillComponent;
 
 protected:
     virtual void NativeConstruct() override;
 
-    // UI 바인딩
     UPROPERTY(meta = (BindWidget))
     UImage* IconImage;
 
@@ -53,15 +51,12 @@ protected:
     UPROPERTY(meta = (BindWidget))
     UImage* LevelSpot05;
 
-    // 잠금 상태 여부
     bool bUnlocked = false;
 
-    // 내부 처리 함수
     UFUNCTION()
     void OnSkillDoubleClicked();
 
 public:
-    // 상태 갱신
     UFUNCTION(BlueprintCallable)
     void UpdateIcon();
 };
