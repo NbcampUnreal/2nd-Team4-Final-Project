@@ -70,6 +70,14 @@ void ADW_MonsterBase::Tick(float DeltaTime)
 	}
 }
 
+void ADW_MonsterBase::ResetRoot()
+{
+	FRotator InitialRotation = GetActorRotation();
+	InitialRotation.Pitch = 0.f;
+	InitialRotation.Roll = 0.f;
+	SetActorRotation(InitialRotation);
+}
+
 void ADW_MonsterBase::SetMovementSpeed(int32 const NewSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;

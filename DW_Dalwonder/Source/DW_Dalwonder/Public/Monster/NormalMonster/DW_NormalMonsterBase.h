@@ -74,8 +74,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void SaveRoot();
-	UFUNCTION(BlueprintCallable, Category = "Monster")
-	void ResetRoot();
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void BehaviorOn();
