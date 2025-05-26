@@ -54,6 +54,12 @@ public:
 	UFUNCTION()
 	void Sprint(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void Dodge(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Lockon(const FInputActionValue& Value);
+
 	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = 0) const;
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
@@ -135,10 +141,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void BlockCharacterControl(bool bShouldBlock);
 
-	// 공격한 대상에게 대미지 적용
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void AttackEnemy(float Damage);
-
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Dead();
 
@@ -190,6 +192,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardMontage;
 
+	// 구르기(회피) 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* DodgeMontage;
+	
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* ParryMontage;
