@@ -271,6 +271,7 @@ void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		//@TODO : Dodge 로직 구현
 		PlayMontage(DodgeMontage);
 	}
 }
@@ -279,7 +280,8 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		//@TODO : Lockon 함수 구현
+		/*@TODO : Lockon 함수 구현
+		 *bIsLockon 변수로 스위치하면 됨*/
 	}
 }
 
