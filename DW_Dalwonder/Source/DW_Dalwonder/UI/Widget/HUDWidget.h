@@ -18,6 +18,14 @@ public:
 
     virtual void NativeConstruct() override;
 
+    UFUNCTION(BlueprintCallable)
+    void UpdateHPBar(float Current, float Max);
+
+    UFUNCTION(BlueprintCallable)
+    void UpdateStaminaBar(float Current, float Max);
+
+public:
+
     //체력바
     UPROPERTY(meta = (BindWidget))
     class UProgressBar* HPBar;
@@ -35,7 +43,4 @@ public:
     class UImage* ItemSlot3;
     UPROPERTY(meta = (BindWidget))
     class UImage* ItemSlot4;
-
-    /*UPROPERTY(meta = (BindWidget))
-    class UImage* CompassImage;*/
 };

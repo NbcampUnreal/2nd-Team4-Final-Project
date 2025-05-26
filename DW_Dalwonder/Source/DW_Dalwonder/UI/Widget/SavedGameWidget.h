@@ -21,6 +21,12 @@ public:
 
 public:
 
+	// 버튼 클릭 이벤트 함수
+	UFUNCTION()
+	void OnBackClicked();
+
+private:
+
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButtonWidget* SaveData1;
 
@@ -32,4 +38,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButtonWidget* SaveData4;
+
+	UPROPERTY(meta = (BindWidget))
+	class UCustomButtonWidget* BackButton;
+
 };

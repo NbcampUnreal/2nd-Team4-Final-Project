@@ -12,6 +12,8 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "UI/Widget/HUDWidget.h"
+#include "DW_GmBase.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -48,6 +50,15 @@ void ADW_CharacterBase::BeginPlay()
 	);
 
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
+
+	// HUD 타이머 설정 (0.1초 간격)
+	GetWorld()->GetTimerManager().SetTimer(
+		HUDUpdateTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateHUD,
+		0.1f,
+		true  // 반복 여부
+	);
 }
 
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -147,6 +158,17 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			else
 			{
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
+			}
+
+			if (PlayerController->ESCAction)
+			{
+				// ESC 바인딩
+				EnhancedInputComponent->BindAction(
+					PlayerController->ESCAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::ToggleESCMenu
+				);
 			}
 		}
 	}
@@ -690,4 +712,62 @@ void ADW_CharacterBase::UpdateClosestItem()
 	}
 
 	CurrentItem = ClosestItem;
+}
+
+void ADW_CharacterBase::UpdateHUD()
+{
+	if (!StatComponent) return;
+
+	// 컨트롤러에서 HUD 가져오기
+	if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+	{
+		if (UHUDWidget* HUD = Cast<UHUDWidget>(PC->HUDWidgetInstance))  // 정확한 클래스 캐스팅
+		{
+			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetMaxHealth());
+			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetMaxStamina());
+		}
+		else {
+			//캐스팅 실패시 타이머 초기화
+			GetWorld()->GetTimerManager().ClearTimer(HUDUpdateTimerHandle);
+		}
+		//현재 HP, Stemina만 업데이트중 아이템(물약) 사용시도 필요하면 제작
+	}
+}
+
+void ADW_CharacterBase::ToggleESCMenu()
+{
+	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+	if (!GameMode || !ESCMenuWidgetClass) return;
+
+	if (!bIsESCMenuOpen)
+	{
+		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+		if (ESCMenuWidgetInstance)
+		{
+			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
+			bIsESCMenuOpen = true;
+
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				PC->SetShowMouseCursor(true);
+				PC->SetInputMode(FInputModeUIOnly());
+			}
+		}
+	}
+	else
+	{
+		if (ESCMenuWidgetInstance)
+		{
+			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
+			ESCMenuWidgetInstance = nullptr;
+		}
+
+		bIsESCMenuOpen = false;
+
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		{
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+		}
+	}
 }

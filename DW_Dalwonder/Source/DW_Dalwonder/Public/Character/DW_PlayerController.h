@@ -41,6 +41,8 @@ public:
 	void ToggleInventoryUI(); // EnhancedInputAction_IA_Inventory에 바인딩될 함수
 
 
+	
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* InputMappingContext;
@@ -69,14 +71,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* GuardAction;
 
+	// -----------------------------
+	// UI 관련
+	// -----------------------------
+#pragma region UI
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ESCAction;
+
+	//HUD
+	UPROPERTY()
+	UUserWidget* HUDWidgetInstance;
+
 protected:
 	// HUD
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 
-private:
-	//HUD
-	UPROPERTY()
-	UUserWidget* HUDWidgetInstance;
+public:
 	ADW_CharacterBase* GetControlledCharacter() const;
+	
+	// HUD 표시
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ShowGameHUD();
+#pragma endregion
 };
