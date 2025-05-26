@@ -209,14 +209,6 @@ void ADW_NormalMonsterBase::ResetAlert()
 	bIsFirstResponder = true;
 }
 
-void ADW_NormalMonsterBase::ResetRoot()
-{
-	FRotator InitialRotation = GetActorRotation();
-	InitialRotation.Pitch = 0.f;
-	InitialRotation.Roll = 0.f;
-	SetActorRotation(InitialRotation);
-}
-
 void ADW_NormalMonsterBase::BehaviorOn()
 {
 	GetWorldTimerManager().ClearTimer(AlertDelayTimer);
