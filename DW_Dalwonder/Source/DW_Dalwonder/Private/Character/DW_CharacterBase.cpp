@@ -362,6 +362,30 @@ void ADW_CharacterBase::StartAttack()
 	}
 }
 
+void ADW_CharacterBase::CancelAttack()
+{
+	if (CurrentCombatState == ECharacterCombatState::Attacking)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			// 현재 재생 중인 모든 몽타주를 중단
+			AnimInstance->Montage_Stop(0.2f);
+		}
+
+		// 상태 초기화
+		SetCombatState(ECharacterCombatState::Idle);
+		bCanAttack = true;
+		bCanControl = true;
+		ComboIndex = 0;
+
+		// 타이머도 정리
+		GetWorldTimerManager().ClearTimer(AttackTimer);
+	}
+}
+
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
