@@ -17,6 +17,7 @@ class DW_DALWONDER_API AMobDrake : public ADW_NormalMonsterBase
 private:
 	AMobDrake();
 
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector HeightLocation;
 };
