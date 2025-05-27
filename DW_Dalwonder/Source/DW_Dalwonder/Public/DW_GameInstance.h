@@ -6,7 +6,7 @@
 
 class ULoadingScreenWidget;
 
-/** GameInstance: OpenLevel + MoviePlayer ·Îµù ½ºÅ©¸° °ü¸® */
+/** GameInstance: OpenLevel + MoviePlayer ï¿½Îµï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 UCLASS()
 class DW_DALWONDER_API UDW_GameInstance : public UGameInstance
 {
@@ -14,6 +14,7 @@ class DW_DALWONDER_API UDW_GameInstance : public UGameInstance
 
 public:
     virtual void Init() override;
+    virtual void Shutdown() override;
 
     UFUNCTION(BlueprintCallable)
     void LoadLevelWithLoadingScreen();
@@ -26,6 +27,22 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loading")
     TSubclassOf<ULoadingScreenWidget> LoadingWidgetClass;
+
+protected:
+    
+    UPROPERTY() // ê°€ë¹„ì§€ ì»¬ë ‰ì…˜ì˜ ê´€ë¦¬ë¥¼ ë°›ë„ë¡ UPROPERTY ì¶”ê°€
+    class UItemDataManager* ItemDataManagerInstanceRef;
+
+public:
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
+    class UDataTable* ItemBaseDataTableRef;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
+    UDataTable* EquipmentSubDataTableRef;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
+    UDataTable* ConsumableSubDataTableRef;
+
 
     FTimerHandle DelayTest;
 
