@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Item/ItemDataManager.h"
 
 void UDW_GameInstance::Init()
 {
@@ -13,7 +14,38 @@ void UDW_GameInstance::Init()
 
     FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UDW_GameInstance::BeginLoadingScreen);
     FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UDW_GameInstance::EndLoadingScreen);
+
+
+    ItemDataManagerInstanceRef = NewObject<UItemDataManager>(this, UItemDataManager::StaticClass(), TEXT("GlobalItemDataManager"));
+
+    if (ItemDataManagerInstanceRef)
+    {
+        ItemDataManagerInstanceRef->InitializeDataManager(
+            ItemBaseDataTableRef,
+            EquipmentSubDataTableRef,
+            ConsumableSubDataTableRef
+        );
+
+        UItemDataManager::SetInstance(ItemDataManagerInstanceRef);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create MyItemDataManager instance in UMyGameInstance."));
+    }
 }
+
+void UDW_GameInstance::Shutdown()
+{
+    Super::Shutdown();
+
+    // 게임 종료 시 싱글턴 인스턴스 해제 로직
+    if (ItemDataManagerInstanceRef)
+    {
+        UItemDataManager::SetInstance(nullptr);
+    }
+    UE_LOG(LogTemp, Log, TEXT("ItemDataManager singleton reference cleared on GameInstance Shutdown."));
+}
+
 
 void UDW_GameInstance::LoadLevelWithLoadingScreen()
 {

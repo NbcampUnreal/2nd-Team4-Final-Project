@@ -14,6 +14,7 @@
 #include "Item/WorldItemActor.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
+#include "Item/ItemDataManager.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
 {
@@ -143,6 +144,24 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::EndGuard);
 			}
 
+			if (PlayerController->DodgeAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->DodgeAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Dodge);
+			}
+
+			if (PlayerController->LockonAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->LockonAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Lockon);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
@@ -249,6 +268,24 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		//@TODO : Dodge 로직 구현
+		PlayMontage(DodgeMontage);
+	}
+}
+
+void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		/*@TODO : Lockon 함수 구현
+		 *bIsLockon 변수로 스위치하면 됨*/
+	}
+}
+
 void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -301,7 +338,7 @@ void ADW_CharacterBase::StartAttack()
 		SetGuarding(false);
 		BlockCharacterControl(false);
 	}
-	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
+	else if (bIsSprinting && GetCharacterMovement()->Velocity.Length() > GetCharacterStatComponent()->GetWalkSpeed())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
 		check(IsValid(SprintAttackMontage));
@@ -473,16 +510,6 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 	bCanControl = !bShouldBlock;
 }
 
-void ADW_CharacterBase::AttackEnemy(float Damage)
-{
-	for (AActor* HitActor : AttackingActors)
-	{
-		UGameplayStatics::ApplyDamage(HitActor, Damage, GetController(), this, UDamageType::StaticClass());
-	}
-
-	AttackingActors.Empty();
-}
-
 void ADW_CharacterBase::Dead()
 {
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
@@ -564,6 +591,39 @@ void ADW_CharacterBase::Interact()
 
 		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
+		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
+		if (ItemDataManager)
+		{
+			bool bSuccess;
+			FName TargetItemID = Data.ItemID; // 데이터테이블에 있는 ItemID
+
+			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
+			if (bSuccess)
+			{
+				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
+
+				if (BaseData.ItemType == EItemType::Equipment)
+				{
+					FEquipmentSubData EquipData = ItemDataManager->GetSubData<FEquipmentSubData>(TargetItemID, bSuccess);
+					if (bSuccess)
+					{
+						UE_LOG(LogTemp, Log, TEXT("Equipment Data: Damage=%.1f, Slot=%s"), EquipData.AttackDamage, *UEnum::GetValueAsString(EquipData.EquipmentSlot));
+					}
+				}
+				if (BaseData.ItemType == EItemType::Consumable)
+				{
+					FConsumableSubData ConsumData = ItemDataManager->GetSubData<FConsumableSubData>(TargetItemID, bSuccess);
+					if (bSuccess)
+					{
+						UE_LOG(LogTemp, Log, TEXT("Consume Data: HealAmount=%.1f, ManaRestoreAmount=%.1f"), ConsumData.HealAmount, ConsumData.ManaRestoreAmount);
+					}
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Item ID '%s' not found in ItemDataManager."), *TargetItemID.ToString());
+			}
+		}
 
 		if (GEngine)
 		{

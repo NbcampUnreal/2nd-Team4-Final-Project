@@ -16,6 +16,8 @@ ADW_PlayerController::ADW_PlayerController()
 	InteractAction(nullptr),
 	SprintAction(nullptr),
 	GuardAction(nullptr),
+	DodgeAction(nullptr),
+	LockonAction(nullptr),
 	ESCAction(nullptr)
 {
 	bIsInventoryOpen = false;
@@ -46,7 +48,6 @@ void ADW_PlayerController::BeginPlay()
 		{
 			InventoryWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
 			InventoryWidgetInstance->AddToViewport();
-            UE_LOG(LogTemp, Warning, TEXT("Inventory Maked."));
 		}
 	}
 
@@ -63,7 +64,6 @@ void ADW_PlayerController::SetupInputComponent()
 		if (InventoryInputAction)
 		{
 			EnhancedInputComponent->BindAction(InventoryInputAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleInventoryUI);
-            UE_LOG(LogTemp, Warning, TEXT("인벤토리토글 바인딩완."));
 		}
 	}
 }
@@ -105,7 +105,6 @@ void ADW_PlayerController::ToggleInventoryUI()
         SetInputMode(FInputModeGameOnly()); 
         SetShowMouseCursor(false);
         bIsInventoryOpen = false;
-        UE_LOG(LogTemp, Warning, TEXT("Inventory Closed."));
     }
     else 
     {
@@ -115,7 +114,6 @@ void ADW_PlayerController::ToggleInventoryUI()
         SetInputMode(FInputModeGameAndUI()); 
         SetShowMouseCursor(true);
         bIsInventoryOpen = true;
-        UE_LOG(LogTemp, Warning, TEXT("Inventory Opened."));
     }
 }
 
