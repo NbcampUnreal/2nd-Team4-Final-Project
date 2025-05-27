@@ -40,9 +40,9 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 void ADW_Sevarog::AirAttack()
 {
 	FVector HammerLocation = Hammer->GetComponentLocation();
-	float Radius = 200.0f;
+	float Radius = 250.0f;
 
-	TArray<FOverlapResult> OverlapResults; // 이게 있어야 함
+	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
@@ -57,9 +57,9 @@ void ADW_Sevarog::AirAttack()
 
 	if (bHit)
 	{
-		for (const FOverlapResult& Result : OverlapResults) // 이 Result는 위 TArray에서 나옴
+		for (const FOverlapResult& Result : OverlapResults)
 		{
-			AActor* HitActor = Result.GetActor(); // 여기서 오류가 없어야 정상
+			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor != this)
 			{
 				UGameplayStatics::ApplyDamage(HitActor, 30.0f, GetController(), this, UDamageType::StaticClass());
@@ -68,4 +68,30 @@ void ADW_Sevarog::AirAttack()
 	}
 
 	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+}
+
+void ADW_Sevarog::DoTeleport()
+{
+	if (IsValid(TeleportMontage))
+	{
+		UAnimMontage* Montage = TeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_Sevarog::DoRangedTeleport()
+{
+	if (IsValid(RangedTeleportMontage))
+	{
+		UAnimMontage* Montage = RangedTeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
 }
