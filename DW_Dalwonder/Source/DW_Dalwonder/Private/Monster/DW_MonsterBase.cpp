@@ -446,3 +446,7 @@ float ADW_MonsterBase::GetPlayerDistance()
 	return FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 }
 
+bool ADW_MonsterBase::CanBeCut_Implementation(const FHitResult& Hit)
+{
+	return true;
+}
