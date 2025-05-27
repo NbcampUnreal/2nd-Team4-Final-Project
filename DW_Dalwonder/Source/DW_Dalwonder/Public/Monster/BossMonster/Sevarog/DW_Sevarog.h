@@ -15,5 +15,11 @@ public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
 
+	UPROPERTY(VIsibleAnywhere, Category = "Component")
+	USceneComponent* Hammer;
+
+	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	void AirAttack();
 };
