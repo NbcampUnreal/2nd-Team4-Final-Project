@@ -144,6 +144,24 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::EndGuard);
 			}
 
+			if (PlayerController->DodgeAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->DodgeAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Dodge);
+			}
+
+			if (PlayerController->LockonAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->LockonAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::Lockon);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
@@ -250,6 +268,24 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 	}
 }
 
+void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		//@TODO : Dodge 로직 구현
+		PlayMontage(DodgeMontage);
+	}
+}
+
+void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		/*@TODO : Lockon 함수 구현
+		 *bIsLockon 변수로 스위치하면 됨*/
+	}
+}
+
 void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex) const
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -302,7 +338,7 @@ void ADW_CharacterBase::StartAttack()
 		SetGuarding(false);
 		BlockCharacterControl(false);
 	}
-	else if (bIsSprinting && GetCharacterMovement()->GetCurrentAcceleration().Length() > 5.f)
+	else if (bIsSprinting && GetCharacterMovement()->Velocity.Length() > GetCharacterStatComponent()->GetWalkSpeed())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
 		check(IsValid(SprintAttackMontage));
@@ -472,16 +508,6 @@ void ADW_CharacterBase::KnockBackCharacter()
 void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock)
 {
 	bCanControl = !bShouldBlock;
-}
-
-void ADW_CharacterBase::AttackEnemy(float Damage)
-{
-	for (AActor* HitActor : AttackingActors)
-	{
-		UGameplayStatics::ApplyDamage(HitActor, Damage, GetController(), this, UDamageType::StaticClass());
-	}
-
-	AttackingActors.Empty();
 }
 
 void ADW_CharacterBase::Dead()

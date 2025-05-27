@@ -16,6 +16,8 @@ ADW_PlayerController::ADW_PlayerController()
 	InteractAction(nullptr),
 	SprintAction(nullptr),
 	GuardAction(nullptr),
+	DodgeAction(nullptr),
+	LockonAction(nullptr),
 	ESCAction(nullptr)
 {
 	bIsInventoryOpen = false;

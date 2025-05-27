@@ -116,6 +116,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
 
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void ResetRoot();
+
 	TSet<AActor*> AlreadyAttackingActors;
 
 	// 몬스터의 최대 속도 정의
