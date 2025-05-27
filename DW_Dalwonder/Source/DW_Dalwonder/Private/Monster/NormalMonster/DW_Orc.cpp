@@ -24,7 +24,15 @@ void ADW_Orc::BeginPlay()
 void ADW_Orc::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!bIsAttacking && GetPlayerDistance() < 200.f)
+	{
+		int32 RandomPattern = GetRandomMontage();
+		PerformAttack(RandomPattern);
+		StartAttackTrace(); 
+	}
 }
+
 
 // Called to bind functionality to input
 void ADW_Orc::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
