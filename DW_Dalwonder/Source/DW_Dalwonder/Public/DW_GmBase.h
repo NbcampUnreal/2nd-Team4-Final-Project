@@ -18,15 +18,15 @@ public:
 
     virtual void BeginPlay() override;
 
-    UFUNCTION(BlueprintCallable, Category = "UI") //UI±³Ã¼ ·ÎÁ÷
+    UFUNCTION(BlueprintCallable, Category = "UI") // UI ì „ì²´ ê´€ë¦¬
     void SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass);
 
-    //ÆË¾÷ UI ·ÎÁ÷
+    // íŒì—… UI ê´€ë¦¬
     UPROPERTY()
     TArray<UUserWidget*> PopupWidgets;
 
     UFUNCTION(BlueprintCallable, Category = "UI")
-    void ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
+    UUserWidget* ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ClosePopupUI(UUserWidget* WidgetToRemove);

@@ -10,6 +10,7 @@ enum class ECharacterCombatState : uint8
 	ComboWindow     UMETA(DisplayName = "Combo Window"),
 	Parrying        UMETA(DisplayName = "Parrying"),
 	Dodging         UMETA(DisplayName = "Dodging"),
+	Guarding		UMETA(DisplayName = "Guarding"),
 	HitReact        UMETA(DisplayName = "Hit React"),
 	Dead            UMETA(DisplayName = "Dead")
 };
