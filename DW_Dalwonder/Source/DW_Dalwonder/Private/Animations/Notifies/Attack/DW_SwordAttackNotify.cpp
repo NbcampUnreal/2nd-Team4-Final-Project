@@ -99,46 +99,42 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	UWorld* World = MeshComp->GetWorld();
 	if (!IsValid(World)) return;
 
-	const FVector TraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
-	const FVector TraceEnd   = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
-
-	// ✅ 캡슐 판정 설정
 	const float CapsuleRadius = CharacterWeapon->CapsuleTraceRadius;
 	const float CapsuleHalfHeight = CharacterWeapon->CapsuleTraceHalfHeight;
 
-	TArray<FHitResult> HitResults;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(PlayerCharacter);
 	Params.AddIgnoredActor(CharacterWeapon);
 
-	// 디버그 시각화
-	DrawDebugCapsule(World, (TraceStart + TraceEnd) * 0.5f, CapsuleHalfHeight, CapsuleRadius,
-		FQuat::FindBetweenNormals(FVector::UpVector, TraceEnd - TraceStart), FColor::Green, false, 1.0f);
+	TArray<FHitResult> Hits;
 
-	UKismetSystemLibrary::CapsuleTraceMulti(
-		World,
+	FVector TraceStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
+	FVector TraceEnd   = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
+	FVector TraceDir   = (TraceEnd - TraceStart).GetSafeNormal();
+	FRotator CapsuleRotation = TraceDir.Rotation();
+
+	// ✅ Sweep with rotation
+	GetWorld()->SweepMultiByChannel(
+		Hits,
 		TraceStart,
 		TraceEnd,
-		CapsuleRadius,
-		CapsuleHalfHeight,
-		UEngineTypes::ConvertToTraceType(ECC_SwordTrace), // ✅ 커스텀 채널 사용
-		false,
-		{ PlayerCharacter, CharacterWeapon },
-		EDrawDebugTrace::ForOneFrame,
-		HitResults,
-		true
+		CapsuleRotation.Quaternion(),
+		ECC_SwordTrace,
+		FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight),
+		Params
 	);
-	// ✅ 아무 것도 안 맞았으면 공격 유지
-	UE_LOG(LogTemp, Warning, TEXT("[SwordTrace] Hit Count: %d"), HitResults.Num());
-	if (HitResults.Num() == 0)
+
+	// ✅ 디버그 시각화 추가
+	DrawDebugLine(World, TraceStart, TraceEnd, FColor::Cyan, false, 1.0f, 0, 2.f);
+
+	if (Hits.Num() == 0)
 	{
 		return;
 	}
 
-	for (FHitResult& HitResult : HitResults)
+	for (FHitResult& HitResult : Hits)
 	{
 		AActor* HitActor = HitResult.GetActor();
-		UE_LOG(LogTemp, Warning, TEXT("[SwordTrace] Hit Actor: %s"), *GetNameSafe(HitActor));
 		if (!HitActor) continue;
 
 		if (HitResult.ImpactNormal.Z > 0.8f)
@@ -147,7 +143,6 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 			continue;
 		}
 
-		// ✅ 베어질 수 있는지 판별
 		if (HitActor->Implements<UBearableInterface>())
 		{
 			if (!IBearableInterface::Execute_CanBeCut(HitActor, HitResult))
@@ -162,7 +157,6 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 			break;
 		}
 
-		// ✅ 공격 판정 적용
 		if (!PlayerCharacter->AttackingActors.Contains(HitActor))
 		{
 			PlayerCharacter->AttackingActors.Add(HitActor);
@@ -176,6 +170,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 		}
 	}
 }
+
 
 
 void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
