@@ -33,4 +33,9 @@ public:
 	
 	UPROPERTY()
 	ADW_SwordBase* CharacterWeapon;
+
+private:
+	FVector PrevTraceStart;
+	FVector PrevTraceEnd;
+	bool bHasPrevTrace = false;
 };
