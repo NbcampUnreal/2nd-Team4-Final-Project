@@ -6,6 +6,7 @@
 #include "DW_MonsterBaseInterface.h"
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
+#include "Interface/BearableInterface.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -15,7 +16,7 @@
 
 
 UCLASS()
-class DW_DALWONDER_API ADW_MonsterBase : public ACharacter, public IDW_MonsterBaseInterface
+class DW_DALWONDER_API ADW_MonsterBase : public ACharacter, public IDW_MonsterBaseInterface, public IBearableInterface
 {
 	GENERATED_BODY()
 
@@ -228,4 +229,5 @@ public:
 	// 플레이어와의 거리 반환
 	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
+	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
 };

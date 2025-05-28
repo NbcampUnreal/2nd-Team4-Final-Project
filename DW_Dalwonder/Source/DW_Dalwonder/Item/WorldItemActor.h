@@ -21,6 +21,10 @@ protected:
 
 public:
 
+    // 아이템 코드 (고유 식별자)
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
+	int32 ItemCode = 0; 
+
     // 아이템 데이터 이름 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
     FName ItemRowName;
@@ -65,4 +69,6 @@ public:
 	{
 		return ItemData;
 	}
+
+
 };

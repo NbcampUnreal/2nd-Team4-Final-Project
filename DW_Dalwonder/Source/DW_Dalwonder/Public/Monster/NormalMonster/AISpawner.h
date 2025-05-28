@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Monster/NormalMonster/SpawnType.h"
+#include "Interface/BearableInterface.h"
 #include "AISpawner.generated.h"
 
 class UBoxComponent;
@@ -12,7 +13,7 @@ class USphereComponent;
 class DW_NormalMonsterBase;
 
 UCLASS()
-class DW_DALWONDER_API AAISpawner : public AActor
+class DW_DALWONDER_API AAISpawner : public AActor, public IBearableInterface
 {
 	GENERATED_BODY()
 
@@ -23,6 +24,8 @@ public:
 	// 몬스터 스포너를 다시 작동시키는 함수
 	UFUNCTION(BlueprintCallable)
 	void SpawnerON();
+
+	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
 
 protected:
 	virtual void BeginPlay() override;

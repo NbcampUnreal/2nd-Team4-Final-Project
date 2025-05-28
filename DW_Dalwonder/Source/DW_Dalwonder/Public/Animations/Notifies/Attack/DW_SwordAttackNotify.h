@@ -5,7 +5,7 @@
 #include "DW_SwordAttackNotify.generated.h"
 
 class ADW_Warrior;
-class ADW_Sword;
+class ADW_SwordBase;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SwordAttackNotify : public UAnimNotifyState
@@ -32,5 +32,10 @@ public:
 	ADW_Warrior* PlayerCharacter;
 	
 	UPROPERTY()
-	ADW_Sword* CharacterWeapon;
+	ADW_SwordBase* CharacterWeapon;
+
+private:
+	FVector PrevTraceStart;
+	FVector PrevTraceEnd;
+	bool bHasPrevTrace = false;
 };
