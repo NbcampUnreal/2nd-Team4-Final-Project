@@ -7,6 +7,9 @@ AWeaponBase::AWeaponBase()
 {
 	AttackPower = 10.0f;
 	AttackSpeed = 1.0f;
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	SetRootComponent(StaticMesh);
 }
 
 void AWeaponBase::EnhanceWeapon()
