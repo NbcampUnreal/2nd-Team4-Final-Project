@@ -368,7 +368,7 @@ void ADW_CharacterBase::CancelAttack()
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
-
+		
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -384,8 +384,17 @@ void ADW_CharacterBase::CancelAttack()
 
 		// 타이머도 정리
 		GetWorldTimerManager().ClearTimer(AttackTimer);
+		// 기존 공격 종료 처리
+		EndAttack(nullptr, true);
+
+		// 튕김 애니메이션 재생
+		if (IsValid(DodgeMontage))
+		{
+			PlayMontage(DodgeMontage);
+		}
 	}
 }
+	
 
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
