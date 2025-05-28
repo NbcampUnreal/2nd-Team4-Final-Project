@@ -750,7 +750,11 @@ void ADW_CharacterBase::ToggleESCMenu()
 			if (APlayerController* PC = Cast<APlayerController>(GetController()))
 			{
 				PC->SetShowMouseCursor(true);
-				PC->SetInputMode(FInputModeUIOnly());
+				// UI Focus말고 키보드 입력도 먹도록 수정
+				FInputModeGameAndUI InputMode;
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				InputMode.SetHideCursorDuringCapture(false);
+				PC->SetInputMode(InputMode);
 			}
 		}
 	}
