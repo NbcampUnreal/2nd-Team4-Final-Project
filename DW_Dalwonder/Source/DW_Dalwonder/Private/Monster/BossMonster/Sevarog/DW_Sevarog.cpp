@@ -4,7 +4,10 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
+#include "Engine/EngineTypes.h"
+#include "Engine/OverlapResult.h"
 
 
 // Sets default values
@@ -16,6 +19,9 @@ ADW_Sevarog::ADW_Sevarog()
 	//부착 후 에디터에서 위치 세부 조정 필요
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("weapon_r"));
+	
+	Hammer = CreateDefaultSubobject<USceneComponent>("Hammer");
+	Hammer->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 }
 
 float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
@@ -29,4 +35,63 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 	}
 	
 	return 0;
+}
+
+void ADW_Sevarog::AirAttack()
+{
+	FVector HammerLocation = Hammer->GetComponentLocation();
+	float Radius = 250.0f;
+
+	TArray<FOverlapResult> OverlapResults;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		HammerLocation,
+		FQuat::Identity,
+		ECC_Pawn,
+		FCollisionShape::MakeSphere(Radius),
+		QueryParams
+	);
+
+	if (bHit)
+	{
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			AActor* HitActor = Result.GetActor();
+			if (HitActor && HitActor != this)
+			{
+				UGameplayStatics::ApplyDamage(HitActor, 30.0f, GetController(), this, UDamageType::StaticClass());
+			}
+		}
+	}
+
+	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+}
+
+void ADW_Sevarog::DoTeleport()
+{
+	if (IsValid(TeleportMontage))
+	{
+		UAnimMontage* Montage = TeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_Sevarog::DoRangedTeleport()
+{
+	if (IsValid(RangedTeleportMontage))
+	{
+		UAnimMontage* Montage = RangedTeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
 }

@@ -111,6 +111,9 @@ public:
 	void StartAttack();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void CancelAttack();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndAttack(UAnimMontage* Montage, bool bInterrupted);
 
 	// 패링 상태 설정
