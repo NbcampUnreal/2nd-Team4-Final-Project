@@ -5,6 +5,7 @@
 #include "Character/DW_Warrior.h"
 #include "Character/DW_Sword.h"
 #include "Interface/BearableInterface.h"
+#include "Character/DW_SwordBase.h"
 #include "Kismet/GameplayStatics.h"
 
 UDW_SwordAttackNotify::UDW_SwordAttackNotify()
@@ -25,7 +26,7 @@ void UDW_SwordAttackNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 
 		if (IsValid(PlayerCharacter))
 		{
-			CharacterWeapon = Cast<ADW_Sword>(PlayerCharacter->GetWeapon());
+			CharacterWeapon = Cast<ADW_SwordBase>(PlayerCharacter->GetWeapon());
 		}
 	}
 }

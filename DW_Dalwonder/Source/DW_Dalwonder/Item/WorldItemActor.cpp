@@ -27,6 +27,7 @@ AWorldItemActor::AWorldItemActor()
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
     InteractionWidget->SetVisibility(false);
+
 }
 
 void AWorldItemActor::BeginPlay()
