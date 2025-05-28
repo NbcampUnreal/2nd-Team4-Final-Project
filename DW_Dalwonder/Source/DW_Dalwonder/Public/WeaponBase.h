@@ -51,6 +51,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
 	UDataTable* EnhancementDataTable;
 
+	// 무기의 스태틱 메시 (외형)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
+	UStaticMeshComponent* StaticMesh;
+	
 	// 무기 여부 확인용
 	UFUNCTION(BlueprintCallable, Category = "Weapon Base")
 	virtual bool IsWeapon() const { return true; }
