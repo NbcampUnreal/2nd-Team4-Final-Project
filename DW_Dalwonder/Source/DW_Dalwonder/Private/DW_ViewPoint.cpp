@@ -2,15 +2,52 @@
 #include "LevelSequenceActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/StaticMeshComponent.h"
+#include "TimerManager.h"
 
-// Sets default values
 ADW_ViewPoint::ADW_ViewPoint()
 {
     PrimaryActorTick.bCanEverTick = false;
+
     SequenceActor = nullptr;
     SequencePlayer = nullptr;
     bHasInteracted = false;
     CachedPlayerController = nullptr;
+
+    ElapsedTime = 0.0f;
+}
+
+void ADW_ViewPoint::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (UStaticMeshComponent* MeshComp = FindComponentByClass<UStaticMeshComponent>())
+    {
+        InitialMeshLocation = MeshComp->GetRelativeLocation();
+    }
+
+    GetWorldTimerManager().SetTimer(FloatingTimerHandle, this, &ADW_ViewPoint::ToggleFloating, 0.01f, true);
+}
+
+void ADW_ViewPoint::ToggleFloating()
+{
+    UStaticMeshComponent* MeshComp = FindComponentByClass<UStaticMeshComponent>();
+    if (!MeshComp) return;
+
+    ElapsedTime += 0.01f;
+
+    if (ElapsedTime > FloatingCycleDuration)
+    {
+        ElapsedTime = 0.0f;
+    }
+
+    float Alpha = ElapsedTime / FloatingCycleDuration;
+    float Offset = FMath::Sin(Alpha * 2.0f * PI) * FloatingAmplitude;
+
+    FVector NewLocation = InitialMeshLocation;
+    NewLocation.Z += Offset;
+
+    MeshComp->SetRelativeLocation(NewLocation);
 }
 
 void ADW_ViewPoint::Interact_Implementation(AActor* Interactor)
@@ -34,7 +71,6 @@ void ADW_ViewPoint::Interact_Implementation(AActor* Interactor)
 
     if (SequencePlayer)
     {
-        // 연출 중 입력 제한
         CachedPlayerController = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
         if (CachedPlayerController)
         {
@@ -44,7 +80,6 @@ void ADW_ViewPoint::Interact_Implementation(AActor* Interactor)
             CachedPlayerController->bShowMouseCursor = false;
         }
 
-        // 시퀀스 재생 및 종료 이벤트 바인딩
         SequencePlayer->OnFinished.AddDynamic(this, &ADW_ViewPoint::OnSequenceFinished);
         SequencePlayer->Play();
     }
@@ -52,7 +87,6 @@ void ADW_ViewPoint::Interact_Implementation(AActor* Interactor)
 
 void ADW_ViewPoint::OnSequenceFinished()
 {
-    // 입력 복원
     if (CachedPlayerController)
     {
         CachedPlayerController->SetIgnoreLookInput(false);
@@ -60,4 +94,6 @@ void ADW_ViewPoint::OnSequenceFinished()
         CachedPlayerController->SetInputMode(FInputModeGameOnly());
         CachedPlayerController->bShowMouseCursor = false;
     }
+
+    bHasInteracted = false;
 }
