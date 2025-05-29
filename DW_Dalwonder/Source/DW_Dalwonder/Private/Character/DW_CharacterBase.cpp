@@ -370,7 +370,7 @@ void ADW_CharacterBase::CancelAttack()
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
-		
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
