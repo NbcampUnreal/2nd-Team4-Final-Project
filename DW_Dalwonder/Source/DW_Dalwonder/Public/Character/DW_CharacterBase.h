@@ -204,47 +204,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* DeadMontage;
 
-	// -----------------------------
-	// 🎯 락온 관련 변수 및 함수
-	// -----------------------------
-
-	// 락온 대상
-	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
-	AActor* LockOnTarget = nullptr;
-
-	// 락온 여부
-	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
-	bool bIsLockOn = false;
-
-	// 락온 회전용 타이머
-	FTimerHandle LockOnRotationTimer;
-
-	// 회전 처리 함수
-	UFUNCTION()
-	void UpdateLockOnRotation();
-
-	// 후보 갱신 함수
-	UFUNCTION()
-	void UpdateLockOnCandidates();
-
-	// 전환 함수
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void SwitchLockOnTarget();
-
-	// 락온 토글 함수
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void ToggleLockOn();
-
-	AActor* FindBestLockOnTarget();
-	
-	// 시야 내 가장 가까운 적 탐색
-	AActor* FindClosestTarget(float MaxDistance = 1500.f);
-	
-	UPROPERTY()
-	TArray<AActor*> LockOnCandidates;
-
-	int32 LockOnIndex = 0;
-	
 protected:
 	// 패링 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -260,7 +219,62 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle AttackTimer;
+
+public:
+	// -----------------------------
+	// 🎯 락온 관련 변수 및 함수
+	// -----------------------------
+
+	// 락온 대상
+	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
+	AActor* LockOnTarget = nullptr;
+
+	// 락온 여부
+	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
+	bool bIsLockOn = false;
+
+	// 전환 함수
+	UFUNCTION(BlueprintCallable, Category = "LockOn")
+	void SwitchLockOnTarget();
+
+	// 락온 토글 함수
+	UFUNCTION(BlueprintCallable, Category = "LockOn")
+	void ToggleLockOn();
 	
+	// 락온 회전용 타이머
+	FTimerHandle LockOnRotationTimer;
+
+	// 락온 갱신 타이머
+	FTimerHandle LockOnMarkerUpdateTimer;
+
+	// 락온 마커 UI 갱신
+	UFUNCTION()
+	void UpdateLockOnMarkerPosition();
+	
+	// 회전 처리 함수
+	UFUNCTION()
+	void UpdateLockOnRotation();
+
+	// 후보 갱신 함수
+	UFUNCTION()
+	void UpdateLockOnCandidates();
+
+
+	AActor* FindBestLockOnTarget();
+	
+	AActor* FindClosestTarget(float MaxDistance = 1500.f);
+	
+	UPROPERTY()
+	TArray<AActor*> LockOnCandidates;
+
+	int32 LockOnIndex = 0;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn|UI")
+	TSubclassOf<UUserWidget> LockOnWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* LockOnWidgetInstance;
 
 #pragma endregion
 

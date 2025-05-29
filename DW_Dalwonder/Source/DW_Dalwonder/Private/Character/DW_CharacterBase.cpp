@@ -15,6 +15,7 @@
 #include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
+#include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -868,32 +869,61 @@ void ADW_CharacterBase::ToggleESCMenu()
 
 void ADW_CharacterBase::ToggleLockOn()
 {
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
 	if (bIsLockOn)
 	{
 		// 🔓 락온 해제
 		bIsLockOn = false;
 		LockOnTarget = nullptr;
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
+
+		if (LockOnWidgetInstance)
+		{
+			LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 	else
 	{
-		// 🔒 락온 시작
-		AActor* Target = FindBestLockOnTarget(); // 또는 FindClosestTarget();
+		AActor* Target = FindBestLockOnTarget();
 		if (IsValid(Target))
 		{
 			bIsLockOn = true;
 			LockOnTarget = Target;
 
+			if (!LockOnWidgetInstance && IsValid(LockOnWidgetClass))
+			{
+				LockOnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), LockOnWidgetClass);
+				if (LockOnWidgetInstance)
+				{
+					LockOnWidgetInstance->AddToViewport();
+				}
+			}
+
+			if (LockOnWidgetInstance)
+			{
+				LockOnWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+			}
+
 			GetWorldTimerManager().SetTimer(
 				LockOnRotationTimer,
 				this,
 				&ADW_CharacterBase::UpdateLockOnRotation,
-				0.05f,
+				0.01f,
+				true
+			);
+
+			GetWorldTimerManager().SetTimer(
+				LockOnMarkerUpdateTimer,
+				this,
+				&ADW_CharacterBase::UpdateLockOnMarkerPosition,
+				0.01f,
 				true
 			);
 		}
 	}
 }
+
 
 
 AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
@@ -1027,6 +1057,34 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		return FVector2D::DistSquared(APos, ScreenCenter) < FVector2D::DistSquared(BPos, ScreenCenter);
 	});
 }
+
+void ADW_CharacterBase::UpdateLockOnMarkerPosition()
+{
+	if (!bIsLockOn || !IsValid(LockOnTarget) || !IsValid(LockOnWidgetInstance)) return;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	FVector WorldLocation;
+
+	// 캡슐 기준 높이 계산 (가슴 위치 근처)
+	UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(LockOnTarget->GetComponentByClass(UCapsuleComponent::StaticClass()));
+	if (Capsule)
+	{
+		WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+	}
+	else
+	{
+		WorldLocation = LockOnTarget->GetActorLocation();
+	}
+
+	FVector2D ScreenPosition;
+	if (PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+	{
+		LockOnWidgetInstance->SetPositionInViewport(ScreenPosition, true);
+	}
+}
+
 
 void ADW_CharacterBase::SwitchLockOnTarget()
 {
