@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
 #include "GameFramework/Character.h"
+#include "DW_SkillComponent.h"
+#include "DW_AttributeComponent.h"
 #include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
@@ -12,7 +14,6 @@ class UCameraComponent;
 class UCharacterStatComponent;
 class UUserWidget;
 
-// ✅ 캐릭터의 기본 클래스: 이동, 전투, 입력 처리 등 공통 기능 포함
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
 {
@@ -22,6 +23,12 @@ public:
 	ADW_CharacterBase();
 
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UDW_SkillComponent* SkillComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UDW_AttributeComponent* AttributeComponent;
 
 protected:
 	// ▶ 게임 시작 시 초기 설정 (예: 상태 초기화)

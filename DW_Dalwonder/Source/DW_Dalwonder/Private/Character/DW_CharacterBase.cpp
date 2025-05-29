@@ -36,6 +36,9 @@ ADW_CharacterBase::ADW_CharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
+	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
+	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
 }
 
 void ADW_CharacterBase::BeginPlay()
