@@ -851,7 +851,7 @@ void ADW_CharacterBase::ToggleESCMenu()
 		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
 		if (ESCMenuWidgetInstance)
 		{
-			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
+			GameMode->ShowPopupUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
 			bIsESCMenuOpen = true;
 
 			if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -869,7 +869,8 @@ void ADW_CharacterBase::ToggleESCMenu()
 	{
 		if (ESCMenuWidgetInstance)
 		{
-			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
+			UE_LOG(LogTemp, Warning, TEXT("메뉴 닫기 진입"));
+			GameMode->CloseLastPopupUI();  // ESC 메뉴 닫기
 			ESCMenuWidgetInstance = nullptr;
 		}
 

@@ -23,6 +23,9 @@ public:
     void OnInfoClicked();
 
     UFUNCTION()
+    void OnSkillTreeClicked();
+
+    UFUNCTION()
     void OnInventoryClicked();
 
     UFUNCTION()
@@ -51,6 +54,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> PlayerInfoWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> SkillTreeWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> InventoryWidgetClass;

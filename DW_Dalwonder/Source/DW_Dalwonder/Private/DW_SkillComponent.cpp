@@ -7,13 +7,13 @@ UDW_SkillComponent::UDW_SkillComponent()
     PrimaryComponentTick.bCanEverTick = false;
 }
 
-/* ------------------------------ ³»ºÎ ÇïÆÛ ------------------------------ */
+/* ------------------------------ ìŠ¤í‚¬ ìƒíƒœ ------------------------------ */
 FSkillState* UDW_SkillComponent::FindSkillState(FName SkillID)
 {
     return SkillStateMap.Find(SkillID);
 }
 
-/* ------------------------------ °ø°³ API ------------------------------ */
+/* ------------------------------ ìŠ¤í‚¬ API ------------------------------ */
 bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 {
     if (!SkillDataTable) return false;
@@ -21,7 +21,7 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
     const FSkillData* SkillData = SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("TryLearnSkill"));
     if (!SkillData) return false;
 
-    /*  ¦¡¦¡ ¼±Çà Á¶°Ç ¦¡¦¡ */
+    /*  ì„ í–‰ ìŠ¤í‚¬ì´ í•„ìš”í•œ ê²½ìš° í™•ì¸ */
     if (!SkillData->PrerequisiteSkillID.IsNone())
     {
         const FSkillState* PreState = SkillStateMap.Find(SkillData->PrerequisiteSkillID);
@@ -32,9 +32,9 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
         }
     }
 
-    /* ¦¡¦¡ ÇöÀç »óÅÂ ¦¡¦¡ */
+    /* ìŠ¤í‚¬ í•™ìŠµ ë˜ëŠ” ë ˆë²¨ì—… */
     FSkillState* MyState = SkillStateMap.Find(SkillID);
-    if (!MyState)           // Ã¹ ½Àµæ
+    if (!MyState)           // ì²˜ìŒ ë°°ìš°ëŠ” ê²½ìš°
     {
         if (CurrentSP < SkillData->Cost) return false;
 
@@ -44,7 +44,7 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 
         ApplySkillEffect(*SkillData, 1);
     }
-    else                    // ·¹º§¾÷
+    else                    // ì´ë¯¸ ë°°ìš´ ê²½ìš°
     {
         if (MyState->CurrentLevel >= SkillData->MaxLevel) return false;
         if (CurrentSP < SkillData->Cost) return false;
@@ -65,7 +65,7 @@ int32 UDW_SkillComponent::GetSkillLevel(FName SkillID) const
     return State ? State->CurrentLevel : 0;
 }
 
-/* --------------------------- È¿°ú Àû¿ëºÎ --------------------------- */
+/* --------------------------- íš¨ê³¼ ì ìš©ë¶€ --------------------------- */
 void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel)
 {
     AActor* OwnerActor = GetOwner();
@@ -79,9 +79,9 @@ void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 Del
 
     auto AddBonus = [&](float& BonusField, float BaseField)
         {
-            if (SkillData.IncreaseType == 1)       // % Áõ°¡
+            if (SkillData.IncreaseType == 1)       // % ì¦ê°€
                 BonusField += BaseField * (RawInc / 100.f);
-            else                                   // Àı´ñ°ª
+            else                                   // ê³ ì • ì¦ê°€
                 BonusField += RawInc;
         };
 
