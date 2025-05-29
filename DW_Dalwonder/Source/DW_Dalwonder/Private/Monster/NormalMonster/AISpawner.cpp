@@ -183,3 +183,8 @@ FTransform AAISpawner::GetRandomSpawnPoint()
 
 	return FTransform(PointLotation, PointLocation, FVector(1.f, 1.f, 1.f));
 }
+
+bool AAISpawner::CanBeCut_Implementation(const FHitResult& Hit)
+{
+	return true;
+}

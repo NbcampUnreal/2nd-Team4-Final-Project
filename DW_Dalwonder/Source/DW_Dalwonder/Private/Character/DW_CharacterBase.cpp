@@ -12,6 +12,7 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
 #include "Item/ItemDataManager.h"
@@ -29,7 +30,7 @@ ADW_CharacterBase::ADW_CharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
-
+	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
@@ -362,6 +363,39 @@ void ADW_CharacterBase::StartAttack()
 		}
 	}
 }
+
+void ADW_CharacterBase::CancelAttack()
+{
+	if (CurrentCombatState == ECharacterCombatState::Attacking)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
+		
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			// 현재 재생 중인 모든 몽타주를 중단
+			AnimInstance->Montage_Stop(0.2f);
+		}
+
+		// 상태 초기화
+		SetCombatState(ECharacterCombatState::Idle);
+		bCanAttack = true;
+		bCanControl = true;
+		ComboIndex = 0;
+
+		// 타이머도 정리
+		GetWorldTimerManager().ClearTimer(AttackTimer);
+		// 기존 공격 종료 처리
+		EndAttack(nullptr, true);
+
+		// 튕김 애니메이션 재생
+		if (IsValid(DodgeMontage))
+		{
+			PlayMontage(DodgeMontage);
+		}
+	}
+}
+	
 
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -810,7 +844,11 @@ void ADW_CharacterBase::ToggleESCMenu()
 			if (APlayerController* PC = Cast<APlayerController>(GetController()))
 			{
 				PC->SetShowMouseCursor(true);
-				PC->SetInputMode(FInputModeUIOnly());
+				// UI Focus말고 키보드 입력도 먹도록 수정
+				FInputModeGameAndUI InputMode;
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				InputMode.SetHideCursorDuringCapture(false);
+				PC->SetInputMode(InputMode);
 			}
 		}
 	}
@@ -830,4 +868,178 @@ void ADW_CharacterBase::ToggleESCMenu()
 			PC->SetInputMode(FInputModeGameOnly());
 		}
 	}
+}
+
+void ADW_CharacterBase::ToggleLockOn()
+{
+	if (bIsLockOn)
+	{
+		// 🔓 락온 해제
+		bIsLockOn = false;
+		LockOnTarget = nullptr;
+		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
+	}
+	else
+	{
+		// 🔒 락온 시작
+		AActor* Target = FindBestLockOnTarget(); // 또는 FindClosestTarget();
+		if (IsValid(Target))
+		{
+			bIsLockOn = true;
+			LockOnTarget = Target;
+
+			GetWorldTimerManager().SetTimer(
+				LockOnRotationTimer,
+				this,
+				&ADW_CharacterBase::UpdateLockOnRotation,
+				0.05f,
+				true
+			);
+		}
+	}
+}
+
+
+AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
+{
+	UWorld* World = GetWorld();
+	if (!World) return nullptr;
+
+	AActor* ClosestTarget = nullptr;
+	float ClosestDistance = MaxDistance;
+
+	FVector MyLocation = GetActorLocation();
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	for (TActorIterator<ADW_MonsterBase> It(World); It; ++It)
+	{
+		ADW_MonsterBase* Monster = *It;
+
+		if (!IsValid(Monster)) continue;
+
+		const float Distance = FVector::Dist(MyLocation, Monster->GetActorLocation());
+		if (Distance > ClosestDistance) continue;
+
+		// 🔍 LineOfSight 검사 (시야 안에 있는지)
+		if (IsValid(PC) && !PC->LineOfSightTo(Monster)) continue;
+
+		ClosestDistance = Distance;
+		ClosestTarget = Monster;
+	}
+
+	return ClosestTarget;
+}
+
+AActor* ADW_CharacterBase::FindBestLockOnTarget()
+{
+	TArray<AActor*> Candidates;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_MonsterBase::StaticClass(), Candidates);
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return nullptr;
+
+	FVector2D ViewportSize;
+	GEngine->GameViewport->GetViewportSize(ViewportSize);
+	FVector2D ScreenCenter = ViewportSize * 0.5f;
+
+	AActor* BestTarget = nullptr;
+	float ClosestDistSquared = FLT_MAX;
+
+	for (AActor* Candidate : Candidates)
+	{
+		if (!IsValid(Candidate) || Candidate == this) continue;
+		if (!PC->LineOfSightTo(Candidate)) continue;
+
+		FVector2D ScreenPos;
+		bool bOnScreen = PC->ProjectWorldLocationToScreen(Candidate->GetActorLocation(), ScreenPos);
+
+		if (bOnScreen)
+		{
+			float DistSq = FVector2D::DistSquared(ScreenPos, ScreenCenter);
+			if (DistSq < ClosestDistSquared)
+			{
+				ClosestDistSquared = DistSq;
+				BestTarget = Candidate;
+			}
+		}
+	}
+
+	return BestTarget;
+}
+
+void ADW_CharacterBase::UpdateLockOnRotation()
+{
+	if (!bIsLockOn || !IsValid(LockOnTarget))
+	{
+		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
+		bIsLockOn = false;
+		LockOnTarget = nullptr;
+		return;
+	}
+
+	FVector ToTarget = LockOnTarget->GetActorLocation() - GetActorLocation();
+	FRotator DesiredRotation = ToTarget.Rotation();
+	DesiredRotation.Pitch = 0.f;
+	DesiredRotation.Roll = 0.f;
+
+	// 🔁 Controller 회전 → 캐릭터 & 카메라 모두 회전
+	FRotator InterpRot = FMath::RInterpTo(
+		GetControlRotation(),
+		DesiredRotation,
+		GetWorld()->GetDeltaSeconds(),
+		10.f
+	);
+	GetController()->SetControlRotation(InterpRot);
+}
+
+void ADW_CharacterBase::UpdateLockOnCandidates()
+{
+	LockOnCandidates.Empty();
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	TArray<AActor*> AllTargets;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_MonsterBase::StaticClass(), AllTargets);
+
+	FVector2D ViewportSize;
+	GEngine->GameViewport->GetViewportSize(ViewportSize);
+	FVector2D ScreenCenter = ViewportSize * 0.5f;
+
+	for (AActor* Target : AllTargets)
+	{
+		if (!IsValid(Target) || Target == this) continue;
+		if (!PC->LineOfSightTo(Target)) continue;
+
+		FVector2D ScreenPos;
+		if (PC->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
+		{
+			// 오른쪽에 있는 타겟만 선별 (왼쪽 정렬 원하면 반대로)
+			if (ScreenPos.X > ScreenCenter.X)
+			{
+				LockOnCandidates.Add(Target);
+			}
+		}
+	}
+
+	// 👉 화면 중심 가까운 순 정렬
+	LockOnCandidates.Sort([&](AActor& A, AActor& B)
+	{
+		FVector2D APos, BPos;
+		PC->ProjectWorldLocationToScreen(A.GetActorLocation(), APos);
+		PC->ProjectWorldLocationToScreen(B.GetActorLocation(), BPos);
+		return FVector2D::DistSquared(APos, ScreenCenter) < FVector2D::DistSquared(BPos, ScreenCenter);
+	});
+}
+
+void ADW_CharacterBase::SwitchLockOnTarget()
+{
+	if (!bIsLockOn) return;
+
+	UpdateLockOnCandidates();
+
+	if (LockOnCandidates.Num() == 0) return;
+
+	LockOnIndex = (LockOnIndex + 1) % LockOnCandidates.Num();
+	LockOnTarget = LockOnCandidates[LockOnIndex];
 }
