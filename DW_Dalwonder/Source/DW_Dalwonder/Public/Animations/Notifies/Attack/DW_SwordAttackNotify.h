@@ -34,6 +34,9 @@ public:
 	UPROPERTY()
 	ADW_SwordBase* CharacterWeapon;
 
+	UPROPERTY()
+	TSet<TWeakObjectPtr<AActor>> IgnoredActors;
+	
 private:
 	FVector PrevTraceStart;
 	FVector PrevTraceEnd;
