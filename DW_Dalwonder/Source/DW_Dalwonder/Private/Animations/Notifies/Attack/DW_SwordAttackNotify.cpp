@@ -55,11 +55,11 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 		PrevTraceEnd = CurrEnd;
 		bHasPrevTrace = true;
 	}
-
+	
 	const int32 NumSteps = 5;
 	const float SphereRadius = 5.f;
 	FCollisionShape SweepShape = FCollisionShape::MakeSphere(SphereRadius);
-
+	
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(SwordSweep), false);
 	Params.AddIgnoredActor(PlayerCharacter);
 	Params.AddIgnoredActor(CharacterWeapon);
@@ -132,16 +132,12 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 					PlayerCharacter,
 					UDamageType::StaticClass()
 				);
-
-				UE_LOG(LogTemp, Warning, TEXT("[Trace] ✅ 데미지 적용: %s | Time: %.2f"), *GetNameSafe(HitActor), CurrentTime);
 			}
 		}
 	}
-
 	PrevTraceStart = CurrStart;
 	PrevTraceEnd = CurrEnd;
 }
-
 
 void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)
