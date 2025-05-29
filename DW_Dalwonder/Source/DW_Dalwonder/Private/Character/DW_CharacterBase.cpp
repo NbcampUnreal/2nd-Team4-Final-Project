@@ -12,6 +12,7 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
@@ -1118,7 +1119,7 @@ void ADW_CharacterBase::SwitchLockOnTarget()
 void ADW_CharacterBase::UpdateFootstepSurface()
 {
 	FVector Start = GetActorLocation();
-	FVector End = Start - FVector(0.f, 0.f, 50.f);  // 아래 방향으로 트레이스
+	FVector End = Start - FVector(0.f, 0.f, 5.f);  // 아래 방향으로 트레이스
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
@@ -1130,6 +1131,47 @@ void ADW_CharacterBase::UpdateFootstepSurface()
 		if (PhysMat)
 		{
 			CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+
+			// 디버그 메시지 출력
+			if (GEngine)
+			{
+				const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("SurfaceType: %s"), *SurfaceName));
+			}
 		}
 	}
 }
+
+
+void ADW_CharacterBase::SpawnFootstepEffect(FName FootSocketName)
+{
+	if (UNiagaraSystem** FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+	{
+		FVector FootLocation = GetActorLocation();
+
+		if (GetMesh()->DoesSocketExist(FootSocketName))
+		{
+			FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+		}
+
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation);
+
+		// 디버그 메시지 출력
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+				FString::Printf(TEXT("Footstep VFX spawned at socket: %s"), *FootSocketName.ToString()));
+		}
+	}
+	else
+	{
+		// 이펙트가 없을 경우도 디버깅
+		if (GEngine)
+		{
+			const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
+				FString::Printf(TEXT("No VFX mapped for surface: %s"), *SurfaceName));
+		}
+	}
+}
+
