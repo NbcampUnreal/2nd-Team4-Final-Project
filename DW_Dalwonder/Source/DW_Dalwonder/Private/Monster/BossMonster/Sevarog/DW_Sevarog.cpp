@@ -3,6 +3,9 @@
 
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
+#include "AIController.h"
+#include "NiagaraFunctionLibrary.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
@@ -68,6 +71,21 @@ void ADW_Sevarog::AirAttack()
 	}
 
 	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+
+	if (!AirAttackNS) return;
+
+	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FRotator SpawnRotation = GetActorRotation();
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		AirAttackNS,
+		SpawnLocation,
+		SpawnRotation,
+		FVector(2.f),
+		true,
+		true
+	);
 }
 
 void ADW_Sevarog::DoTeleport()
@@ -94,4 +112,33 @@ void ADW_Sevarog::DoRangedTeleport()
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
 		}
 	}
+}
+
+void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const
+{
+	const FVector RandomOffset = FVector(
+	FMath::RandRange(-500.f, 500.f),
+	FMath::RandRange(-500.f, 500.f),
+	0.f);
+
+	const FVector SpawnLocation = GetActorLocation() + RandomOffset;
+
+	if (IsValid(SpawnMonsterNS))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		SpawnMonsterNS,
+		SpawnLocation,
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true);
+	}
+
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	
+	GetWorld()->SpawnActor<AActor>(SpawnMob, SpawnLocation, GetActorRotation(), SpawnParams);
+
 }
