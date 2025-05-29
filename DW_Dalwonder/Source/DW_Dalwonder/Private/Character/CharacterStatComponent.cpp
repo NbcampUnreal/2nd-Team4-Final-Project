@@ -12,6 +12,16 @@ void UCharacterStatComponent::BeginPlay()
 	
 }
 
+void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+	HealthTimer.Invalidate();
+	StaminaTimer.Invalidate();
+}
+
 void UCharacterStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

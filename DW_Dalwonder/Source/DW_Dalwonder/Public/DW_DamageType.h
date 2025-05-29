@@ -9,8 +9,9 @@ class DW_DALWONDER_API UDW_DamageType : public UDamageType
 {
 	GENERATED_BODY()
 
-	UDW_DamageType(bool bCanKnockDown);
+public:
+	UDW_DamageType();
 
-	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "DamageType")
-	bool bCanKnockdown;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageType")
+	bool bCanKnockdown = false;
 };

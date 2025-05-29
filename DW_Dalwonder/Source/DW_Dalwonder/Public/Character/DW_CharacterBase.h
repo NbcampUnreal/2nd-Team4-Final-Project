@@ -60,7 +60,7 @@ public:
 	UFUNCTION()
 	void Lockon(const FInputActionValue& Value);
 
-	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = 0) const;
+	void PlayMontage(UAnimMontage* Montage, bool bBlockControl = false, int32 SectionIndex = -1);
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
@@ -142,7 +142,7 @@ public:
 
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void BlockCharacterControl(bool bShouldBlock);
+	void BlockCharacterControl(bool bShouldBlock, float Length = 0.f);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Dead();
@@ -260,6 +260,9 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle AttackTimer;
+
+	UPROPERTY()
+	FTimerHandle BlockTimer;
 	
 
 #pragma endregion

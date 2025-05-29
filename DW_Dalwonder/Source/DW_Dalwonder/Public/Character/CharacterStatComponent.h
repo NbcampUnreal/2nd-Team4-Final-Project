@@ -148,6 +148,7 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
@@ -194,4 +195,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float SprintSpeed = 600.f;
+
+	UPROPERTY()
+	FTimerHandle HealthTimer;
+
+	UPROPERTY()
+	FTimerHandle StaminaTimer;
 };
