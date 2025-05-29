@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystem.h"
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
 
@@ -24,6 +25,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* RangedTeleportMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* AirAttackNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* SpawnMonsterNS;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -34,4 +41,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DoRangedTeleport();
+
+	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
 };

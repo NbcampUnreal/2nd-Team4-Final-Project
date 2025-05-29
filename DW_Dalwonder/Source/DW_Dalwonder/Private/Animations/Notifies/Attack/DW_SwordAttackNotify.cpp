@@ -38,16 +38,19 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (!IsValid(PlayerCharacter) || !IsValid(CharacterWeapon)) return;
+	UE_LOG(LogTemp, Warning, TEXT("[NotifyTick] Instance: %p | Anim: %s | Mesh: %s "),
+		this,
+		*GetNameSafe(Animation),
+		*GetNameSafe(MeshComp)
+		);
 
+	if (!IsValid(PlayerCharacter) || !IsValid(CharacterWeapon)) return;
 	UWorld* World = MeshComp->GetWorld();
 	if (!IsValid(World)) return;
 
-	// Trace 포인트
 	const FVector CurrStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
 	const FVector CurrEnd   = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
 
-	// 이전 프레임 위치 미리 저장 안 되어있으면 초기화
 	if (!bHasPrevTrace)
 	{
 		PrevTraceStart = CurrStart;
@@ -55,78 +58,106 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 		bHasPrevTrace = true;
 	}
 
-	// 여러 구간으로 나누기
 	const int32 NumSteps = 5;
+	const float SphereRadius = 5.f;
+	FCollisionShape SweepShape = FCollisionShape::MakeSphere(SphereRadius);
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(SwordSweep), false);
+	Params.AddIgnoredActor(PlayerCharacter);
+	Params.AddIgnoredActor(CharacterWeapon);
+
 	for (int32 i = 0; i < NumSteps; ++i)
 	{
 		const float Alpha = static_cast<float>(i) / (NumSteps - 1);
-		const FVector Prev = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
-		const FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
+		const FVector Start = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
+		const FVector End   = FMath::Lerp(CurrStart, CurrEnd, Alpha);
 
-		FHitResult Hit;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(PlayerCharacter);
-		Params.AddIgnoredActor(CharacterWeapon);
-
-		// 디버그 시각화
-		DrawDebugLine(World, Prev, Curr, FColor::Red, false, 1.0f, 0, 1.5f);
-		DrawDebugSphere(World, Curr, 5.f, 12, FColor::Yellow, false, 1.0f);
-
-		if (World->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_SwordTrace, Params))
+		DrawDebugCapsule(
+			World,
+			(Start + End) * 0.5f,           // 중심
+			(End - Start).Size() * 0.5f,    // 하프높이
+			SphereRadius,                   // 반지름
+			FRotationMatrix::MakeFromZ(End - Start).ToQuat(),  // 회전
+			FColor::Green,
+			false, 0.2f, 0, 1.f
+		);
+		
+		TArray<FHitResult> HitResults;
+		if (World->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_SwordTrace, SweepShape, Params))
 		{
-			AActor* HitActor = Hit.GetActor();
-			if (!IsValid(HitActor)) continue;
-
-			// 바닥 무시
-			if (Hit.ImpactNormal.Z > 0.8f)
+			for (const FHitResult& Hit : HitResults)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("바닥 충돌 무시됨: %s"), *GetNameSafe(HitActor));
-				continue;
-			}
+				AActor* HitActor = Hit.GetActor();
+				if (!IsValid(HitActor)) continue;
 
-			// 인터페이스 판별
-			if (HitActor->Implements<UBearableInterface>())
-			{
-				if (!IBearableInterface::Execute_CanBeCut(HitActor, Hit))
+				// ✅ 이전에 무시된 액터인지 확인
+				if (IgnoredActors.Contains(HitActor))
 				{
-					PlayerCharacter->CancelAttack();
-					break;
+					UE_LOG(LogTemp, Warning, TEXT("[Trace] 이미 무시된 액터: %s"), *GetNameSafe(HitActor));
+					continue;
 				}
-			}
-			else
-			{
-				PlayerCharacter->CancelAttack();
-				break;
-			}
 
-			// 공격 판정 적용
-			if (!PlayerCharacter->AttackingActors.Contains(HitActor))
-			{
-				PlayerCharacter->AttackingActors.Add(HitActor);
-				UGameplayStatics::ApplyDamage(
-					HitActor,
-					AttackDamage,
-					PlayerCharacter->GetController(),
-					PlayerCharacter,
-					UDamageType::StaticClass()
-				);
-				UE_LOG(LogTemp, Warning, TEXT("[SwordTrace] Hit Actor: %s"), *GetNameSafe(HitActor));
+				// ✅ 바닥이면 무시 리스트에 등록
+				if (Hit.ImpactNormal.Z > 0.8f)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[Trace] 바닥 충돌 무시 추가: %s | Normal.Z: %.2f"), *GetNameSafe(HitActor), Hit.ImpactNormal.Z);
+					IgnoredActors.Add(HitActor);
+					continue;
+				}
+
+				// ✅ CanBeCut 검사
+				if (HitActor->Implements<UBearableInterface>())
+				{
+					if (!IBearableInterface::Execute_CanBeCut(HitActor, Hit))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("[Trace] 공격 취소 대상: %s (CanBeCut = false)"), *GetNameSafe(HitActor));
+						PlayerCharacter->CancelAttack();
+						return;
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[Trace] 인터페이스 없음, 공격 취소 대상: %s"), *GetNameSafe(HitActor));
+					PlayerCharacter->CancelAttack();
+					return;
+				}
+
+				// 데미지 적용 (중복 방지)
+				if (!PlayerCharacter->AttackingActors.Contains(HitActor))
+				{
+					PlayerCharacter->AttackingActors.Add(HitActor);
+
+					UGameplayStatics::ApplyDamage(
+						HitActor,
+						AttackDamage,
+						PlayerCharacter->GetController(),
+						PlayerCharacter,
+						UDamageType::StaticClass()
+					);
+
+					UE_LOG(LogTemp, Warning, TEXT("[Trace] ✅ 데미지 적용: %s | Normal.Z: %.2f"),
+						*GetNameSafe(HitActor),
+						Hit.ImpactNormal.Z);
+				}
 			}
 		}
 	}
 
-	// 다음 틱을 위해 위치 갱신
 	PrevTraceStart = CurrStart;
 	PrevTraceEnd = CurrEnd;
 }
+
 
 void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 
+	
 	if (IsValid(PlayerCharacter))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("엔드"));
 		PlayerCharacter->AttackingActors.Empty();
+		IgnoredActors.Empty();
 	}
 }

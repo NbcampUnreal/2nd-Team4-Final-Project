@@ -1,40 +1,43 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "DW_SkillIcon.generated.h"
 
-class UDW_SkillComponent;
 class UImage;
 class UTextBlock;
 class UButton;
+class UDW_SkillComponent;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
+    virtual void NativeConstruct() override;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+    UPROPERTY(BlueprintReadWrite)
     FName SkillID;
 
     UPROPERTY(BlueprintReadWrite)
     UDW_SkillComponent* SkillComponent;
 
+    UFUNCTION()
+    void UpdateIcon();
+
 protected:
-    virtual void NativeConstruct() override;
+    UFUNCTION()
+    void OnSkillDoubleClicked();
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* SkillButton;
 
     UPROPERTY(meta = (BindWidget))
     UImage* IconImage;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* LevelText;
-
-    UPROPERTY(meta = (BindWidget))
-    UButton* SkillButton;
 
     UPROPERTY(meta = (BindWidget))
     UImage* LevelSpot01;
@@ -51,12 +54,6 @@ protected:
     UPROPERTY(meta = (BindWidget))
     UImage* LevelSpot05;
 
+private:
     bool bUnlocked = false;
-
-    UFUNCTION()
-    void OnSkillDoubleClicked();
-
-public:
-    UFUNCTION(BlueprintCallable)
-    void UpdateIcon();
 };

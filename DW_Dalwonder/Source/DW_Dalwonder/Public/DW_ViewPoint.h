@@ -45,5 +45,7 @@ protected:
 
 public:
     virtual void Interact_Implementation(AActor* Interactor) override;
+
+    UFUNCTION()
     void OnSequenceFinished();
 };
