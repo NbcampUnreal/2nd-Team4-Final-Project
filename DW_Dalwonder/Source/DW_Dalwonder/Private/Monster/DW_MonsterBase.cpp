@@ -386,6 +386,9 @@ void ADW_MonsterBase::Dead()
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
+
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
 	if (MonsterHP <= 0)
@@ -446,3 +449,7 @@ float ADW_MonsterBase::GetPlayerDistance()
 	return FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 }
 
+bool ADW_MonsterBase::CanBeCut_Implementation(const FHitResult& Hit)
+{
+	return true;
+}

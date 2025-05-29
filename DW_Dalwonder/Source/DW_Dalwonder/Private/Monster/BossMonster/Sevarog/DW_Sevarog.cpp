@@ -3,6 +3,9 @@
 
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
+#include "AIController.h"
+#include "NiagaraFunctionLibrary.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
@@ -40,9 +43,9 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 void ADW_Sevarog::AirAttack()
 {
 	FVector HammerLocation = Hammer->GetComponentLocation();
-	float Radius = 200.0f;
+	float Radius = 250.0f;
 
-	TArray<FOverlapResult> OverlapResults; // 이게 있어야 함
+	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
@@ -57,15 +60,132 @@ void ADW_Sevarog::AirAttack()
 
 	if (bHit)
 	{
-		for (const FOverlapResult& Result : OverlapResults) // 이 Result는 위 TArray에서 나옴
+		for (const FOverlapResult& Result : OverlapResults)
 		{
-			AActor* HitActor = Result.GetActor(); // 여기서 오류가 없어야 정상
-			if (HitActor && HitActor != this)
+			AActor* HitActor = Result.GetActor();
+			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
-				UGameplayStatics::ApplyDamage(HitActor, 30.0f, GetController(), this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
 	}
 
 	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+
+	if (!AirAttackNS) return;
+
+	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FRotator SpawnRotation = GetActorRotation();
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		AirAttackNS,
+		SpawnLocation,
+		SpawnRotation,
+		FVector(2.f),
+		true,
+		true
+	);
+}
+
+void ADW_Sevarog::DoTeleport()
+{
+	if (IsValid(TeleportMontage))
+	{
+		UAnimMontage* Montage = TeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_Sevarog::DoRangedTeleport()
+{
+	if (IsValid(RangedTeleportMontage))
+	{
+		UAnimMontage* Montage = RangedTeleportMontage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+}
+
+void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const
+{
+	const FVector RandomOffset = FVector(
+	FMath::RandRange(-500.f, 500.f),
+	FMath::RandRange(-500.f, 500.f),
+	0.f);
+
+	const FVector SpawnLocation = GetActorLocation() + RandomOffset;
+
+	if (IsValid(SpawnMonsterNS))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		SpawnMonsterNS,
+		SpawnLocation,
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true);
+	}
+
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	
+	GetWorld()->SpawnActor<AActor>(SpawnMob, SpawnLocation, GetActorRotation(), SpawnParams);
+}
+
+void ADW_Sevarog::SurroundedAttack()
+{
+	FVector HammerLocation = Hammer->GetComponentLocation();
+	float Radius = 400.0f;
+
+	TArray<FOverlapResult> OverlapResults;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		HammerLocation,
+		FQuat::Identity,
+		ECC_Pawn,
+		FCollisionShape::MakeSphere(Radius),
+		QueryParams
+	);
+
+	if (bHit)
+	{
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			AActor* HitActor = Result.GetActor();
+			if (HitActor && HitActor->ActorHasTag("Player"))
+			{
+				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+			}
+		}
+	}
+
+	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+
+	if (!SurroundedAttackNS) return;
+
+	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FRotator SpawnRotation = GetActorRotation();
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		SurroundedAttackNS,
+		SpawnLocation,
+		SpawnRotation,
+		FVector(1.f),
+		true,
+		true
+	);
 }

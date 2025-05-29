@@ -2,7 +2,7 @@
 
 ADW_Warrior::ADW_Warrior()
 {
-	FName WeaponSocketName(TEXT("weapon_r1Socket"));
+	FName WeaponSocketName = FName(TEXT("weapon_rSocket"));
 	
 	Weapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(GetMesh(), WeaponSocketName);

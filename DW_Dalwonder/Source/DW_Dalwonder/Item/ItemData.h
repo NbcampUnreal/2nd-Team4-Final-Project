@@ -1,19 +1,9 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "Engine/Texture2D.h"
+#include "EItemType.h"
 #include "ItemData.generated.h"
-
-UENUM(BlueprintType)
-enum class EItemType : uint8
-{
-    Equipment      UMETA(DisplayName = "Equipment"),
-    Consumable     UMETA(DisplayName = "Consumable"),
-    Material       UMETA(DisplayName = "Material"),
-    Quest          UMETA(DisplayName = "Quest")
-    
-};
 
 USTRUCT(BlueprintType)
 struct FItemData : public FTableRowBase
@@ -21,7 +11,7 @@ struct FItemData : public FTableRowBase
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
-    FName ItemID;
+    int32 ItemID;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
     FText ItemName;
@@ -30,7 +20,7 @@ struct FItemData : public FTableRowBase
     FText Description;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
-    EItemType ItemType;
+    EItemType ItemType = EItemType::None;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
     TSoftObjectPtr<UTexture2D> Icon;
