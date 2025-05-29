@@ -31,6 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* SpawnMonsterNS;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* SurroundedAttackNS;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -43,4 +46,6 @@ public:
 	void DoRangedTeleport();
 
 	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
+
+	void SurroundedAttack();
 };
