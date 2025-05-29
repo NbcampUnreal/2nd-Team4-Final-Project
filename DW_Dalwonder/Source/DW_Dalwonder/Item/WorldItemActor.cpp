@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "ItemTranslator.h"
 #include "Character/DW_CharacterBase.h"
 
 AWorldItemActor::AWorldItemActor()
@@ -28,18 +29,35 @@ AWorldItemActor::AWorldItemActor()
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
     InteractionWidget->SetVisibility(false);
 
+	ItemBase = CreateDefaultSubobject<UItemBase>(TEXT("ItemBase"));
 }
 
 void AWorldItemActor::BeginPlay()
 {
     Super::BeginPlay();
 
+	if (ItemBase->ItemCode != 0)
+	{
+		bool bSuccess = false;
+		// 아이템 코드가 설정되어 있다면 해당 아이템 데이터를 로드
+        UItemTranslator::ParseItemCode(
+            ItemBase->ItemCode,
+            ItemBase->ItemGrade,
+            ItemBase->EnchantLevel,
+            ItemBase->ItemBaseData.ItemID,
+            bSuccess);
+
+        if(!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("월드아이템 비상!!!!")));
+	}
+	
+
     if (ItemDataTable)
     {
-        const FItemData* FoundData = ItemDataTable->FindRow<FItemData>(ItemRowName, TEXT("Item Lookup"));
+		FName FItemRowName = FName(*FString::FromInt(ItemBase->ItemBaseData.ItemID));
+        const FItemData* FoundData = ItemDataTable->FindRow<FItemData>(FItemRowName, TEXT("Item Lookup"));
         if (FoundData)
         {
-            ItemData = *FoundData;
+            ItemBase->ItemBaseData = *FoundData;
         }
     }
 }
