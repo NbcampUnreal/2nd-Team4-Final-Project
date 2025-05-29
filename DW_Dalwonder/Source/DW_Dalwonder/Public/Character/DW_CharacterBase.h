@@ -314,7 +314,7 @@ public:
 	void UpdateFootstepSurface();
 
 	UFUNCTION(BlueprintCallable)
-	void SpawnFootstepEffect(FName FootSocketName);
+	void SpawnFootstepEffect(const FName FootSocketName) const;
 
 
 protected:	

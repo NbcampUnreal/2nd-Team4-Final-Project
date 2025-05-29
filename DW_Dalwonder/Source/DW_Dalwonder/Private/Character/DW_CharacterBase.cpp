@@ -1143,35 +1143,74 @@ void ADW_CharacterBase::UpdateFootstepSurface()
 }
 
 
-void ADW_CharacterBase::SpawnFootstepEffect(FName FootSocketName)
+void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 {
-	if (UNiagaraSystem** FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+	const FVector NewFootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
+	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
+	
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetMesh()->GetOwner());
+	Params.bReturnPhysicalMaterial = true;
+	
+	if (GetWorld()->LineTraceSingleByChannel(Hit, NewTraceStart, NewTraceEnd, ECC_Visibility, Params))
 	{
-		FVector FootLocation = GetActorLocation();
+		UPhysicalMaterial* PhysMat = Hit.PhysMaterial.Get();
 
-		if (GetMesh()->DoesSocketExist(FootSocketName))
+		if (Hit.bBlockingHit == true)
 		{
-			FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+			UE_LOG(LogTemp, Warning, TEXT("Blocked"))
 		}
 
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation);
-
-		// 디버그 메시지 출력
-		if (GEngine)
+		if (IsValid(PhysMat))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-				FString::Printf(TEXT("Footstep VFX spawned at socket: %s"), *FootSocketName.ToString()));
+			if (PhysMat->SurfaceType == SurfaceType1)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Good"))
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("SurfaceType X"))
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PhysMat X"))
 		}
 	}
-	else
-	{
-		// 이펙트가 없을 경우도 디버깅
-		if (GEngine)
-		{
-			const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
-				FString::Printf(TEXT("No VFX mapped for surface: %s"), *SurfaceName));
-		}
-	}
+
+	//
+	//
+	// if (UNiagaraSystem** FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+	// {
+	// 	FVector FootLocation = GetActorLocation();
+	//
+	// 	if (GetMesh()->DoesSocketExist(FootSocketName))
+	// 	{
+	// 		FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+	// 	}
+	//
+	// 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation);
+	//
+	// 	// 디버그 메시지 출력
+	// 	if (GEngine)
+	// 	{
+	// 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+	// 			FString::Printf(TEXT("Footstep VFX spawned at socket: %s"), *FootSocketName.ToString()));
+	// 	}
+	// }
+	// else
+	// {
+	// 	// 이펙트가 없을 경우도 디버깅
+	// 	if (GEngine)
+	// 	{
+	// 		const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+	// 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
+	// 			FString::Printf(TEXT("No VFX mapped for surface: %s"), *SurfaceName));
+	// 	}
+	// }
+
+	
 }
 
