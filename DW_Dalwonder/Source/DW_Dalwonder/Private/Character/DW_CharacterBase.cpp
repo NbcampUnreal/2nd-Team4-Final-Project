@@ -649,23 +649,6 @@ void ADW_CharacterBase::Interact()
 			if (bSuccess)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
-
-				if (BaseData.ItemType == EItemType::Equipment)
-				{
-					FEquipmentSubData EquipData = ItemDataManager->GetSubData<FEquipmentSubData>(TargetItemID, bSuccess);
-					if (bSuccess)
-					{
-						UE_LOG(LogTemp, Log, TEXT("Equipment Data: Damage=%.1f, Slot=%s"), EquipData.AttackDamage, *UEnum::GetValueAsString(EquipData.EquipmentSlot));
-					}
-				}
-				if (BaseData.ItemType == EItemType::Consumable)
-				{
-					FConsumableSubData ConsumData = ItemDataManager->GetSubData<FConsumableSubData>(TargetItemID, bSuccess);
-					if (bSuccess)
-					{
-						UE_LOG(LogTemp, Log, TEXT("Consume Data: HealAmount=%.1f, ManaRestoreAmount=%.1f"), ConsumData.HealAmount, ConsumData.ManaRestoreAmount);
-					}
-				}
 			}
 			else
 			{
