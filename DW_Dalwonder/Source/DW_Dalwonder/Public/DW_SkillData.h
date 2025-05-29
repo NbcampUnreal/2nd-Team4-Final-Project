@@ -28,6 +28,12 @@ struct FSkillData : public FTableRowBase
     int32 MaxLevel = 1;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    int32 Increase;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    int32 IncreaseType; // 1: 퍼센트, 2: 절댓값
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     UTexture2D* Icon;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
