@@ -38,12 +38,6 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	UE_LOG(LogTemp, Warning, TEXT("[NotifyTick] Instance: %p | Anim: %s | Mesh: %s "),
-		this,
-		*GetNameSafe(Animation),
-		*GetNameSafe(MeshComp)
-		);
-
 	if (!IsValid(PlayerCharacter) || !IsValid(CharacterWeapon)) return;
 	UWorld* World = MeshComp->GetWorld();
 	if (!IsValid(World)) return;
@@ -74,10 +68,10 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 
 		DrawDebugCapsule(
 			World,
-			(Start + End) * 0.5f,           // 중심
-			(End - Start).Size() * 0.5f,    // 하프높이
-			SphereRadius,                   // 반지름
-			FRotationMatrix::MakeFromZ(End - Start).ToQuat(),  // 회전
+			(Start + End) * 0.5f,
+			(End - Start).Size() * 0.5f,
+			SphereRadius,
+			FRotationMatrix::MakeFromZ(End - Start).ToQuat(),
 			FColor::Green,
 			false, 0.2f, 0, 1.f
 		);
