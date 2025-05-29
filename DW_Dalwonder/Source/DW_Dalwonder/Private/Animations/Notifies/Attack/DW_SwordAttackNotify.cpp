@@ -38,6 +38,12 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
+	UE_LOG(LogTemp, Warning, TEXT("[NotifyTick] Instance: %p | Anim: %s | Mesh: %s "),
+		this,
+		*GetNameSafe(Animation),
+		*GetNameSafe(MeshComp)
+		);
+
 	if (!IsValid(PlayerCharacter) || !IsValid(CharacterWeapon)) return;
 	UWorld* World = MeshComp->GetWorld();
 	if (!IsValid(World)) return;

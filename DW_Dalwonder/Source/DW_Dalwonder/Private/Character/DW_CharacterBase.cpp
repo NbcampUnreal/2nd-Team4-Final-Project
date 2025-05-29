@@ -219,6 +219,8 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Look(const FInputActionValue& Value)
 {
+	if (bIsLockOn) return;
+	
 	FVector2D LookInput = Value.Get<FVector2D>();
 
 	AddControllerYawInput(LookInput.X);
@@ -283,8 +285,7 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		/*@TODO : Lockon 함수 구현
-		 *bIsLockon 변수로 스위치하면 됨*/
+		ToggleLockOn();
 	}
 }
 
