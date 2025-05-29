@@ -1,11 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Monster/AnimNotify/AnimNotify_SetDog1BattleSpeed.h"
+#include "Monster/AnimNotify/AnimNotify_SetSpeed.h"
 
 #include "Monster/DW_MonsterBase.h"
 
-void UAnimNotify_SetDog1BattleSpeed::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
+void UAnimNotify_SetSpeed::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	if (MeshComp && MeshComp->GetOwner())
 	{
@@ -14,7 +14,7 @@ void UAnimNotify_SetDog1BattleSpeed::Notify(USkeletalMeshComponent* MeshComp, UA
 
 		if (IsValid(Monster))
 		{
-			Monster->SetMonsterSpeed(700);
+			Monster->SetMonsterSpeed(MoveSpeed);
 		}
 	}
 }

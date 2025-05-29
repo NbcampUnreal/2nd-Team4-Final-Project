@@ -4,16 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
-#include "AnimNotify_SetDog1BattleSpeed.generated.h"
+#include "AnimNotify_SetSpeed.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class DW_DALWONDER_API UAnimNotify_SetDog1BattleSpeed : public UAnimNotify
+class DW_DALWONDER_API UAnimNotify_SetSpeed : public UAnimNotify
 {
 	GENERATED_BODY()
-	
+		
 public:
+
+	UPROPERTY(EditAnywhere)
+	float MoveSpeed;
+	
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };
