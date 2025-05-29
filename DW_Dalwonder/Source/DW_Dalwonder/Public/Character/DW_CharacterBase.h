@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "DW_SkillComponent.h"
 #include "DW_AttributeComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
@@ -13,6 +14,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
 class UUserWidget;
+class UNiagaraSystem;
+class UPhysicalMaterial;
 
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
@@ -285,13 +288,7 @@ public:
 
 #pragma endregion
 
-	// -----------------------------
-	// 🙋 상호작용 관련 시스템 (Interact)
-	// -----------------------------
 #pragma region Interact
-	// -----------------------------
-	//  상호작용 관련
-	// -----------------------------
 public:
 	
 	FTimerHandle ItemScanTimerHandle;
@@ -302,6 +299,19 @@ public:
 	void RemoveNearbyItem(AWorldItemActor* Item);
 	void UpdateClosestItem();
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UPROPERTY(EditDefaultsOnly, Category = "Footstep")
+	TMap<TEnumAsByte<EPhysicalSurface>, UNiagaraSystem*> FootstepVFXMap;
+
+	// 현재 감지된 SurfaceType (0.01초마다 업데이트됨)
+	EPhysicalSurface CurrentSurfaceType = SurfaceType_Default;
+
+	// 바닥 정보를 주기적으로 검사하는 타이머
+	FTimerHandle FootstepTraceTimerHandle;
+
+	// 현재 바닥의 SurfaceType을 판별하는 함수
+	void UpdateFootstepSurface();
+
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")

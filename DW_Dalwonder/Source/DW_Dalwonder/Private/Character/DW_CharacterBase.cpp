@@ -55,6 +55,14 @@ void ADW_CharacterBase::BeginPlay()
 		true          
 	);
 
+	GetWorldTimerManager().SetTimer(
+		FootstepTraceTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateFootstepSurface,
+		0.01f,   // 주기
+		true     // 반복 여부
+	);
+
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
 
 	// HUD 타이머 설정 (0.1초 간격)
@@ -1104,4 +1112,24 @@ void ADW_CharacterBase::SwitchLockOnTarget()
 
 	LockOnIndex = (LockOnIndex + 1) % LockOnCandidates.Num();
 	LockOnTarget = LockOnCandidates[LockOnIndex];
+}
+
+
+void ADW_CharacterBase::UpdateFootstepSurface()
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start - FVector(0.f, 0.f, 50.f);  // 아래 방향으로 트레이스
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		UPhysicalMaterial* PhysMat = Hit.PhysMaterial.Get();
+		if (PhysMat)
+		{
+			CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+		}
+	}
 }
