@@ -623,13 +623,13 @@ void ADW_CharacterBase::Interact()
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
 		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
 		if (ItemDataManager)
 		{
 			bool bSuccess;
-			FName TargetItemID = Data.ItemID; // 데이터테이블에 있는 ItemID
+			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
 
 			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
 			if (bSuccess)
