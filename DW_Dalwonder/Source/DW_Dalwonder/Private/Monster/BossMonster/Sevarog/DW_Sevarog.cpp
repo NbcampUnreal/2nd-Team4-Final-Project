@@ -63,9 +63,9 @@ void ADW_Sevarog::AirAttack()
 		for (const FOverlapResult& Result : OverlapResults)
 		{
 			AActor* HitActor = Result.GetActor();
-			if (HitActor && HitActor != this)
+			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
-				UGameplayStatics::ApplyDamage(HitActor, 30.0f, GetController(), this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage, GetController(), this, UDamageType::StaticClass());
 			}
 		}
 	}
