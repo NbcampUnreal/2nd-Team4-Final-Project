@@ -12,6 +12,7 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
@@ -53,6 +54,14 @@ void ADW_CharacterBase::BeginPlay()
 		&ADW_CharacterBase::UpdateClosestItem,
 		0.1f,         
 		true          
+	);
+
+	GetWorldTimerManager().SetTimer(
+		FootstepTraceTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateFootstepSurface,
+		0.01f,   // 주기
+		true     // 반복 여부
 	);
 
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
@@ -628,13 +637,13 @@ void ADW_CharacterBase::Interact()
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
 		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
 		if (ItemDataManager)
 		{
 			bool bSuccess;
-			FName TargetItemID = Data.ItemID; // 데이터테이블에 있는 ItemID
+			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
 
 			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
 			if (bSuccess)
@@ -1105,3 +1114,64 @@ void ADW_CharacterBase::SwitchLockOnTarget()
 	LockOnIndex = (LockOnIndex + 1) % LockOnCandidates.Num();
 	LockOnTarget = LockOnCandidates[LockOnIndex];
 }
+
+
+void ADW_CharacterBase::UpdateFootstepSurface()
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start - FVector(0.f, 0.f, 5.f);  // 아래 방향으로 트레이스
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		UPhysicalMaterial* PhysMat = Hit.PhysMaterial.Get();
+		if (PhysMat)
+		{
+			CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+
+			// 디버그 메시지 출력
+			if (GEngine)
+			{
+				const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("SurfaceType: %s"), *SurfaceName));
+			}
+		}
+	}
+}
+
+
+void ADW_CharacterBase::SpawnFootstepEffect(FName FootSocketName)
+{
+	if (UNiagaraSystem** FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+	{
+		FVector FootLocation = GetActorLocation();
+
+		if (GetMesh()->DoesSocketExist(FootSocketName))
+		{
+			FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+		}
+
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation);
+
+		// 디버그 메시지 출력
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+				FString::Printf(TEXT("Footstep VFX spawned at socket: %s"), *FootSocketName.ToString()));
+		}
+	}
+	else
+	{
+		// 이펙트가 없을 경우도 디버깅
+		if (GEngine)
+		{
+			const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
+				FString::Printf(TEXT("No VFX mapped for surface: %s"), *SurfaceName));
+		}
+	}
+}
+
