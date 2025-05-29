@@ -1,11 +1,12 @@
 // WorldItemActor.h
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
-#include "ItemData.h" // FItemData 정의된 헤더
+#include "ItemData.h"
+#include "EItemGrade.h"
+#include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
 UCLASS()
@@ -20,22 +21,12 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-
-    // 아이템 코드 (고유 식별자)
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 ItemCode = 0; 
-
-    // 아이템 데이터 이름 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    FName ItemRowName;
+    UPROPERTY(EditAnywhere, Instanced, Category = "Item")
+	UItemBase* ItemBase;
 
     // 아이템 데이터테이블 
-    UPROPERTY(EditDefaultsOnly, Category = "Item")
+    UPROPERTY(EditAnywhere, Category = "Item")
     UDataTable* ItemDataTable;
-
-    // 아이템 실제 데이터 
-    UPROPERTY(EditAnywhere)
-    FItemData ItemData;
 
     // 상호작용 문구 위젯 
     UPROPERTY(VisibleAnywhere)
@@ -64,11 +55,4 @@ public:
 
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
-
-	FItemData GetItemData() const
-	{
-		return ItemData;
-	}
-
-
 };

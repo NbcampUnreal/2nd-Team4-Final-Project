@@ -12,9 +12,11 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
+#include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -36,6 +38,9 @@ ADW_CharacterBase::ADW_CharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
+	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
+	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
 }
 
 void ADW_CharacterBase::BeginPlay()
@@ -49,6 +54,14 @@ void ADW_CharacterBase::BeginPlay()
 		&ADW_CharacterBase::UpdateClosestItem,
 		0.1f,         
 		true          
+	);
+
+	GetWorldTimerManager().SetTimer(
+		FootstepTraceTimerHandle,
+		this,
+		&ADW_CharacterBase::UpdateFootstepSurface,
+		0.01f,   // 주기
+		true     // 반복 여부
 	);
 
 	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
@@ -218,6 +231,8 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Look(const FInputActionValue& Value)
 {
+	if (bIsLockOn) return;
+	
 	FVector2D LookInput = Value.Get<FVector2D>();
 
 	AddControllerYawInput(LookInput.X);
@@ -282,8 +297,7 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		/*@TODO : Lockon 함수 구현
-		 *bIsLockon 변수로 스위치하면 됨*/
+		ToggleLockOn();
 	}
 }
 
@@ -369,7 +383,7 @@ void ADW_CharacterBase::CancelAttack()
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
-		
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -623,13 +637,13 @@ void ADW_CharacterBase::Interact()
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
 		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
 		if (ItemDataManager)
 		{
 			bool bSuccess;
-			FName TargetItemID = Data.ItemID; // 데이터테이블에 있는 ItemID
+			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
 
 			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
 			if (bSuccess)
@@ -872,32 +886,61 @@ void ADW_CharacterBase::ToggleESCMenu()
 
 void ADW_CharacterBase::ToggleLockOn()
 {
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
 	if (bIsLockOn)
 	{
 		// 🔓 락온 해제
 		bIsLockOn = false;
 		LockOnTarget = nullptr;
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
+
+		if (LockOnWidgetInstance)
+		{
+			LockOnWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 	else
 	{
-		// 🔒 락온 시작
-		AActor* Target = FindBestLockOnTarget(); // 또는 FindClosestTarget();
+		AActor* Target = FindBestLockOnTarget();
 		if (IsValid(Target))
 		{
 			bIsLockOn = true;
 			LockOnTarget = Target;
 
+			if (!LockOnWidgetInstance && IsValid(LockOnWidgetClass))
+			{
+				LockOnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), LockOnWidgetClass);
+				if (LockOnWidgetInstance)
+				{
+					LockOnWidgetInstance->AddToViewport();
+				}
+			}
+
+			if (LockOnWidgetInstance)
+			{
+				LockOnWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+			}
+
 			GetWorldTimerManager().SetTimer(
 				LockOnRotationTimer,
 				this,
 				&ADW_CharacterBase::UpdateLockOnRotation,
-				0.05f,
+				0.01f,
+				true
+			);
+
+			GetWorldTimerManager().SetTimer(
+				LockOnMarkerUpdateTimer,
+				this,
+				&ADW_CharacterBase::UpdateLockOnMarkerPosition,
+				0.01f,
 				true
 			);
 		}
 	}
 }
+
 
 
 AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
@@ -1032,6 +1075,34 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 	});
 }
 
+void ADW_CharacterBase::UpdateLockOnMarkerPosition()
+{
+	if (!bIsLockOn || !IsValid(LockOnTarget) || !IsValid(LockOnWidgetInstance)) return;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	FVector WorldLocation;
+
+	// 캡슐 기준 높이 계산 (가슴 위치 근처)
+	UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(LockOnTarget->GetComponentByClass(UCapsuleComponent::StaticClass()));
+	if (Capsule)
+	{
+		WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+	}
+	else
+	{
+		WorldLocation = LockOnTarget->GetActorLocation();
+	}
+
+	FVector2D ScreenPosition;
+	if (PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
+	{
+		LockOnWidgetInstance->SetPositionInViewport(ScreenPosition, true);
+	}
+}
+
+
 void ADW_CharacterBase::SwitchLockOnTarget()
 {
 	if (!bIsLockOn) return;
@@ -1043,3 +1114,64 @@ void ADW_CharacterBase::SwitchLockOnTarget()
 	LockOnIndex = (LockOnIndex + 1) % LockOnCandidates.Num();
 	LockOnTarget = LockOnCandidates[LockOnIndex];
 }
+
+
+void ADW_CharacterBase::UpdateFootstepSurface()
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start - FVector(0.f, 0.f, 5.f);  // 아래 방향으로 트레이스
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		UPhysicalMaterial* PhysMat = Hit.PhysMaterial.Get();
+		if (PhysMat)
+		{
+			CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+
+			// 디버그 메시지 출력
+			if (GEngine)
+			{
+				const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("SurfaceType: %s"), *SurfaceName));
+			}
+		}
+	}
+}
+
+
+void ADW_CharacterBase::SpawnFootstepEffect(FName FootSocketName)
+{
+	if (UNiagaraSystem** FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+	{
+		FVector FootLocation = GetActorLocation();
+
+		if (GetMesh()->DoesSocketExist(FootSocketName))
+		{
+			FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+		}
+
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation);
+
+		// 디버그 메시지 출력
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
+				FString::Printf(TEXT("Footstep VFX spawned at socket: %s"), *FootSocketName.ToString()));
+		}
+	}
+	else
+	{
+		// 이펙트가 없을 경우도 디버깅
+		if (GEngine)
+		{
+			const FString SurfaceName = UEnum::GetValueAsString(CurrentSurfaceType);
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
+				FString::Printf(TEXT("No VFX mapped for surface: %s"), *SurfaceName));
+		}
+	}
+}
+
