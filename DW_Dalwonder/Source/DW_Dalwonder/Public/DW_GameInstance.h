@@ -30,19 +30,8 @@ public:
 
 protected:
     
-    UPROPERTY() // 가비지 컬렉션의 관리를 받도록 UPROPERTY 추가
-    class UItemDataManager* ItemDataManagerInstanceRef;
 
 public:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
-    class UDataTable* ItemBaseDataTableRef;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
-    UDataTable* EquipmentSubDataTableRef;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Data Manager Data")
-    UDataTable* ConsumableSubDataTableRef;
-
 
     FTimerHandle DelayTest;
 
