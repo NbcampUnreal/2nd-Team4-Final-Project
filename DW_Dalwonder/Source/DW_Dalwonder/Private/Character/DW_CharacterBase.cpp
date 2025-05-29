@@ -73,6 +73,8 @@ void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	AttackTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(BlockTimer);
 	BlockTimer.Invalidate();
+	GetWorldTimerManager().ClearTimer(IdleStateTimer);
+	IdleStateTimer.Invalidate();
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -264,11 +266,13 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 		{
 			bIsSprinting = true;
 			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+			GetCharacterStatComponent()->ConsumeStamina(1.f);
 		}
 		else
 		{
 			bIsSprinting = false;
 			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
+			GetCharacterStatComponent()->StopConsumeStamina();
 		}
 	}
 }
@@ -277,7 +281,13 @@ void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		if (GetCharacterStatComponent()->GetStamina() < 10.f)
+		{
+			return;
+		}
+		
 		//@TODO : Dodge 로직 구현
+		GetCharacterStatComponent()->SetStamina(GetCharacterStatComponent()->GetStamina() - 10.f);
 		PlayMontage(DodgeMontage);
 	}
 }
@@ -326,8 +336,12 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, bool bBlockControl, i
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
-
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
+
+	if (CurrentCombatState != ECharacterCombatState::Idle || CurrentCombatState != ECharacterCombatState::Guarding)
+	{
+		SetIdleState();
+	}
 }
 
 void ADW_CharacterBase::StartAttack()
@@ -503,34 +517,35 @@ void ADW_CharacterBase::SetParrying(bool bNewParrying)
 	
 	if (bIsParrying)
 	{
-		CurrentCombatState = ECharacterCombatState::Parrying;
-
+		SetCombatState(ECharacterCombatState::Parrying);
 		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
 	}
 	else
 	{
-		CurrentCombatState = ECharacterCombatState::Idle;
-
-		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
+		UE_LOG(LogTemp, Log, TEXT("패링 종료"));
 	}
 }
 
 void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 {
 	if (bIsGuarding == bNewGuarding)
+	{
 		return;
-
+	}
+	
 	bIsGuarding = bNewGuarding;
 
 	if (bIsGuarding)
 	{
-		CurrentCombatState = ECharacterCombatState::Guarding;
+		SetCombatState(ECharacterCombatState::Guarding);
 		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
+		GetCharacterStatComponent()->ConsumeStamina(2.f);
 	}
 	else
 	{
-		CurrentCombatState = ECharacterCombatState::Idle;
+		SetCombatState(ECharacterCombatState::Idle);
 		UE_LOG(LogTemp, Log, TEXT("가드 종료"));
+		GetCharacterStatComponent()->StopConsumeStamina();
 	}
 }
 
@@ -553,6 +568,11 @@ void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 
 void ADW_CharacterBase::StartGuard()
 {
+	if (GetCharacterStatComponent()->GetStamina() < 5.f)
+	{
+		return;
+	}
+	
 	SetGuarding(true);
 	BlockCharacterControl(true);
 	PlayMontage(GuardMontage);
@@ -622,6 +642,16 @@ void ADW_CharacterBase::SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex
 		{
 			EndAttack(Montage, false);
 		}), MontageLength, false);
+}
+
+void ADW_CharacterBase::SetIdleState()
+{
+	GetWorldTimerManager().ClearTimer(IdleStateTimer);
+
+	GetWorldTimerManager().SetTimer(IdleStateTimer, FTimerDelegate::CreateLambda([&]
+	{
+			SetCombatState(ECharacterCombatState::Idle);
+	}), 5.f, false);
 }
 
 void ADW_CharacterBase::Interact()

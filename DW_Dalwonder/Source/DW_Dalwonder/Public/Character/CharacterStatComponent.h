@@ -12,6 +12,14 @@ class DW_DALWONDER_API UCharacterStatComponent : public UActorComponent
 public:
 	UCharacterStatComponent();
 
+	void ConsumeHealth(float ConsumeRate);
+
+	void ConsumeStamina(float ConsumeRate);
+
+	void StopConsumeHealth();
+
+	void StopConsumeStamina();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 #pragma region GetterSetter
@@ -148,6 +156,7 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:

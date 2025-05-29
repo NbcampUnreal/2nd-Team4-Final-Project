@@ -150,6 +150,9 @@ public:
 	UFUNCTION(blueprintCallable, Category = "Combat")
 	void SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex = -1);
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetIdleState();
+
 	// 공격한 대상 저장하기 위한 Set
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TSet<AActor*> AttackingActors;
@@ -203,6 +206,10 @@ public:
 	// 사망 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* DeadMontage;
+
+	// 전투 상태 타이머
+	UPROPERTY()
+	FTimerHandle IdleStateTimer;
 
 	// -----------------------------
 	// 🎯 락온 관련 변수 및 함수
