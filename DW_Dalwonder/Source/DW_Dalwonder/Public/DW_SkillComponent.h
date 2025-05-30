@@ -1,24 +1,23 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "Components/ActorComponent.h"
 #include "DW_SkillData.h"
 #include "DW_SkillState.h"
 #include "DW_SkillComponent.generated.h"
 
+class UDW_AttributeComponent;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DW_DALWONDER_API UDW_SkillComponent : public UActorComponent
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 public:
     UDW_SkillComponent();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 CurrentSP = 5;
+    int32 CurrentSP = 10;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill")
     UDataTable* SkillDataTable;
@@ -35,4 +34,8 @@ public:
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillUpdated);
     UPROPERTY(BlueprintAssignable)
     FOnSkillUpdated OnSkillUpdated;
+
+private:
+    FSkillState* FindSkillState(FName SkillID);
+    void ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel);
 };

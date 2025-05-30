@@ -4,8 +4,8 @@
 #include "Blueprint/UserWidget.h"
 #include "DW_SkillTree.generated.h"
 
-class UScrollBox;
 class UCanvasPanel;
+class UDW_SkillComponent;
 class UDW_SkillIcon;
 
 UCLASS()
@@ -16,18 +16,17 @@ class DW_DALWONDER_API UDW_SkillTree : public UUserWidget
 public:
     virtual void NativeConstruct() override;
 
-protected:
-    UPROPERTY(meta = (BindWidget))
-    UScrollBox* SkillScrollBox;
-
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
     UCanvasPanel* SkillCanvasPanel;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillTree")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn))
+    UDW_SkillComponent* SkillComponent;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
     TSubclassOf<UDW_SkillIcon> SkillIconClass;
 
-    UPROPERTY(BlueprintReadWrite, Category = "SkillTree")
-    class UDW_SkillComponent* SkillComponent;
-
+private:
     void CreateSkillIcons();
+    UFUNCTION()
+    void RefreshAllIcons();
 };

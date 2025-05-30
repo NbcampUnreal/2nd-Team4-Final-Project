@@ -16,7 +16,7 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->InitSphereRadius(10.f);
-	CollisionComponent->SetCollisionProfileName("BlockAll");
+	CollisionComponent->SetCollisionProfileName("Projectile");
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnProjectileHit);
 	RootComponent = CollisionComponent;
@@ -38,7 +38,7 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 
 		if (OtherActor->ActorHasTag("Player"))
 		{
-			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), this, nullptr);
+			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
 			HitEffectSpawnLogic(Hit);
 			Destroy();
 		}
