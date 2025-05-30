@@ -288,6 +288,12 @@ void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 		
 		//@TODO : Dodge 로직 구현
 		GetCharacterStatComponent()->SetStamina(GetCharacterStatComponent()->GetStamina() - 10.f);
+
+		if (bIsLockOn)
+		{
+			
+		}
+		
 		PlayMontage(DodgeMontage);
 	}
 }
@@ -423,8 +429,7 @@ void ADW_CharacterBase::CancelAttack()
 void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
 {
 	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
-
-	SetCombatState(ECharacterCombatState::Idle);
+	
 	bCanAttack = true;
 	ComboIndex = 0;
 }
@@ -437,75 +442,77 @@ float ADW_CharacterBase::TakeDamage
 	AActor* DamageCauser
 	)
 {
-	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
-
+	float ActualDamage = DamageAmount;
+	
 	// 캐릭터가 무적 상태일 때
 	if (bIsInvincible)
 	{
 		UE_LOG(LogTemp, Log, TEXT("무적"));
-		return 0.f;
+		ActualDamage = 0.f;
+		return ActualDamage;
 	}
 
-	// 캐릭터가 몬스터에게 대미지를 받았을 때
-	if (IsValid(Monster))
+	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
+	// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
+	if (Monster->GetCanParry() && bIsParrying)
 	{
-		// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
-		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
-		{
-			Monster->Parried();
-			PlayMontage(ParryMontage, true);
-		}
-		else if (CurrentCombatState == ECharacterCombatState::Guarding)
-		{
-			
-		}
-		else
-		{
-			UDW_DamageType* DW_DamageType = Cast<UDW_DamageType>(DamageEvent.DamageTypeClass);
+		Monster->Parried();
+		PlayMontage(ParryMontage, true);
+		ActualDamage = 0.f;
+		return ActualDamage;
+	}
 
-			// 대미지 타입을 커스텀 대미지 타입으로 받았을 때
-			if (IsValid(DW_DamageType))
+	// 캐릭터가 가드 상태일 때
+	if (bIsGuarding)
+	{
+		ActualDamage /= 0.5f;
+	}
+	else
+	{
+		UDW_DamageType* DW_DamageType = Cast<UDW_DamageType>(DamageEvent.DamageTypeClass);
+
+		// 대미지 타입을 커스텀 대미지 타입으로 받았을 때
+		if (IsValid(DW_DamageType))
+		{
+			// 넉백이 적용되는 공격을 맞았을 때
+			if (DW_DamageType->bCanKnockdown == true)
 			{
-				// 넉백이 적용되는 공격을 맞았을 때
-				if (DW_DamageType->bCanKnockdown == true)
+				KnockBackCharacter();
+			}
+			// 넉백이 적용되지 않는 공격을 맞았을 때
+			else
+			{
+				float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
+				if (DamageAmount > KnockBackAmount)
 				{
 					KnockBackCharacter();
 				}
-				// 넉백이 적용되지 않는 공격을 맞았을 때
 				else
 				{
-					float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
-					if (DamageAmount > KnockBackAmount)
-					{
-						KnockBackCharacter();
-					}
-					else
-					{
-						int32 HitSectionNum = HitMontage->GetNumSections();
-						int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-						PlayMontage(HitMontage, true, RandomHitSectionNum);
-					}
+					int32 HitSectionNum = HitMontage->GetNumSections();
+					int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
+					PlayMontage(HitMontage, true, RandomHitSectionNum);
 				}
 			}
-			// 일반 대미지 타입으로 받았을 때
-			else
-			{
-				int32 HitSectionNum = HitMontage->GetNumSections();
-				int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-				PlayMontage(HitMontage, true, RandomHitSectionNum);
-			}
-
-			// 체력 감소 로직
-			StatComponent->SetHealth(StatComponent->GetHealth() - DamageAmount);
+		}
+		// 일반 대미지 타입으로 받았을 때
+		else
+		{
+			int32 HitSectionNum = HitMontage->GetNumSections();
+			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
+			PlayMontage(HitMontage, true, RandomHitSectionNum);
 		}
 	}
+
+	// 체력 감소 로직
+	StatComponent->SetHealth(StatComponent->GetHealth() - ActualDamage);
 
 	if (FMath::IsNearlyZero(StatComponent->GetHealth()))
 	{
 		Dead();
 	}
 	
-	return DamageAmount;
+	return ActualDamage;
 }
 
 void ADW_CharacterBase::SetParrying(bool bNewParrying)
@@ -647,10 +654,11 @@ void ADW_CharacterBase::SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex
 void ADW_CharacterBase::SetIdleState()
 {
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
+	UE_LOG(LogTemp, Warning, TEXT("SetIdleState"));
 
 	GetWorldTimerManager().SetTimer(IdleStateTimer, FTimerDelegate::CreateLambda([&]
 	{
-			SetCombatState(ECharacterCombatState::Idle);
+		SetCombatState(ECharacterCombatState::Idle);
 	}), 5.f, false);
 }
 
