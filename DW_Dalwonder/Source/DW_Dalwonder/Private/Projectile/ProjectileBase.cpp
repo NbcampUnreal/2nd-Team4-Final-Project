@@ -37,8 +37,8 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		if (OtherActor->ActorHasTag("Player"))
-		{
-			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), this, nullptr);
+		{			
+			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), GetOwner(), nullptr);
 			HitEffectSpawnLogic(Hit);
 			Destroy();
 		}

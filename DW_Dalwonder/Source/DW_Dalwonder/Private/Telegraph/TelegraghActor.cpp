@@ -32,7 +32,9 @@ void ATelegraghActor::OnEffectOverlap(UPrimitiveComponent* OverlappedComponent, 
 {
 	if (OtherActor->ActorHasTag("Player"))
 	{
+		
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
 
 		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), this, nullptr);
 	}
