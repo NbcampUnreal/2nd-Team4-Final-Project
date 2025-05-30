@@ -26,7 +26,6 @@ public:
     UFUNCTION()
     void UpdateIcon();
 
-    // Image Getter
     UImage* GetIconImage() const { return IconImage; }
 
 protected:
@@ -38,6 +37,9 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UImage* IconImage;
+
+    UPROPERTY(meta = (BindWidget))
+    UImage* DotEffectImage;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* LevelText;
