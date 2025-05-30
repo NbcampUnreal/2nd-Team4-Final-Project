@@ -830,39 +830,34 @@ void ADW_CharacterBase::ToggleESCMenu()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (!GameMode || !ESCMenuWidgetClass) return;
 
-	if (!bIsESCMenuOpen)
+	if (GameMode->GetPopupWidgetCount() > 0)
 	{
-		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-		if (ESCMenuWidgetInstance)
-		{
-			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
-			bIsESCMenuOpen = true;
+		// 전용 함수 사용
+		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
 
-			if (APlayerController* PC = Cast<APlayerController>(GetController()))
-			{
-				PC->SetShowMouseCursor(true);
-				// UI Focus말고 키보드 입력도 먹도록 수정
-				FInputModeGameAndUI InputMode;
-				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				InputMode.SetHideCursorDuringCapture(false);
-				PC->SetInputMode(InputMode);
-			}
-		}
-	}
-	else
-	{
-		if (ESCMenuWidgetInstance)
+		// ESC 메뉴 닫혔는지 체크
+		if (ClosedWidget == ESCMenuWidgetInstance)
 		{
-			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
 			ESCMenuWidgetInstance = nullptr;
+			bIsESCMenuOpen = false;
 		}
+		return;
+	}
 
-		bIsESCMenuOpen = false;
+	// ESC 메뉴 열기
+	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+	if (ESCMenuWidgetInstance)
+	{
+		GameMode->ShowPopupUI(ESCMenuWidgetClass);
+		bIsESCMenuOpen = true;
 
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
-			PC->SetShowMouseCursor(false);
-			PC->SetInputMode(FInputModeGameOnly());
+			PC->SetShowMouseCursor(true);
+			FInputModeGameAndUI InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InputMode.SetHideCursorDuringCapture(false);
+			PC->SetInputMode(InputMode);
 		}
 	}
 }
