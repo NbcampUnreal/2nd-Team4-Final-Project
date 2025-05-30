@@ -157,7 +157,6 @@ void ADW_NormalMonsterAIControllerBase::StartChasingPlayer()
 	BB = GetBlackboardComponent();
 	if (BB)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::White, TEXT("Chase Player"));
 		BB->SetValueAsEnum(CurrentStateKey, (uint8)ENormalMobState::Chasing);
 	}
 }

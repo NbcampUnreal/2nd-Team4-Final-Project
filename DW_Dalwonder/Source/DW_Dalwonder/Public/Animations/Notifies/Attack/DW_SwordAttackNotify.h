@@ -36,6 +36,12 @@ public:
 
 	UPROPERTY()
 	TSet<TWeakObjectPtr<AActor>> IgnoredActors;
+
+	// 데미지 간격(초) - 필요에 따라 조정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+	float DamageInterval = 0.1f;
+
+	TMap<TWeakObjectPtr<AActor>, float> LastHitTimes;
 	
 private:
 	FVector PrevTraceStart;

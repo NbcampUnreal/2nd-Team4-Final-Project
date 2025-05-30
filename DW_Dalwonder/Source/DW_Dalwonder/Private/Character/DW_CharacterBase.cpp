@@ -12,6 +12,7 @@
 #include "NiagaraValidationRule.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_GmBase.h"
@@ -636,35 +637,18 @@ void ADW_CharacterBase::Interact()
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->GetItemData(); // 아이템 정보 가져오기
+		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
 		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
 		if (ItemDataManager)
 		{
 			bool bSuccess;
-			FName TargetItemID = Data.ItemID; // 데이터테이블에 있는 ItemID
+			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
 
 			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
 			if (bSuccess)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
-
-				if (BaseData.ItemType == EItemType::Equipment)
-				{
-					FEquipmentSubData EquipData = ItemDataManager->GetSubData<FEquipmentSubData>(TargetItemID, bSuccess);
-					if (bSuccess)
-					{
-						UE_LOG(LogTemp, Log, TEXT("Equipment Data: Damage=%.1f, Slot=%s"), EquipData.AttackDamage, *UEnum::GetValueAsString(EquipData.EquipmentSlot));
-					}
-				}
-				if (BaseData.ItemType == EItemType::Consumable)
-				{
-					FConsumableSubData ConsumData = ItemDataManager->GetSubData<FConsumableSubData>(TargetItemID, bSuccess);
-					if (bSuccess)
-					{
-						UE_LOG(LogTemp, Log, TEXT("Consume Data: HealAmount=%.1f, ManaRestoreAmount=%.1f"), ConsumData.HealAmount, ConsumData.ManaRestoreAmount);
-					}
-				}
 			}
 			else
 			{
@@ -1113,18 +1097,42 @@ void ADW_CharacterBase::SwitchLockOnTarget()
 void ADW_CharacterBase::UpdateFootstepSurface()
 {
 	FVector Start = GetActorLocation();
-	FVector End = Start - FVector(0.f, 0.f, 50.f);  // 아래 방향으로 트레이스
+	FVector End = Start - FVector(0.f, 0.f, 100.f);  // 아래 방향으로 트레이스
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
+	Params.bReturnPhysicalMaterial = true;
 
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
 	{
-		UPhysicalMaterial* PhysMat = Hit.PhysMaterial.Get();
-		if (PhysMat)
+		CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+	}
+}
+
+void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
+{
+	const FVector NewFootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
+	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetMesh()->GetOwner());
+	Params.bReturnPhysicalMaterial = true;
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, NewTraceStart, NewTraceEnd, ECC_Visibility, Params))
+	{
+		if (UNiagaraSystem* const* FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
 		{
-			CurrentSurfaceType = UGameplayStatics::GetSurfaceType(Hit);
+			FVector FootLocation = Hit.ImpactPoint;
+
+			if (GetMesh()->DoesSocketExist(FootSocketName))
+			{
+				FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+			}
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());
 		}
 	}
 }

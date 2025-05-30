@@ -14,6 +14,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
 class UUserWidget;
+class UiagaraFunctionLibrary;
 class UNiagaraSystem;
 class UPhysicalMaterial;
 
@@ -300,7 +301,7 @@ public:
 	void UpdateClosestItem();
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
-	UPROPERTY(EditDefaultsOnly, Category = "Footstep")
+	UPROPERTY(EditDefaultsOnly, Category = "FootStep")
 	TMap<TEnumAsByte<EPhysicalSurface>, UNiagaraSystem*> FootstepVFXMap;
 
 	// 현재 감지된 SurfaceType (0.01초마다 업데이트됨)
@@ -311,6 +312,9 @@ public:
 
 	// 현재 바닥의 SurfaceType을 판별하는 함수
 	void UpdateFootstepSurface();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnFootstepEffect(const FName FootSocketName) const;
 
 
 protected:	
