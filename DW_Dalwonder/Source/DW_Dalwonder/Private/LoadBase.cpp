@@ -25,6 +25,6 @@ void ALoadBase::BeginPlay()
     FTimerHandle Handle;
     GetWorld()->GetTimerManager().SetTimer(Handle, FTimerDelegate::CreateLambda([]()
         {
-            UGameplayStatics::OpenLevel(GWorld, "TestGameMap"); // 오픈월드 맵 이름
+            UGameplayStatics::OpenLevel(GWorld, "Start_Testmap_WP"); // 오픈월드 맵 이름
         }), 2.0f, false);
 }
