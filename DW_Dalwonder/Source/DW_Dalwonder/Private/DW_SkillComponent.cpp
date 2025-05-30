@@ -54,7 +54,7 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 
         ApplySkillEffect(*SkillData, 1);
     }
-
+    UE_LOG(LogTemp, Warning, TEXT("CurrentSP: %d"), CurrentSP);
     OnSkillUpdated.Broadcast();
     return true;
 }

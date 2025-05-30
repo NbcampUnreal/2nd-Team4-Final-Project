@@ -26,6 +26,9 @@ public:
     UFUNCTION()
     void UpdateIcon();
 
+    // Image Getter
+    UImage* GetIconImage() const { return IconImage; }
+
 protected:
     UFUNCTION()
     void OnSkillDoubleClicked();
