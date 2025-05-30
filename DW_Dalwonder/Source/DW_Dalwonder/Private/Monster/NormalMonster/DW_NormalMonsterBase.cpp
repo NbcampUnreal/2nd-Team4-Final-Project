@@ -49,6 +49,55 @@ void ADW_NormalMonsterBase::Tick(float DeltaTime)
 	}
 }
 
+void ADW_NormalMonsterBase::InitialSpawn()
+{
+	if (IsValid(SpawnMontage))
+	{
+		UAnimMontage* Montage = SpawnMontage;
+
+		if (Montage && GetMesh())
+		{
+			float Duration = GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+
+			if (AAIController* AICon = Cast<AAIController>(GetController()))
+			{
+				if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+				{
+					BBC->SetValueAsBool(FName("bCanBehavior"), false);
+				}
+			}
+
+			bIsPlayingSpawnMontage = true;
+
+			if (Duration > 0.f)
+			{
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &ADW_NormalMonsterBase::OnSpawnMontageEnded);
+				GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, Montage);
+			}
+		}
+	}
+}
+
+void ADW_NormalMonsterBase::OnSpawnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("bCanBehavior"), true);
+		}
+	}
+	
+	bIsPlayingSpawnMontage = false;
+
+	if (bWantsToPlayAlertMontage)
+	{
+		bWantsToPlayAlertMontage = false;
+		PlayAlertMontage();
+	}
+}
+
 void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 AlertDistance)
 {
 	TArray<AActor*> OutActors;
@@ -110,8 +159,14 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 	// 최초 감지자만 몽타주 재생
 	if (bIsFirstResponder)
 	{
-		PlayAlertMontage();
-		
+		if (bIsPlayingSpawnMontage)
+		{
+			bWantsToPlayAlertMontage = true;
+		}
+		else
+		{
+			PlayAlertMontage();
+		}
 	}
 }
 

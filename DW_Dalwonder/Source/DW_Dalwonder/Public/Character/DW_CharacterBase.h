@@ -3,6 +3,9 @@
 #include "CoreMinimal.h"
 #include "Character/ECharacterCombatState.h"
 #include "GameFramework/Character.h"
+#include "DW_SkillComponent.h"
+#include "DW_AttributeComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Inventory/InventoryComponent.h"
 #include "DW_CharacterBase.generated.h"
 
@@ -11,8 +14,10 @@ class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
 class UUserWidget;
+class UiagaraFunctionLibrary;
+class UNiagaraSystem;
+class UPhysicalMaterial;
 
-// ✅ 캐릭터의 기본 클래스: 이동, 전투, 입력 처리 등 공통 기능 포함
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
 {
@@ -22,6 +27,12 @@ public:
 	ADW_CharacterBase();
 
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UDW_SkillComponent* SkillComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UDW_AttributeComponent* AttributeComponent;
 
 protected:
 	// ▶ 게임 시작 시 초기 설정 (예: 상태 초기화)
@@ -211,47 +222,6 @@ public:
 	UPROPERTY()
 	FTimerHandle IdleStateTimer;
 
-	// -----------------------------
-	// 🎯 락온 관련 변수 및 함수
-	// -----------------------------
-
-	// 락온 대상
-	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
-	AActor* LockOnTarget = nullptr;
-
-	// 락온 여부
-	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
-	bool bIsLockOn = false;
-
-	// 락온 회전용 타이머
-	FTimerHandle LockOnRotationTimer;
-
-	// 회전 처리 함수
-	UFUNCTION()
-	void UpdateLockOnRotation();
-
-	// 후보 갱신 함수
-	UFUNCTION()
-	void UpdateLockOnCandidates();
-
-	// 전환 함수
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void SwitchLockOnTarget();
-
-	// 락온 토글 함수
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void ToggleLockOn();
-
-	AActor* FindBestLockOnTarget();
-	
-	// 시야 내 가장 가까운 적 탐색
-	AActor* FindClosestTarget(float MaxDistance = 1500.f);
-	
-	UPROPERTY()
-	TArray<AActor*> LockOnCandidates;
-
-	int32 LockOnIndex = 0;
-	
 protected:
 	// 패링 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -270,17 +240,65 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle BlockTimer;
+
+public:
+	// -----------------------------
+	// 🎯 락온 관련 변수 및 함수
+	// -----------------------------
+
+	// 락온 대상
+	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
+	AActor* LockOnTarget = nullptr;
+
+	// 락온 여부
+	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
+	bool bIsLockOn = false;
 	
+	// 전환 함수
+	UFUNCTION(BlueprintCallable, Category = "LockOn")
+	void SwitchLockOnTarget();
+
+	// 락온 토글 함수
+	UFUNCTION(BlueprintCallable, Category = "LockOn")
+	void ToggleLockOn();
+	
+	// 락온 회전용 타이머
+	FTimerHandle LockOnRotationTimer;
+
+	// 락온 갱신 타이머
+	FTimerHandle LockOnMarkerUpdateTimer;
+
+	// 락온 마커 UI 갱신
+	UFUNCTION()
+	void UpdateLockOnMarkerPosition();
+	
+	// 회전 처리 함수
+	UFUNCTION()
+	void UpdateLockOnRotation();
+
+	// 후보 갱신 함수
+	UFUNCTION()
+	void UpdateLockOnCandidates();
+
+
+	AActor* FindBestLockOnTarget();
+	
+	AActor* FindClosestTarget(float MaxDistance = 1500.f);
+	
+	UPROPERTY()
+	TArray<AActor*> LockOnCandidates;
+
+	int32 LockOnIndex = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn|UI")
+	TSubclassOf<UUserWidget> LockOnWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* LockOnWidgetInstance;
 
 #pragma endregion
 
-	// -----------------------------
-	// 🙋 상호작용 관련 시스템 (Interact)
-	// -----------------------------
 #pragma region Interact
-	// -----------------------------
-	//  상호작용 관련
-	// -----------------------------
 public:
 	
 	FTimerHandle ItemScanTimerHandle;
@@ -291,6 +309,22 @@ public:
 	void RemoveNearbyItem(AWorldItemActor* Item);
 	void UpdateClosestItem();
 	UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UPROPERTY(EditDefaultsOnly, Category = "FootStep")
+	TMap<TEnumAsByte<EPhysicalSurface>, UNiagaraSystem*> FootstepVFXMap;
+
+	// 현재 감지된 SurfaceType (0.01초마다 업데이트됨)
+	EPhysicalSurface CurrentSurfaceType = SurfaceType_Default;
+
+	// 바닥 정보를 주기적으로 검사하는 타이머
+	FTimerHandle FootstepTraceTimerHandle;
+
+	// 현재 바닥의 SurfaceType을 판별하는 함수
+	void UpdateFootstepSurface();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnFootstepEffect(const FName FootSocketName) const;
+
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")
