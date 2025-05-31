@@ -42,6 +42,8 @@ public:
 	float DamageInterval = 0.1f;
 
 	TMap<TWeakObjectPtr<AActor>, float> LastHitTimes;
+
+	TMap<AActor*, TArray<FVector>> SurfaceHitNormals;
 	
 private:
 	FVector PrevTraceStart;
