@@ -16,7 +16,7 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->InitSphereRadius(10.f);
-	CollisionComponent->SetCollisionProfileName("Projectile");
+	CollisionComponent->SetCollisionProfileName("ProjectileActor");
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnProjectileHit);
 	RootComponent = CollisionComponent;
@@ -32,7 +32,7 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!OtherActor->ActorHasTag("Projectile"))
+	if (!OtherActor->ActorHasTag("Projectile") || !OtherActor->ActorHasTag("Monster"))
 	{
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
