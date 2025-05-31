@@ -25,6 +25,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
 	void SpawnProjectile(int32 Index);
 
+	UFUNCTION(BlueprintCallable, Category = "Spawn")
+	void SpawnConnectWithTarget(int32 Index, float DamageIncrease);
+
+	// BP_Projectile 액터 할당 : 발사체에 대한 배열입니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Projectile Spawn")
 	TArray<TSubclassOf<AActor>> NiagaraSystemArray;
+	// Niagara System Asset 할당 : 몬스터와 플레이어가 이어지는 이펙트 공격(번개 등)을 실행할 에셋에 대한 배열입니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Projectile Spawn")
+	TArray<UNiagaraSystem*> ConnectNiagaraSystemArray;
+
 };

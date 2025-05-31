@@ -26,6 +26,8 @@ public:
     UFUNCTION()
     void UpdateIcon();
 
+    UImage* GetIconImage() const { return IconImage; }
+
 protected:
     UFUNCTION()
     void OnSkillDoubleClicked();
@@ -35,6 +37,9 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UImage* IconImage;
+
+    UPROPERTY(meta = (BindWidget))
+    UImage* DotEffectImage;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* LevelText;

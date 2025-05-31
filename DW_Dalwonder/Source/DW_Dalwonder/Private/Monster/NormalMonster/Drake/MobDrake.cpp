@@ -11,8 +11,8 @@ AMobDrake::AMobDrake()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
-	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	TraceStart->SetupAttachment(GetMesh(), TEXT("LeftHand"));
+	TraceEnd->SetupAttachment(GetMesh(), TEXT("LeftHand"));
 
 	HeightLocation = GetActorLocation();
 	HeightLocation.Z += 400.f;

@@ -3,6 +3,9 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "DW_SkillComponent.h"
+#include "Engine/Texture2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/ConstructorHelpers.h"
 
 void UDW_SkillIcon::NativeConstruct()
 {
@@ -11,6 +14,17 @@ void UDW_SkillIcon::NativeConstruct()
     if (SkillButton)
     {
         SkillButton->OnClicked.AddDynamic(this, &UDW_SkillIcon::OnSkillDoubleClicked);
+    }
+
+    if (DotEffectImage)
+    {
+        static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMat(TEXT("/Game/UI/Materials/M_Dot"));
+        if (DotMat.Succeeded())
+        {
+            UMaterialInstanceDynamic* DotMID = UMaterialInstanceDynamic::Create(DotMat.Object, this);
+            DotEffectImage->SetBrushFromMaterial(DotMID);
+            DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
+        }
     }
 
     UpdateIcon();
@@ -34,19 +48,24 @@ void UDW_SkillIcon::UpdateIcon()
 {
     if (!SkillComponent) return;
 
-    int32 Level = SkillComponent->GetSkillLevel(SkillID);
-    bUnlocked = (Level > 0);
+    const int32 Level = SkillComponent->GetSkillLevel(SkillID);
+    bUnlocked = Level > 0;
 
-    if (IconImage)
+    const FSkillData* SkillData = SkillComponent->SkillDataTable
+        ? SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("SkillIcon Update"))
+        : nullptr;
+
+    if (!SkillData || !IconImage) return;
+
+    UTexture2D* TextureToUse = bUnlocked ? SkillData->IconActivated : SkillData->Icon;
+    if (TextureToUse)
     {
-        IconImage->SetColorAndOpacity(
-            bUnlocked ? FLinearColor::White : FLinearColor(0.3f, 0.3f, 0.3f)
-        );
+        IconImage->SetBrushFromTexture(TextureToUse);
     }
 
     if (LevelText)
     {
-        LevelText->SetText(Level > 0 ? FText::AsNumber(Level) : FText::GetEmpty());
+        LevelText->SetText(FText::AsNumber(Level));
     }
 
     TArray<UImage*> LevelSpots = { LevelSpot01, LevelSpot02, LevelSpot03, LevelSpot04, LevelSpot05 };
@@ -56,5 +75,10 @@ void UDW_SkillIcon::UpdateIcon()
         {
             LevelSpots[i]->SetVisibility(i < Level ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
         }
+    }
+
+    if (DotEffectImage)
+    {
+        DotEffectImage->SetVisibility(bUnlocked ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
     }
 }
