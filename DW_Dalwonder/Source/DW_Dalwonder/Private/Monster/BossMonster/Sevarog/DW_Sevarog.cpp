@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Character/DW_CharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
@@ -38,6 +39,28 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 	}
 	
 	return 0;
+}
+
+void ADW_Sevarog::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (PlayerCharacter)
+	{
+		FRotator CurrentRotation = GetActorRotation();
+
+		FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+		DirectionToPlayer.Z = 0;
+
+		if (!DirectionToPlayer.IsNearlyZero())
+		{
+			FRotator TargetRotation = DirectionToPlayer.Rotation();
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.5f);
+
+			SetActorRotation(NewRotation);
+		}
+	
+	}
 }
 
 void ADW_Sevarog::AirAttack()
@@ -144,7 +167,7 @@ void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) con
 
 void ADW_Sevarog::SurroundedAttack()
 {
-	FVector HammerLocation = Hammer->GetComponentLocation();
+	FVector HammerLocation = GetActorLocation() - FVector(0,0,150.f);
 	float Radius = 400.0f;
 
 	TArray<FOverlapResult> OverlapResults;
@@ -176,7 +199,7 @@ void ADW_Sevarog::SurroundedAttack()
 
 	if (!SurroundedAttackNS) return;
 
-	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FVector SpawnLocation = GetActorLocation() - FVector(0,0,150.f);
 	FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(

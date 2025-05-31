@@ -46,6 +46,8 @@ public:
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void Tick(float DeltaTime) override;
+
 	void AirAttack();
 
 	UFUNCTION(BlueprintCallable)
