@@ -43,6 +43,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	bool bIsRealBoss = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle")
+	UNiagaraComponent* TrailNS;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 

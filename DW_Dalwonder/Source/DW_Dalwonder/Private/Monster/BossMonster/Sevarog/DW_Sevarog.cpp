@@ -4,6 +4,7 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "AIController.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
@@ -19,6 +20,9 @@ ADW_Sevarog::ADW_Sevarog()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	TrailNS = CreateDefaultSubobject<UNiagaraComponent>("TrailParticle");
+	TrailNS->SetupAttachment(RootComponent);
 
 	//부착 후 에디터에서 위치 세부 조정 필요
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
@@ -195,7 +199,10 @@ void ADW_Sevarog::SurroundedAttack()
 		}
 	}
 
-	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+	if (bDrawDebugTrace)
+	{
+		DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+	}
 
 	if (!SurroundedAttackNS) return;
 
@@ -246,10 +253,12 @@ void ADW_Sevarog::BoxAttack()
 		}
 	}
 
-	// 디버그용 박스 시각화
-	DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, GetActorQuat(), FColor::Red, false, 1.0f);
+	if (bDrawDebugTrace)
+	{
+		DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, GetActorQuat(), FColor::Red, false, 1.0f);
+	}
 
-	// 이펙트 스폰
+
 	if (!BoxAttackNS) return;
 
 	FVector EffectOffset = FVector(50.f, 0.f, -200.f);
