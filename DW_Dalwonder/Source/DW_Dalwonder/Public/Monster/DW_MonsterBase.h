@@ -120,6 +120,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
 
+	UPROPERTY()
+	class UNavigationInvokerComponent* NavInvokerComp;
+
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void ResetRoot();
 
