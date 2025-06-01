@@ -8,6 +8,7 @@
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 #include "Character/DW_PlayerController.h"
+#include "Character/DW_AnimInstanceBase.h"
 #include "Character/CharacterStatComponent.h"
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
@@ -21,6 +22,7 @@
 #include "Item/ItemDataManager.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_InteractInterface.h"
+#include "KismetAnimationLibrary.h"
 #include "Engine/DamageEvents.h"
 
 
@@ -87,6 +89,10 @@ void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
 	BlockTimer.Invalidate();
+	GetWorldTimerManager().ClearTimer(DodgeTimer);
+	DodgeTimer.Invalidate();
+	GetWorldTimerManager().ClearTimer(InvincibleTimer);
+	InvincibleTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
 	IdleStateTimer.Invalidate();
 }
@@ -317,19 +323,32 @@ void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 		GetCharacterStatComponent()->SetStamina(GetCharacterStatComponent()->GetStamina() - 10.f);
 		SetCombatState(ECharacterCombatState::Dodging);
 
-		if (bIsLockOn)
+		FVector InputVector = GetLastMovementInputVector();
+		UDW_AnimInstanceBase* DW_AnimInstance = Cast<UDW_AnimInstanceBase>(AnimInstance);
+		if (!InputVector.IsNearlyZero())
 		{
-			
-		}
-
-		if (bIsOnCombat)
-		{
-			PlayMontage(DodgeMontage, 1);
+			DW_AnimInstance->DodgeDirection = UKismetAnimationLibrary::CalculateDirection(InputVector, GetActorRotation());
 		}
 		else
 		{
-			PlayMontage(DodgeMontage);
+			DW_AnimInstance->DodgeDirection = 0.f;
 		}
+		bIsInvincible = true;
+		BlockCharacterControl(true);
+
+		AnimInstance->RootMotionMode = ERootMotionMode::RootMotionFromEverything;
+
+		GetWorld()->GetTimerManager().SetTimer(DodgeTimer, FTimerDelegate::CreateLambda([&]
+		{
+			SetCombatState(ECharacterCombatState::Idle);
+			BlockCharacterControl(false);
+			AnimInstance->RootMotionMode = ERootMotionMode::RootMotionFromMontagesOnly;
+		}), 1.34f, false);
+		
+		GetWorld()->GetTimerManager().SetTimer(InvincibleTimer, FTimerDelegate::CreateLambda([&]
+		{
+			bIsInvincible = false;
+		}), InvincibleDuration, false);
 	}
 }
 

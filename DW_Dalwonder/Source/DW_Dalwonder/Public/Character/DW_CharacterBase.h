@@ -210,6 +210,18 @@ public:
 	UPROPERTY()
 	FTimerHandle IdleStateTimer;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float DodgeDistance = 600.f;
+
+	UPROPERTY()
+	FTimerHandle DodgeTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float InvincibleDuration = 1.5f;
+
+	UPROPERTY()
+	FTimerHandle InvincibleTimer;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bCanCombo = false;
 
