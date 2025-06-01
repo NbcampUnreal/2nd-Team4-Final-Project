@@ -146,7 +146,7 @@ public:
 
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void KnockBackCharacter();
+	void KnockBackCharacter(const FVector& Direction, const float Strength, const bool bIsZOnly);
 
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -363,6 +363,15 @@ private:
 
 #pragma region UI
 public:
+	//HUD업데이트함수
+	UFUNCTION()
+	void UpdateHUD();
+
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
+
+public:
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 
@@ -374,16 +383,5 @@ public:
 	UUserWidget* ESCMenuWidgetInstance;
 
 	bool bIsESCMenuOpen = false;
-
-public:
-
-	//HUD업데이트함수
-	UFUNCTION()
-	void UpdateHUD();
-
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
-
 #pragma endregion
 };

@@ -5,6 +5,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "TimerManager.h"
+#include "Character/DW_CharacterBase.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -20,6 +21,7 @@ ATelegraghActor::ATelegraghActor()
 	//CollisionComponent->OnComponentHit.AddDynamic(this, &ATelegraghActor::OnEffectHit);
 	CollisionComponent->SetGenerateOverlapEvents(true);
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ATelegraghActor::OnEffectOverlap);
+	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &ATelegraghActor::OnEffectEndOverlap);
 	RootComponent = CollisionComponent;
 
 	EffectComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
@@ -32,9 +34,30 @@ void ATelegraghActor::OnEffectOverlap(UPrimitiveComponent* OverlappedComponent, 
 {
 	if (OtherActor->ActorHasTag("Player"))
 	{
-		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (!bIsDOT)
+		{
+			CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), this, nullptr);
+			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
+		}
+		else
+		{
+			if (DOTTargetActor == nullptr)
+			{
+				DOTTargetActor = OtherActor;
+
+				GetWorldTimerManager().SetTimer(DOTIntervalTimerHandle, this, &ATelegraghActor::DOTIntervalLogic, DOTInterval, true);
+			}
+		}
+	}
+}
+
+void ATelegraghActor::OnEffectEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor == DOTTargetActor)
+	{
+		GetWorldTimerManager().ClearTimer(DOTIntervalTimerHandle);
+		DOTTargetActor = nullptr;
 	}
 }
 
@@ -83,14 +106,58 @@ void ATelegraghActor::RealEffectSpawnLogic()
 			EffectComponent->GetComponentScale()
 		);
 
-		CollisionComponent->SetCollisionProfileName("OverlapAllDynamic");
+		CollisionComponent->SetCollisionProfileName("TelegraphField");
 	}
 
-	GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 5.f, false);
+	if (bIsDOT)
+	{
+		DOTDamage = DamageAmount / (DOTDuration / DOTInterval);
+
+		GetWorldTimerManager().SetTimer(DOTDurationTimerHandle, this, &ATelegraghActor::DOTDurationEndLogic, DOTDuration, false);
+
+	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 3.f, false);
+
+	}
 }
 
 void ATelegraghActor::DestroyToDelay()
 {
 	Destroy();
+}
+
+void ATelegraghActor::DOTIntervalLogic()
+{
+	if (DOTTargetActor && DOTTargetActor->ActorHasTag("Player"))
+	{
+		if (bDoLaunch)
+		{
+			if (ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(DOTTargetActor))
+			{
+				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+				const float KnockBackStrength = LaunchImpulse;
+
+				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, bIsZOnly);
+			}
+		}
+		
+		UGameplayStatics::ApplyDamage(DOTTargetActor, DOTDamage, nullptr, this, nullptr);
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(DOTIntervalTimerHandle);
+		DOTTargetActor = nullptr;
+	}
+}
+
+void ATelegraghActor::DOTDurationEndLogic()
+{
+	GetWorldTimerManager().ClearTimer(DOTIntervalTimerHandle);
+	GetWorldTimerManager().ClearTimer(DOTDurationTimerHandle);
+
+	GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 3.f, false);
+
 }
 
