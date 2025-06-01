@@ -84,13 +84,18 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-
-	GetWorldTimerManager().ClearTimer(AttackTimer);
-	AttackTimer.Invalidate();
+	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
 	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
 	IdleStateTimer.Invalidate();
+}
+
+void ADW_CharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -297,22 +302,34 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
+	if (CurrentCombatState == ECharacterCombatState::Dodging)
+	{
+		return;
+	}
+	
 	if (Value.Get<bool>())
 	{
 		if (GetCharacterStatComponent()->GetStamina() < 10.f)
 		{
 			return;
 		}
-		
-		//@TODO : Dodge 로직 구현
+
 		GetCharacterStatComponent()->SetStamina(GetCharacterStatComponent()->GetStamina() - 10.f);
+		SetCombatState(ECharacterCombatState::Dodging);
 
 		if (bIsLockOn)
 		{
 			
 		}
-		
-		PlayMontage(DodgeMontage);
+
+		if (bIsOnCombat)
+		{
+			PlayMontage(DodgeMontage, 1);
+		}
+		else
+		{
+			PlayMontage(DodgeMontage);
+		}
 	}
 }
 
@@ -324,34 +341,34 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 	}
 }
 
-void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, bool bBlockControl, int32 SectionIndex)
+void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	BlockCharacterControl(true);
+	
 	if (IsValid(AnimInstance))
 	{
+		FOnMontageEnded MontageEndDelegate;
+		MontageEndDelegate.BindUObject(this, &ADW_CharacterBase::OnMontageEnded);
+		
 		if (!IsValid(Montage) || SectionIndex >= Montage->GetNumSections()) return;
 		
 		if (SectionIndex != -1)
 		{
 			FName SectionName = Montage->GetSectionName(SectionIndex);
-			AnimInstance->Montage_Play(Montage);
-			AnimInstance->Montage_JumpToSection(SectionName);
-
-			if (bBlockControl == true)
+			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				float SectionLength = Montage->GetSectionLength(SectionIndex);
-				BlockCharacterControl(true, SectionLength);
+				AnimInstance->Montage_Play(Montage);
 			}
+			AnimInstance->Montage_JumpToSection(SectionName);
+			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
 		}
 		else
 		{
-			AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
-
-			if (bBlockControl == true)
+			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				float MontageLength = Montage->GetPlayLength();
-				BlockCharacterControl(true, MontageLength);
+				AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
 			}
+			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
 		}
 	}
 }
@@ -361,57 +378,59 @@ void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 	CurrentCombatState = NewState;
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
 
-	if (CurrentCombatState != ECharacterCombatState::Idle || CurrentCombatState != ECharacterCombatState::Guarding)
+	if (CurrentCombatState != ECharacterCombatState::Idle && CurrentCombatState != ECharacterCombatState::Dodging)
 	{
+		bIsOnCombat = true;
 		SetIdleState();
 	}
 }
 
 void ADW_CharacterBase::StartAttack()
 {
-	if (!bCanAttack) return;
+	if (CurrentCombatState != ECharacterCombatState::Idle && CurrentCombatState != ECharacterCombatState::ComboWindow) return;
 	
-	SetCombatState(ECharacterCombatState::Attacking);
-	bCanControl = false;
+	BlockCharacterControl(true);
 
 	if (GetMovementComponent()->IsFalling())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Falling"));
 		check(IsValid(FallingAttackMontage));
-		bCanAttack = false;
-		PlayMontage(FallingAttackMontage, true);
-		SetAttackTimer(FallingAttackMontage);
+		SetCombatState(ECharacterCombatState::Attacking);
+		PlayMontage(FallingAttackMontage);
 	}
 	else if (bIsGuarding)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Guard"));
 		check(IsValid(GuardAttackMontage));
-		bCanAttack = false;
-		PlayMontage(GuardAttackMontage, true);
-		SetAttackTimer(GuardAttackMontage);
-		SetGuarding(false);
+		SetCombatState(ECharacterCombatState::Attacking);
+		PlayMontage(GuardAttackMontage);
 	}
-	else if (bIsSprinting && GetCharacterMovement()->Velocity.Length() > GetCharacterStatComponent()->GetWalkSpeed())
+	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
 		check(IsValid(SprintAttackMontage));
-		bCanAttack = false;
-		PlayMontage(SprintAttackMontage, true);
-		SetAttackTimer(SprintAttackMontage);
+		SetCombatState(ECharacterCombatState::Attacking);
+		PlayMontage(SprintAttackMontage);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("else"));
 		check(IsValid(AttackMontage));
-		
-		int ComboTotalNum = AttackMontage->GetNumSections();
-		
-		if (bCanAttack && ComboIndex < ComboTotalNum)
+
+		if (CurrentCombatState == ECharacterCombatState::Idle)
 		{
-			bCanAttack = false;
-			PlayMontage(AttackMontage, true, ComboIndex);
-			SetAttackTimer(AttackMontage, ComboIndex);
-			ComboIndex++;
+			CurrentComboIndex = 0;
+			PlayMontage(AttackMontage);
+			SetCombatState(ECharacterCombatState::ComboWindow);
+		}
+		else if (CurrentCombatState == ECharacterCombatState::ComboWindow && bCanCombo)
+		{
+			CurrentComboIndex++;
+			if (CurrentComboIndex < AttackMontage->GetNumSections())
+			{
+				PlayMontage(AttackMontage, CurrentComboIndex);
+				bCanCombo = false;
+			}
 		}
 	}
 }
@@ -421,35 +440,37 @@ void ADW_CharacterBase::CancelAttack()
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
-
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			// 현재 재생 중인 모든 몽타주를 중단
-			AnimInstance->Montage_Stop(0.2f);
-		}
 		
-		// 타이머도 정리
-		GetWorldTimerManager().ClearTimer(AttackTimer);
-		// 기존 공격 종료 처리
-		EndAttack(nullptr, true);
-		BlockCharacterControl(false);
+		// 현재 재생 중인 모든 몽타주를 중단
+		AnimInstance->Montage_Stop(0.2f);
 
-		// 튕김 애니메이션 재생
-		if (IsValid(DodgeMontage))
-		{
-			PlayMontage(DodgeMontage);
-		}
+		OnMontageEnded(nullptr, true);
+	}
+
+	if (CurrentCombatState == ECharacterCombatState::ComboWindow)
+	{
+		OnMontageEnded(AttackMontage, true);
+	}
+	
+	// 튕김 애니메이션 재생
+	if (IsValid(DodgeMontage))
+	{
+		PlayMontage(DodgeMontage);
 	}
 }
-	
 
-void ADW_CharacterBase::EndAttack(UAnimMontage* Montage, bool bInterrupted)
+void ADW_CharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("EndAttack Called!!"));
+	UE_LOG(LogTemp, Warning, TEXT("OnMontageEnded Called!!"));
 	
-	bCanAttack = true;
-	ComboIndex = 0;
+	SetCombatState(ECharacterCombatState::Idle);
+	BlockCharacterControl(false);
+
+	if (Montage == AttackMontage)
+	{
+		CurrentComboIndex = 0;
+		bCanCombo = false;
+	}
 }
 
 float ADW_CharacterBase::TakeDamage
@@ -472,10 +493,10 @@ float ADW_CharacterBase::TakeDamage
 
 	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 	// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
-	if (Monster->GetCanParry() && bIsParrying)
+	if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 	{
 		Monster->Parried();
-		PlayMontage(ParryMontage, true);
+		PlayMontage(ParryMontage);
 		ActualDamage = 0.f;
 		return ActualDamage;
 	}
@@ -509,7 +530,7 @@ float ADW_CharacterBase::TakeDamage
 				{
 					int32 HitSectionNum = HitMontage->GetNumSections();
 					int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-					PlayMontage(HitMontage, true, RandomHitSectionNum);
+					PlayMontage(HitMontage, RandomHitSectionNum);
 				}
 			}
 		}
@@ -518,7 +539,7 @@ float ADW_CharacterBase::TakeDamage
 		{
 			int32 HitSectionNum = HitMontage->GetNumSections();
 			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-			PlayMontage(HitMontage, true, RandomHitSectionNum);
+			PlayMontage(HitMontage, RandomHitSectionNum);
 		}
 	}
 
@@ -533,13 +554,8 @@ float ADW_CharacterBase::TakeDamage
 	return ActualDamage;
 }
 
-void ADW_CharacterBase::SetParrying(bool bNewParrying)
+void ADW_CharacterBase::SetParrying(bool bIsParrying)
 {
-	if (bIsParrying == bNewParrying)
-		return;
-	
-	bIsParrying = bNewParrying;
-	
 	if (bIsParrying)
 	{
 		SetCombatState(ECharacterCombatState::Parrying);
@@ -547,6 +563,7 @@ void ADW_CharacterBase::SetParrying(bool bNewParrying)
 	}
 	else
 	{
+		SetCombatState(ECharacterCombatState::Idle);
 		UE_LOG(LogTemp, Log, TEXT("패링 종료"));
 	}
 }
@@ -562,15 +579,15 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 
 	if (bIsGuarding)
 	{
-		SetCombatState(ECharacterCombatState::Guarding);
 		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
 		GetCharacterStatComponent()->ConsumeStamina(2.f);
+		PlayMontage(GuardMontage);
 	}
 	else
 	{
-		SetCombatState(ECharacterCombatState::Idle);
 		UE_LOG(LogTemp, Log, TEXT("가드 종료"));
 		GetCharacterStatComponent()->StopConsumeStamina();
+		AnimInstance->Montage_Stop(0.25f, GuardMontage);
 	}
 }
 
@@ -597,27 +614,29 @@ void ADW_CharacterBase::StartGuard()
 	{
 		return;
 	}
-	
-	SetGuarding(true);
-	BlockCharacterControl(true);
-	PlayMontage(GuardMontage);
+
+	if (CurrentCombatState == ECharacterCombatState::Idle)
+	{
+		SetGuarding(true);
+	}
 }
 
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
-	PlayMontage(GuardMontage, true, 2);
 }
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
+	SetCombatState(ECharacterCombatState::Hit);
+	
 	const float KnockBackMultiplier = 50.f;
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
 	
 	LaunchCharacter(KnockBackDirection, true, true);
 	if (IsValid(KnockBackMontage) == true)
 	{
-		PlayMontage(KnockBackMontage, true);
+		PlayMontage(KnockBackMontage);
 	}
 }
 
@@ -640,33 +659,14 @@ void ADW_CharacterBase::Dead()
 {
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		PlayMontage(DeadMontage, true, 1);
+		PlayMontage(DeadMontage, 1);
 	}
 	else
 	{
-		PlayMontage(DeadMontage, true);
+		PlayMontage(DeadMontage);
 	}
-}
 
-void ADW_CharacterBase::SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex)
-{
-	float MontageLength;
-	
-	if (SectionIndex == -1)
-	{
-		MontageLength = Montage->GetPlayLength();
-	}
-	else
-	{
-		MontageLength = Montage->GetSectionLength(SectionIndex);
-	}
-	
-	check(IsValid(GetWorld()));
-	
-	GetWorldTimerManager().SetTimer(AttackTimer, FTimerDelegate::CreateLambda([&]()
-		{
-			EndAttack(Montage, false);
-		}), MontageLength, false);
+	SetCombatState(ECharacterCombatState::Dead);
 }
 
 void ADW_CharacterBase::SetIdleState()
@@ -676,7 +676,7 @@ void ADW_CharacterBase::SetIdleState()
 
 	GetWorldTimerManager().SetTimer(IdleStateTimer, FTimerDelegate::CreateLambda([&]
 	{
-		SetCombatState(ECharacterCombatState::Idle);
+		bIsOnCombat = false;
 	}), 5.f, false);
 }
 
@@ -909,7 +909,7 @@ void ADW_CharacterBase::UpdateHUD()
 			//캐스팅 실패시 타이머 초기화
 			GetWorld()->GetTimerManager().ClearTimer(HUDUpdateTimerHandle);
 		}
-		//현재 HP, Stemina만 업데이트중 아이템(물약) 사용시도 필요하면 제작
+		//현재 HP, Stamina만 업데이트중 아이템(물약) 사용시도 필요하면 제작
 	}
 }
 

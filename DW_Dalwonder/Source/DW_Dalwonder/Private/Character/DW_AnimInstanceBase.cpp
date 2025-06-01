@@ -29,6 +29,6 @@ void UDW_AnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size();
 	bShouldMove = ((OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) == false) && (GroundSpeed > 3.f);
 	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
-	bShouldCombat = OwnerCharacter->CurrentCombatState != ECharacterCombatState::Idle;
+	bShouldCombat = OwnerCharacter->bIsOnCombat;
 	bIsLockOn = OwnerCharacter->bIsLockOn;
 }
