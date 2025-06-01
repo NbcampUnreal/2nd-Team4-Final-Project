@@ -149,7 +149,7 @@ public:
 
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void KnockBackCharacter();
+	void KnockBackCharacter(const FVector& Direction, const float Strength);
 
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")

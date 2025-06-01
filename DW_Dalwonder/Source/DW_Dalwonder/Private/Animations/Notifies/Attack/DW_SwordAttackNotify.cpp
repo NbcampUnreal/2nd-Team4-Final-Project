@@ -112,10 +112,12 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				if (!PlayerCharacter->AttackingActors.Contains(HitActor))
 				{
 					PlayerCharacter->AttackingActors.Add(HitActor);
-
-					UGameplayStatics::ApplyDamage(
+					
+					UGameplayStatics::ApplyPointDamage(
 						HitActor,
 						AttackDamage,
+						(Hit.TraceEnd - Hit.TraceStart).GetSafeNormal(),
+						Hit,
 						PlayerCharacter->GetController(),
 						PlayerCharacter,
 						UDamageType::StaticClass()

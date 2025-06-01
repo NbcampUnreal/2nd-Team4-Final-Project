@@ -1,6 +1,8 @@
 ﻿#include "Monster/DW_MonsterBase.h"
 
 #include "AIController.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -11,11 +13,12 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
                                     PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0),
-									MonsterSpeed(100), MonsterAccelSpeed(100), MonsterDamageMultiplier(1.0f)
+                                    MonsterSpeed(100), MonsterAccelSpeed(100), MonsterDamageMultiplier(1.0f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -390,6 +393,29 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
+
+	if (HitNS)
+	{
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+			const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+
+			const FVector SpawnLocation = HitLocation;
+			const FRotator SpawnRotation = GetActorRotation();
+			
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				HitNS,
+				SpawnLocation,
+				SpawnRotation,
+				FVector(1.f),
+				true,
+				true
+			);
+		}
+
+	}
 
 	if (MonsterHP <= 0)
 	{
