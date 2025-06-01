@@ -29,4 +29,8 @@ private:
     void CreateSkillIcons();
     UFUNCTION()
     void RefreshAllIcons();
+
+public:
+    UFUNCTION()
+    void UpdateSkillActivationStates();
 };

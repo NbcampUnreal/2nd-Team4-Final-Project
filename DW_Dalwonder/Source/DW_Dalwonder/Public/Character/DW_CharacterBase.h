@@ -351,6 +351,15 @@ private:
 
 #pragma region UI
 public:
+	//HUD업데이트함수
+	UFUNCTION()
+	void UpdateHUD();
+
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
+
+public:
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 
@@ -362,16 +371,5 @@ public:
 	UUserWidget* ESCMenuWidgetInstance;
 
 	bool bIsESCMenuOpen = false;
-
-public:
-
-	//HUD업데이트함수
-	UFUNCTION()
-	void UpdateHUD();
-
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
-
 #pragma endregion
 };
