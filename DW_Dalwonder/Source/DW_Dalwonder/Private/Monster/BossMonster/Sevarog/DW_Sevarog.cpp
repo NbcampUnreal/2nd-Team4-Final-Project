@@ -69,8 +69,8 @@ void ADW_Sevarog::Tick(float DeltaTime)
 
 void ADW_Sevarog::AirAttack()
 {
-	FVector HammerLocation = Hammer->GetComponentLocation();
-	float Radius = 250.0f;
+	const FVector HammerLocation = Hammer->GetComponentLocation();
+	constexpr float Radius = 200.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
@@ -93,6 +93,10 @@ void ADW_Sevarog::AirAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+				constexpr float KnockBackStrength = 2000.f;
+
+				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, true);
 			}
 		}
 	}
@@ -101,8 +105,8 @@ void ADW_Sevarog::AirAttack()
 
 	if (!AirAttackNS) return;
 
-	FVector SpawnLocation = Hammer->GetComponentLocation();
-	FRotator SpawnRotation = GetActorRotation();
+	const FVector SpawnLocation = Hammer->GetComponentLocation();
+	const FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -115,7 +119,7 @@ void ADW_Sevarog::AirAttack()
 	);
 }
 
-void ADW_Sevarog::DoTeleport()
+void ADW_Sevarog::DoTeleport() const
 {
 	if (IsValid(TeleportMontage))
 	{
@@ -128,7 +132,7 @@ void ADW_Sevarog::DoTeleport()
 	}
 }
 
-void ADW_Sevarog::DoRangedTeleport()
+void ADW_Sevarog::DoRangedTeleport() const
 {
 	if (IsValid(RangedTeleportMontage))
 	{
@@ -171,14 +175,14 @@ void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) con
 
 void ADW_Sevarog::SurroundedAttack()
 {
-	FVector HammerLocation = GetActorLocation() - FVector(0,0,150.f);
-	float Radius = 400.0f;
+	const FVector HammerLocation = GetActorLocation() - FVector(0,0,150.f);
+	constexpr float Radius = 350.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->OverlapMultiByChannel(
+	const bool bHit = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
 		HammerLocation,
 		FQuat::Identity,
@@ -195,6 +199,10 @@ void ADW_Sevarog::SurroundedAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+				constexpr float KnockBackStrength = 1000.f;
+
+				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, false);
 			}
 		}
 	}
@@ -206,8 +214,8 @@ void ADW_Sevarog::SurroundedAttack()
 
 	if (!SurroundedAttackNS) return;
 
-	FVector SpawnLocation = GetActorLocation() - FVector(0,0,150.f);
-	FRotator SpawnRotation = GetActorRotation();
+	const FVector SpawnLocation = GetActorLocation() - FVector(0,0,150.f);
+	const FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -222,17 +230,16 @@ void ADW_Sevarog::SurroundedAttack()
 
 void ADW_Sevarog::BoxAttack()
 {
-	FVector LocalOffset = FVector(300.f, 0.f, -200.f);
-	FVector BoxExtent = FVector(300.f, 150.f, 200.f);
-
-	// 회전 반영한 박스 위치
-	FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
+	const FVector LocalOffset = FVector(300.f, 0.f, -200.f);
+	const FVector BoxExtent = FVector(300.f, 150.f, 200.f);
+	
+	const FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->OverlapMultiByChannel(
+	const bool bHit = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
 		BoxCenter,
 		GetActorQuat(),
@@ -249,6 +256,10 @@ void ADW_Sevarog::BoxAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+				constexpr float KnockBackStrength = 1000.f;
+
+				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, false);
 			}
 		}
 	}
@@ -261,8 +272,8 @@ void ADW_Sevarog::BoxAttack()
 
 	if (!BoxAttackNS) return;
 
-	FVector EffectOffset = FVector(50.f, 0.f, -200.f);
-	FVector EffectLocation = GetActorLocation() + GetActorRotation().RotateVector(EffectOffset);
+	const FVector EffectOffset = FVector(50.f, 0.f, -200.f);
+	const FVector EffectLocation = GetActorLocation() + GetActorRotation().RotateVector(EffectOffset);
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -283,8 +294,8 @@ void ADW_Sevarog::Dead()
 	{
 		if (!RepDeadNS) return;
 
-		FVector SpawnLocation = GetActorLocation();
-		FRotator SpawnRotation = GetActorRotation();
+		const FVector SpawnLocation = GetActorLocation();
+		const FRotator SpawnRotation = GetActorRotation();
 
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),

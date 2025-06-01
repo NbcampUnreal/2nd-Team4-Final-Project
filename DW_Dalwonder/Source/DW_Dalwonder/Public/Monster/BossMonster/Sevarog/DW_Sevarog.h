@@ -54,10 +54,10 @@ public:
 	void AirAttack();
 
 	UFUNCTION(BlueprintCallable)
-	void DoTeleport();
+	void DoTeleport() const;
 
 	UFUNCTION(BlueprintCallable)
-	void DoRangedTeleport();
+	void DoRangedTeleport() const;
 
 	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
 

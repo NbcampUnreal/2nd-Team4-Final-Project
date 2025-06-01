@@ -8,6 +8,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Character/DW_CharacterBase.h"
 
 // Sets default values
 AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), CollisionRadius(1.f)
@@ -38,6 +39,19 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 
 		if (OtherActor->ActorHasTag("Player"))
 		{
+			// Launch 정의
+			if (bDoLaunch)
+			{
+				if (ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(OtherActor))
+				{
+					const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+					const float KnockBackStrength = LaunchImpulse;
+
+					PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, bIsZOnly);
+				}
+			}
+
+			// Launch 이외 정의
 			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
 			HitEffectSpawnLogic(Hit);
 			Destroy();

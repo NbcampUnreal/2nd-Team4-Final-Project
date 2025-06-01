@@ -532,11 +532,18 @@ void ADW_CharacterBase::EndGuard()
 	PlayMontage(GuardMontage, 2);
 }
 
-void ADW_CharacterBase::KnockBackCharacter(const FVector& Direction, const float Strength)
+void ADW_CharacterBase::KnockBackCharacter(const FVector& Direction, const float Strength, const bool bIsZOnly)
 {
 	BlockCharacterControl(false);
 
-	const FVector KnockBackVelocity = Direction.GetSafeNormal() * Strength;
+	FVector KnockBackVelocity;
+	
+	if (!bIsZOnly)
+	{
+		KnockBackVelocity = Direction.GetSafeNormal() * Strength;
+	}
+	
+	KnockBackVelocity.Z = Strength / 2;
 
 	LaunchCharacter(KnockBackVelocity, true, true);
 

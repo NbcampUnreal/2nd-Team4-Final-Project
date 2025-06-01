@@ -88,6 +88,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Effect")
 	float DamageAmount;
 
+	// Hit시 캐릭터 Launch의 여부입니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch")
+	bool bDoLaunch;
+	// Launch의 힘을 조절합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	float LaunchImpulse;
+	// Launch의 방향을 조절합니다. True일 때, Z축으로만 날아갑니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	bool bIsZOnly;
+
 	// 도트 데미지로 전환하시겠습니까?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|DOT")
 	bool bIsDOT;
