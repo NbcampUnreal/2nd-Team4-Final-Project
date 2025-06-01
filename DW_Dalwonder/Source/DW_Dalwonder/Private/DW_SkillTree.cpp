@@ -136,7 +136,7 @@ void UDW_SkillTree::CreateSkillIcons()
 
 
     // -------------------------------
-    // Step 5: 아이콘 생성 (MeleeSkill 통합 UI)
+    // Step 5: 아이콘 생성
     // -------------------------------
     TSet<FName> SpawnedIcons;
 
@@ -146,7 +146,7 @@ void UDW_SkillTree::CreateSkillIcons()
 
         
         FName DisplayID = RealID;
-        // UI 통합 처리 나중에 고치기
+        // UI 대검 중검 구분... 흠...
         /*if (RealID == "Lon001" || RealID == "Gre001")
         {
             DisplayID = "MeleeSkill";
@@ -168,11 +168,25 @@ void UDW_SkillTree::CreateSkillIcons()
             CanvasSlot->SetPosition(Pair.Value);
         }
 
-        // ✨ 아이콘 텍스처 설정
+        // 아이콘 텍스처 설정
         const FSkillData* SkillData = SkillDataMap.Contains(RealID) ? SkillDataMap[RealID] : nullptr;
         if (SkillData && SkillData->Icon && SkillIcon->GetIconImage())
         {
             SkillIcon->GetIconImage()->SetBrushFromTexture(SkillData->Icon);
+        }
+
+        // 선행 조건에 따른 버튼 활성화 여부 설정
+        if (SkillData)
+        {
+            bool bShouldEnable = true;
+
+            if (!SkillData->PrerequisiteSkillID.IsNone())
+            {
+                int32 PrereqLevel = SkillComponent->GetSkillLevel(SkillData->PrerequisiteSkillID);
+                bShouldEnable = PrereqLevel > 0;
+            }
+
+            SkillIcon->SetIsEnabled(bShouldEnable);
         }
 
         SkillIcon->UpdateIcon();
@@ -189,6 +203,27 @@ void UDW_SkillTree::RefreshAllIcons()
         if (UDW_SkillIcon* Icon = Cast<UDW_SkillIcon>(Child))
         {
             Icon->UpdateIcon();
+        }
+    }
+}
+
+void UDW_SkillTree::UpdateSkillActivationStates()
+{
+    if (!SkillCanvasPanel || !SkillComponent || !SkillComponent->SkillDataTable)
+        return;
+    // 모든 스킬트리의 스킬 확인
+    for (UWidget* Child : SkillCanvasPanel->GetAllChildren())
+    {
+        if (UDW_SkillIcon* SkillIcon = Cast<UDW_SkillIcon>(Child))
+        {
+            const FName& SkillID = SkillIcon->SkillID;
+            const FSkillData* SkillData = SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("UpdateActivation"));
+
+            if (SkillData && !SkillData->PrerequisiteSkillID.IsNone())
+            {
+                int32 PrereqLevel = SkillComponent->GetSkillLevel(SkillData->PrerequisiteSkillID);
+                SkillIcon->SetIsEnabled(PrereqLevel > 0);
+            }
         }
     }
 }

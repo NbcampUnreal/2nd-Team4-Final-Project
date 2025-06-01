@@ -3,9 +3,19 @@
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "DW_SkillComponent.h"
+#include "DW_SkillTree.h"
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+
+UDW_SkillIcon::UDW_SkillIcon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMat(TEXT("/Game/UI/Materials/M_Dot.M_Dot"));
+    if (DotMat.Succeeded())
+    {
+        DotMaterial = DotMat.Object;
+    }
+}
 
 void UDW_SkillIcon::NativeConstruct()
 {
@@ -16,15 +26,13 @@ void UDW_SkillIcon::NativeConstruct()
         SkillButton->OnClicked.AddDynamic(this, &UDW_SkillIcon::OnSkillDoubleClicked);
     }
 
-    if (DotEffectImage)
+    if (DotEffectImage && DotMaterial)
     {
-        static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMat(TEXT("/Game/UI/Materials/M_Dot"));
-        if (DotMat.Succeeded())
-        {
-            UMaterialInstanceDynamic* DotMID = UMaterialInstanceDynamic::Create(DotMat.Object, this);
-            DotEffectImage->SetBrushFromMaterial(DotMID);
-            DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
-        }
+        UMaterialInstanceDynamic* DotMID = UMaterialInstanceDynamic::Create(DotMaterial, this);
+        DotEffectImage->SetBrushFromMaterial(DotMID);
+        //DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
+        //이펙트가 클릭 안가리게
+        DotEffectImage->SetVisibility(ESlateVisibility::HitTestInvisible);
     }
 
     UpdateIcon();
@@ -34,12 +42,15 @@ void UDW_SkillIcon::OnSkillDoubleClicked()
 {
     if (!SkillComponent) return;
 
-    if (!bUnlocked)
+    const bool bSuccess = SkillComponent->TryLearnSkill(SkillID);
+    if (bSuccess)
     {
-        bool bSuccess = SkillComponent->TryLearnSkill(SkillID);
-        if (bSuccess)
+        UpdateIcon();
+
+        // 스킬들 선행 조건 확인 후 버튼 활성화 시켜주기
+        if (UDW_SkillTree* SkillTree = GetTypedOuter<UDW_SkillTree>())
         {
-            UpdateIcon();
+            SkillTree->UpdateSkillActivationStates();
         }
     }
 }
@@ -79,6 +90,41 @@ void UDW_SkillIcon::UpdateIcon()
 
     if (DotEffectImage)
     {
-        DotEffectImage->SetVisibility(bUnlocked ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+        if (bUnlocked)
+        {
+            DotEffectImage->SetVisibility(ESlateVisibility::Visible);
+
+            // 1초 후 이펙트를 자동으로 숨김
+            FTimerHandle TimerHandle;
+            GetWorld()->GetTimerManager().SetTimer(
+                TimerHandle,
+                FTimerDelegate::CreateWeakLambda(this, [this]()
+                    {
+                        if (DotEffectImage)
+                        {
+                            DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
+                        }
+                    }),
+                1.0f, // 1초 후 실행
+                false // 반복 안함
+            );
+        }
+        else
+        {
+            DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+
+    // 최대 레벨 도달 시 버튼 비활성화
+    if (SkillButton)
+    {
+        if (SkillData && Level >= SkillData->MaxLevel)
+        {
+            SkillButton->SetIsEnabled(false);
+        }
+        else
+        {
+            SkillButton->SetIsEnabled(true);
+        }
     }
 }
