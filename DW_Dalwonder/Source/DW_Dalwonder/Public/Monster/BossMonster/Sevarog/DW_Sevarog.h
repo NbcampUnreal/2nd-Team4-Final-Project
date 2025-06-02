@@ -34,6 +34,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* SurroundedAttackNS;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* RepDeadNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* BoxAttackNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsRealBoss = false;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -48,4 +57,8 @@ public:
 	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
 
 	void SurroundedAttack();
+
+	void BoxAttack();
+
+	virtual void Dead() override;
 };
