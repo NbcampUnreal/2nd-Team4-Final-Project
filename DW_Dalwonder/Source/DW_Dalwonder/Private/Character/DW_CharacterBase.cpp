@@ -1173,7 +1173,7 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		}
 	}
 
-	// 👉 화면 중심 가까운 순 정렬
+	// 화면 중심 가까운 순 정렬
 	LockOnCandidates.Sort([&](AActor& A, AActor& B)
 	{
 		FVector2D APos, BPos;
