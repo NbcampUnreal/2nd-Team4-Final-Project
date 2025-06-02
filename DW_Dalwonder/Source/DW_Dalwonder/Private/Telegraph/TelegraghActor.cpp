@@ -131,18 +131,7 @@ void ATelegraghActor::DestroyToDelay()
 void ATelegraghActor::DOTIntervalLogic()
 {
 	if (DOTTargetActor && DOTTargetActor->ActorHasTag("Player"))
-	{
-		if (bDoLaunch)
-		{
-			if (ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(DOTTargetActor))
-			{
-				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-				const float KnockBackStrength = LaunchImpulse;
-
-				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, bIsZOnly);
-			}
-		}
-		
+	{		
 		UGameplayStatics::ApplyDamage(DOTTargetActor, DOTDamage, nullptr, this, nullptr);
 	}
 	else

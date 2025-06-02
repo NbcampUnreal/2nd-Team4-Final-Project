@@ -93,10 +93,6 @@ void ADW_Sevarog::AirAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
-				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-				constexpr float KnockBackStrength = 2000.f;
-
-				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, true);
 			}
 		}
 	}
@@ -199,10 +195,6 @@ void ADW_Sevarog::SurroundedAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
-				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-				constexpr float KnockBackStrength = 1000.f;
-
-				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, false);
 			}
 		}
 	}
@@ -256,10 +248,7 @@ void ADW_Sevarog::BoxAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
-				const FVector KnockBackDirection = (PlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-				constexpr float KnockBackStrength = 1000.f;
 
-				PlayerCharacter->KnockBackCharacter(KnockBackDirection, KnockBackStrength, false);
 			}
 		}
 	}

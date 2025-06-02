@@ -25,10 +25,11 @@ void UDW_AnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	
 	Velocity = OwnerCharacterMovementComponent->Velocity;
-	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, GetOwningActor()->GetActorRotation());
+	Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, OwnerCharacter->GetActorRotation());
 	GroundSpeed = FVector(Velocity.X, Velocity.Y, 0.f).Size();
 	bShouldMove = ((OwnerCharacterMovementComponent->GetCurrentAcceleration().IsNearlyZero()) == false) && (GroundSpeed > 3.f);
 	bIsFalling = OwnerCharacterMovementComponent->IsFalling();
-	bShouldCombat = OwnerCharacter->CurrentCombatState != ECharacterCombatState::Idle;
+	bShouldCombat = OwnerCharacter->bIsOnCombat;
 	bIsLockOn = OwnerCharacter->bIsLockOn;
+	bIsDodging = OwnerCharacter->CurrentCombatState == ECharacterCombatState::Dodging;
 }
