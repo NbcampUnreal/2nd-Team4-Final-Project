@@ -17,6 +17,8 @@ class UUserWidget;
 class UNiagaraFunctionLibrary;
 class UNiagaraSystem;
 class UPhysicalMaterial;
+class USceneCaptureComponent2D;
+class UTextureRenderTarget2D;
 
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
@@ -385,5 +387,14 @@ public:
 	UFUNCTION()
 	void ToggleESCMenu();
 
+protected:
+
+	// SceneCapture 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Render")
+	USceneCaptureComponent2D* SceneCaptureComponent;
+
+	// RenderTarget
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render")
+	UTextureRenderTarget2D* RenderTarget;
 #pragma endregion
 };

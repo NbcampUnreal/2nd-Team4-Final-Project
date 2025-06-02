@@ -13,17 +13,16 @@
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
 #include "NiagaraFunctionLibrary.h"
-#include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
 #include "DW_DamageType.h"
 #include "DW_GmBase.h"
 #include "Components/CapsuleComponent.h"
-#include "Item/WorldItemActor.h"
 #include "Item/ItemDataManager.h"
-#include "UI/Widget/HUDWidget.h"
 #include "DW_InteractInterface.h"
 #include "KismetAnimationLibrary.h"
 #include "Engine/DamageEvents.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Engine/TextureRenderTarget2D.h"
 
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -48,6 +47,24 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
+
+	// SceneCaptureComponent 초기화
+	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));
+	SceneCaptureComponent->SetupAttachment(RootComponent);
+
+	SceneCaptureComponent->SetRelativeLocation(FVector(120.f, 0.f, 30.f));  // 위치 조정
+	SceneCaptureComponent->SetRelativeRotation(FRotator(-10.f, 180.f, 0.f)); // 캐릭터를 바라보게 회전
+
+	// 기본 렌더링 세팅
+	SceneCaptureComponent->bCaptureEveryFrame = true;
+	SceneCaptureComponent->bCaptureOnMovement = false;
+	SceneCaptureComponent->ProjectionType = ECameraProjectionMode::Perspective;
+	SceneCaptureComponent->FOVAngle = 45.f;
+
+	// 최적화 설정
+	SceneCaptureComponent->bCaptureEveryFrame = false;
+	SceneCaptureComponent->bCaptureOnMovement = false;
+	SceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 }
 
 void ADW_CharacterBase::BeginPlay()
@@ -81,6 +98,36 @@ void ADW_CharacterBase::BeginPlay()
 		0.1f,
 		true  // 반복 여부
 	);
+
+	if (RenderTarget && SceneCaptureComponent)
+	{
+		SceneCaptureComponent->TextureTarget = RenderTarget;
+		SceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
+		// 자식 액터들의 컴포넌트도 따로 추가
+		TArray<AActor*> ChildActors;
+		GetAttachedActors(ChildActors, true); // true = recursive
+
+		for (AActor* Child : ChildActors)
+		{
+			if (!Child) continue;
+
+			TArray<UActorComponent*> Components = Child->GetComponents().Array();
+			for (UActorComponent* Comp : Components)
+			{
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Comp))
+				{
+					SceneCaptureComponent->ShowOnlyComponent(Primitive);
+				}
+			}
+		}
+
+		// 자신만 보여주도록 설정 (배경 안 보이게)
+		SceneCaptureComponent->ShowOnlyActorComponents(this);
+
+		// 캡처
+		SceneCaptureComponent->CaptureScene();
+	}
 }
 
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -955,39 +1002,33 @@ void ADW_CharacterBase::ToggleESCMenu()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (!GameMode || !ESCMenuWidgetClass) return;
 
-	if (!bIsESCMenuOpen)
+	if (GameMode->GetPopupWidgetCount() > 0)
 	{
-		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-		if (ESCMenuWidgetInstance)
-		{
-			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
-			bIsESCMenuOpen = true;
+		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
 
-			if (APlayerController* PC = Cast<APlayerController>(GetController()))
-			{
-				PC->SetShowMouseCursor(true);
-				// UI Focus말고 키보드 입력도 먹도록 수정
-				FInputModeGameAndUI InputMode;
-				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				InputMode.SetHideCursorDuringCapture(false);
-				PC->SetInputMode(InputMode);
-			}
-		}
-	}
-	else
-	{
-		if (ESCMenuWidgetInstance)
+		// ESC 메뉴 닫혔는지 체크
+		if (ClosedWidget == ESCMenuWidgetInstance)
 		{
-			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
 			ESCMenuWidgetInstance = nullptr;
+			bIsESCMenuOpen = false;
 		}
+		return;
+	}
 
-		bIsESCMenuOpen = false;
+	// ESC 메뉴 열기
+	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+	if (ESCMenuWidgetInstance)
+	{
+		GameMode->ShowPopupUI(ESCMenuWidgetClass);
+		bIsESCMenuOpen = true;
 
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
-			PC->SetShowMouseCursor(false);
-			PC->SetInputMode(FInputModeGameOnly());
+			PC->SetShowMouseCursor(true);
+			FInputModeGameAndUI InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InputMode.SetHideCursorDuringCapture(false);
+			PC->SetInputMode(InputMode);
 		}
 	}
 }
