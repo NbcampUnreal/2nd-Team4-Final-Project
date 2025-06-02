@@ -14,7 +14,7 @@ void UDW_CanComboNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequ
 	PlayerCharacter = Cast<ADW_CharacterBase>(MeshComp->GetOwner());
 	if (IsValid(PlayerCharacter))
 	{
-		PlayerCharacter->bCanCombo = true;
+		PlayerCharacter->bCanAttack = true;
 	}
 }
 
@@ -25,6 +25,6 @@ void UDW_CanComboNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequen
 
 	if (IsValid(PlayerCharacter))
 	{
-		PlayerCharacter->bCanCombo = false;
+		PlayerCharacter->bCanAttack = false;
 	}
 }
