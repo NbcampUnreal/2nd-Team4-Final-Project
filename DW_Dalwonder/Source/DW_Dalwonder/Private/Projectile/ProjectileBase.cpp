@@ -8,7 +8,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
-#include "Character/DW_CharacterBase.h"
 
 // Sets default values
 AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), CollisionRadius(1.f)
@@ -17,7 +16,7 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
 	CollisionComponent->InitSphereRadius(10.f);
-	CollisionComponent->SetCollisionProfileName("ProjectileActor");
+	CollisionComponent->SetCollisionProfileName("Projectile");
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	CollisionComponent->OnComponentHit.AddDynamic(this, &AProjectileBase::OnProjectileHit);
 	RootComponent = CollisionComponent;
@@ -33,14 +32,15 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!OtherActor->ActorHasTag("Projectile") || !OtherActor->ActorHasTag("Monster"))
+	if (!OtherActor->ActorHasTag("Projectile"))
 	{
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		if (OtherActor->ActorHasTag("Player"))
 		{
-			// Launch 이외 정의
-			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
+      
+			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetInstigatorController(), this, nullptr);
+      
 			HitEffectSpawnLogic(Hit);
 			Destroy();
 		}

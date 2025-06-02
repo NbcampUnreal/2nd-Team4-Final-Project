@@ -7,7 +7,6 @@
 #include "PlayerInfoWidget.generated.h"
 
 class UCustomButtonWidget;
-class UImage;
 
 /**
  * 
@@ -24,7 +23,9 @@ public:
 	// 정보 업데이트
 	UFUNCTION(BlueprintCallable)
 	void UpdatePlayerInfo(
+		float HP,
 		float MaxHP,
+		float Stamina,
 		float MaxStamina,
 		float Damage,
 		float Defense,
@@ -66,8 +67,4 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* StRegenText;
-
-	//3D Model
-	UPROPERTY(meta = (BindWidget))
-	UImage* PreviewImage;
 };

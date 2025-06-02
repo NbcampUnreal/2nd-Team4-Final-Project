@@ -8,11 +8,11 @@
 
 UDW_GmInstance::UDW_GmInstance()
 {
-    /*static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass(TEXT("/Game/BluePrint/UI/Widget/WBP_LoadingWidget"));
+    static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass(TEXT("/Game/UI/Widget/WBP_LoadingWidget"));
     if (WidgetClass.Succeeded())
     {
         LoadingWidgetClass = WidgetClass.Class;
-    }*/
+    }
 }
 
 void UDW_GmInstance::Init()

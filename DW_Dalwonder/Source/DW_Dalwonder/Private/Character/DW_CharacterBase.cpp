@@ -532,31 +532,17 @@ void ADW_CharacterBase::EndGuard()
 	PlayMontage(GuardMontage, 2);
 }
 
-void ADW_CharacterBase::KnockBackCharacter(const FVector& Direction, const float Strength, const bool bIsZOnly)
+void ADW_CharacterBase::KnockBackCharacter()
 {
-	BlockCharacterControl(false);
-
-	FVector KnockBackVelocity;
+	SetCombatState(ECharacterCombatState::Hit);
 	
-	if (!bIsZOnly)
-	{
-		KnockBackVelocity = Direction.GetSafeNormal() * Strength;
-	}
+	const float KnockBackMultiplier = 50.f;
+	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
 	
-	KnockBackVelocity.Z = Strength / 2;
-
-	LaunchCharacter(KnockBackVelocity, true, true);
-
-	if (IsValid(KnockBackMontage))
+	LaunchCharacter(KnockBackDirection, true, true);
+	if (IsValid(KnockBackMontage) == true)
 	{
-		float KnockBackLength = KnockBackMontage->GetPlayLength();
-		FTimerHandle KnockBackTimerHandle;
-		GetWorldTimerManager().SetTimer(KnockBackTimerHandle, FTimerDelegate::CreateLambda([this]
-		{
-			BlockCharacterControl(true);
-		}), KnockBackLength, false);
-
-		PlayAnimMontage(KnockBackMontage);
+		PlayMontage(KnockBackMontage);
 	}
 }
 
@@ -837,34 +823,39 @@ void ADW_CharacterBase::ToggleESCMenu()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (!GameMode || !ESCMenuWidgetClass) return;
 
-	if (GameMode->GetPopupWidgetCount() > 0)
+	if (!bIsESCMenuOpen)
 	{
-		// 전용 함수 사용
-		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
-
-		// ESC 메뉴 닫혔는지 체크
-		if (ClosedWidget == ESCMenuWidgetInstance)
+		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+		if (ESCMenuWidgetInstance)
 		{
-			ESCMenuWidgetInstance = nullptr;
-			bIsESCMenuOpen = false;
-		}
-		return;
-	}
+			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
+			bIsESCMenuOpen = true;
 
-	// ESC 메뉴 열기
-	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-	if (ESCMenuWidgetInstance)
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				PC->SetShowMouseCursor(true);
+				// UI Focus말고 키보드 입력도 먹도록 수정
+				FInputModeGameAndUI InputMode;
+				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				InputMode.SetHideCursorDuringCapture(false);
+				PC->SetInputMode(InputMode);
+			}
+		}
+	}
+	else
 	{
-		GameMode->ShowPopupUI(ESCMenuWidgetClass);
-		bIsESCMenuOpen = true;
+		if (ESCMenuWidgetInstance)
+		{
+			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
+			ESCMenuWidgetInstance = nullptr;
+		}
+
+		bIsESCMenuOpen = false;
 
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
-			PC->SetShowMouseCursor(true);
-			FInputModeGameAndUI InputMode;
-			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			InputMode.SetHideCursorDuringCapture(false);
-			PC->SetInputMode(InputMode);
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
 		}
 	}
 }

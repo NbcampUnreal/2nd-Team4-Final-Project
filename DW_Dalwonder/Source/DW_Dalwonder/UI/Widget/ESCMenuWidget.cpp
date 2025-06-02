@@ -15,9 +15,6 @@ void UESCMenuWidget::NativeConstruct()
     if (InfoButton)
         InfoButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnInfoClicked);
 
-    if (SkillTreeButton)
-        SkillTreeButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnSkillTreeClicked);
-
     if (InventoryButton)
         InventoryButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnInventoryClicked);
 
@@ -38,21 +35,12 @@ void UESCMenuWidget::OnInfoClicked()
     }
 }
 
-void UESCMenuWidget::OnSkillTreeClicked()
-{
-    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-    if (GameMode && SkillTreeWidgetClass)
-    {
-        GameMode->ShowPopupUI(SkillTreeWidgetClass);
-    }
-}
-
 void UESCMenuWidget::OnInventoryClicked()
 {
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (GameMode && InventoryWidgetClass)
     {
-        GameMode->ShowPopupUI(InventoryWidgetClass);
+        GameMode->SwitchUI(InventoryWidgetClass);
     }
 }
 
@@ -61,7 +49,7 @@ void UESCMenuWidget::OnOptionClicked()
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (GameMode && OptionMenuWidgetClass)
     {
-        GameMode->ShowPopupUI(OptionMenuWidgetClass);
+        GameMode->SwitchUI(OptionMenuWidgetClass);
     }
 }
 

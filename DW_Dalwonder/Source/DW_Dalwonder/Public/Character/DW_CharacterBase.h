@@ -149,7 +149,7 @@ public:
 
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void KnockBackCharacter(const FVector& Direction, const float Strength, const bool bIsZOnly);
+	void KnockBackCharacter();
 
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -214,6 +214,23 @@ public:
 	// 사망 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* DeadMontage;
+
+	// 전투 상태 타이머
+	UPROPERTY()
+	FTimerHandle IdleStateTimer;
+
+	UPROPERTY()
+	FTimerHandle DodgeTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float InvincibleDuration = 1.5f;
+
+	UPROPERTY()
+	FTimerHandle InvincibleTimer;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bCanCombo = false;
+
 
 protected:
 	// 패링 중 여부
@@ -351,15 +368,6 @@ private:
 
 #pragma region UI
 public:
-	//HUD업데이트함수
-	UFUNCTION()
-	void UpdateHUD();
-
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
-
-public:
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 
@@ -371,5 +379,16 @@ public:
 	UUserWidget* ESCMenuWidgetInstance;
 
 	bool bIsESCMenuOpen = false;
+
+public:
+
+	//HUD업데이트함수
+	UFUNCTION()
+	void UpdateHUD();
+
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
+
 #pragma endregion
 };

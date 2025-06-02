@@ -4,10 +4,8 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "AIController.h"
-#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Character/DW_CharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
@@ -20,9 +18,6 @@ ADW_Sevarog::ADW_Sevarog()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	TrailNS = CreateDefaultSubobject<UNiagaraComponent>("TrailParticle");
-	TrailNS->SetupAttachment(RootComponent);
 
 	//부착 후 에디터에서 위치 세부 조정 필요
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
@@ -45,32 +40,10 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 	return 0;
 }
 
-void ADW_Sevarog::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (PlayerCharacter)
-	{
-		FRotator CurrentRotation = GetActorRotation();
-
-		FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
-		DirectionToPlayer.Z = 0;
-
-		if (!DirectionToPlayer.IsNearlyZero())
-		{
-			FRotator TargetRotation = DirectionToPlayer.Rotation();
-			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.5f);
-
-			SetActorRotation(NewRotation);
-		}
-	
-	}
-}
-
 void ADW_Sevarog::AirAttack()
 {
-	const FVector HammerLocation = Hammer->GetComponentLocation();
-	constexpr float Radius = 200.0f;
+	FVector HammerLocation = Hammer->GetComponentLocation();
+	float Radius = 250.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
@@ -101,8 +74,8 @@ void ADW_Sevarog::AirAttack()
 
 	if (!AirAttackNS) return;
 
-	const FVector SpawnLocation = Hammer->GetComponentLocation();
-	const FRotator SpawnRotation = GetActorRotation();
+	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -115,7 +88,7 @@ void ADW_Sevarog::AirAttack()
 	);
 }
 
-void ADW_Sevarog::DoTeleport() const
+void ADW_Sevarog::DoTeleport()
 {
 	if (IsValid(TeleportMontage))
 	{
@@ -128,7 +101,7 @@ void ADW_Sevarog::DoTeleport() const
 	}
 }
 
-void ADW_Sevarog::DoRangedTeleport() const
+void ADW_Sevarog::DoRangedTeleport()
 {
 	if (IsValid(RangedTeleportMontage))
 	{
@@ -171,14 +144,14 @@ void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) con
 
 void ADW_Sevarog::SurroundedAttack()
 {
-	const FVector HammerLocation = GetActorLocation() - FVector(0,0,150.f);
-	constexpr float Radius = 350.0f;
+	FVector HammerLocation = Hammer->GetComponentLocation();
+	float Radius = 400.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
-	const bool bHit = GetWorld()->OverlapMultiByChannel(
+	bool bHit = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
 		HammerLocation,
 		FQuat::Identity,
@@ -199,15 +172,12 @@ void ADW_Sevarog::SurroundedAttack()
 		}
 	}
 
-	if (bDrawDebugTrace)
-	{
-		DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
-	}
+	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
 
 	if (!SurroundedAttackNS) return;
 
-	const FVector SpawnLocation = GetActorLocation() - FVector(0,0,150.f);
-	const FRotator SpawnRotation = GetActorRotation();
+	FVector SpawnLocation = Hammer->GetComponentLocation();
+	FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
