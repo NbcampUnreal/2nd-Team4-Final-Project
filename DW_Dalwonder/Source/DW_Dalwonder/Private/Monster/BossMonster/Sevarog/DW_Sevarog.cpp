@@ -189,3 +189,83 @@ void ADW_Sevarog::SurroundedAttack()
 		true
 	);
 }
+
+void ADW_Sevarog::BoxAttack()
+{
+	const FVector LocalOffset = FVector(300.f, 0.f, -200.f);
+	const FVector BoxExtent = FVector(300.f, 150.f, 200.f);
+	
+	const FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
+
+	TArray<FOverlapResult> OverlapResults;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	const bool bHit = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		BoxCenter,
+		GetActorQuat(),
+		ECC_Pawn,
+		FCollisionShape::MakeBox(BoxExtent),
+		QueryParams
+	);
+
+	if (bHit)
+	{
+		for (const FOverlapResult& Result : OverlapResults)
+		{
+			AActor* HitActor = Result.GetActor();
+			if (HitActor && HitActor->ActorHasTag("Player"))
+			{
+				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+
+			}
+		}
+	}
+
+	if (bDrawDebugTrace)
+	{
+		DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, GetActorQuat(), FColor::Red, false, 1.0f);
+	}
+
+
+	if (!BoxAttackNS) return;
+
+	const FVector EffectOffset = FVector(50.f, 0.f, -200.f);
+	const FVector EffectLocation = GetActorLocation() + GetActorRotation().RotateVector(EffectOffset);
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		BoxAttackNS,
+		EffectLocation,
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true
+	);
+}
+
+void ADW_Sevarog::Dead()
+{
+	Super::Dead();
+
+	if (!bIsRealBoss)
+	{
+		if (!RepDeadNS) return;
+
+		const FVector SpawnLocation = GetActorLocation();
+		const FRotator SpawnRotation = GetActorRotation();
+
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			RepDeadNS,
+			SpawnLocation,
+			SpawnRotation,
+			FVector(1.f),
+			true,
+			true
+		);
+
+		Destroy();
+	}
+}

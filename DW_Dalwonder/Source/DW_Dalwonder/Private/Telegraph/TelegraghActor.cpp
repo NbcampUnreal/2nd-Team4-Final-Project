@@ -94,3 +94,24 @@ void ATelegraghActor::DestroyToDelay()
 	Destroy();
 }
 
+void ATelegraghActor::DOTIntervalLogic()
+{
+	if (DOTTargetActor && DOTTargetActor->ActorHasTag("Player"))
+	{		
+		UGameplayStatics::ApplyDamage(DOTTargetActor, DOTDamage, nullptr, this, nullptr);
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(DOTIntervalTimerHandle);
+		DOTTargetActor = nullptr;
+	}
+}
+
+void ATelegraghActor::DOTDurationEndLogic()
+{
+	GetWorldTimerManager().ClearTimer(DOTIntervalTimerHandle);
+	GetWorldTimerManager().ClearTimer(DOTDurationTimerHandle);
+
+	GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 3.f, false);
+
+}
