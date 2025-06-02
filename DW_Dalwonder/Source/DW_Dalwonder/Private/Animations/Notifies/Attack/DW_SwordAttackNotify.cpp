@@ -3,6 +3,7 @@
 #include "Animations/Notifies/Attack/DW_SwordAttackNotify.h"
 #include "DrawDebugHelpers.h"
 #include "Character/DW_Warrior.h"
+#include "Character/DW_Sword.h"
 #include "Interface/BearableInterface.h"
 #include "Character/DW_SwordBase.h"
 #include "Kismet/GameplayStatics.h"
