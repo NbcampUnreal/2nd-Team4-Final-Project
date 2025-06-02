@@ -15,8 +15,6 @@ class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
     GENERATED_BODY()
 
 public:
-    UDW_SkillIcon(const FObjectInitializer& ObjectInitializer);
-
     virtual void NativeConstruct() override;
 
     UPROPERTY(BlueprintReadWrite)
@@ -25,13 +23,8 @@ public:
     UPROPERTY(BlueprintReadWrite)
     UDW_SkillComponent* SkillComponent;
 
-    UPROPERTY()
-    UMaterialInterface* DotMaterial;
-
     UFUNCTION()
     void UpdateIcon();
-
-    UImage* GetIconImage() const { return IconImage; }
 
 protected:
     UFUNCTION()
@@ -42,9 +35,6 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UImage* IconImage;
-
-    UPROPERTY(meta = (BindWidget))
-    UImage* DotEffectImage;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* LevelText;

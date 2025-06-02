@@ -34,7 +34,13 @@ public:
     UPROPERTY(meta = (BindWidget))
     class UProgressBar* StaminaBar;
 
-    //퀵슬롯 1개
+    //퀵슬롯 1~4
     UPROPERTY(meta = (BindWidget))
     class UImage* ItemSlot1;
+    UPROPERTY(meta = (BindWidget))
+    class UImage* ItemSlot2;
+    UPROPERTY(meta = (BindWidget))
+    class UImage* ItemSlot3;
+    UPROPERTY(meta = (BindWidget))
+    class UImage* ItemSlot4;
 };
