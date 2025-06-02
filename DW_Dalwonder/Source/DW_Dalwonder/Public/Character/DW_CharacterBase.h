@@ -210,9 +210,6 @@ public:
 	UPROPERTY()
 	FTimerHandle IdleStateTimer;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float DodgeDistance = 600.f;
-
 	UPROPERTY()
 	FTimerHandle DodgeTimer;
 
