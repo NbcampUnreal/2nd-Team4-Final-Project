@@ -8,8 +8,10 @@ AWeaponBase::AWeaponBase()
 	AttackPower = 10.0f;
 	AttackSpeed = 1.0f;
 
+	GrabPoint = CreateDefaultSubobject<USceneComponent>(TEXT("GrabPoint"));
+	SetRootComponent(GrabPoint);
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	SetRootComponent(StaticMesh);
+	StaticMesh->SetupAttachment(GrabPoint);
 }
 
 void AWeaponBase::EnhanceWeapon()
