@@ -83,16 +83,20 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				AActor* HitActor = Hit.GetActor();
 				if (!IsValid(HitActor)) continue;
 
+				// ✅ 이전에 무시된 액터인지 확인
 				if (IgnoredActors.Contains(HitActor))
 				{
 					continue;
 				}
-				
-				if (FMath::Abs(Hit.ImpactNormal.Z) >= 0.8f)
+
+				// ✅ 바닥이면 무시 리스트에 등록
+				if (Hit.ImpactNormal.Z > 0.8f)
 				{
+					IgnoredActors.Add(HitActor);
 					continue;
 				}
 
+				// ✅ CanBeCut 검사
 				if (HitActor->Implements<UBearableInterface>())
 				{
 					if (!IBearableInterface::Execute_CanBeCut(HitActor, Hit))
@@ -111,16 +115,18 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				if (!PlayerCharacter->AttackingActors.Contains(HitActor))
 				{
 					PlayerCharacter->AttackingActors.Add(HitActor);
-					
-					UGameplayStatics::ApplyPointDamage(
+
+					UGameplayStatics::ApplyDamage(
 						HitActor,
 						AttackDamage,
-						(Hit.TraceEnd - Hit.TraceStart).GetSafeNormal(),
-						Hit,
 						PlayerCharacter->GetController(),
 						PlayerCharacter,
 						UDamageType::StaticClass()
 					);
+
+					UE_LOG(LogTemp, Warning, TEXT("[Trace] ✅ 데미지 적용: %s | Normal.Z: %.2f"),
+						*GetNameSafe(HitActor),
+						Hit.ImpactNormal.Z);
 				}
 			}
 		}
@@ -129,6 +135,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	PrevTraceStart = CurrStart;
 	PrevTraceEnd = CurrEnd;
 }
+
 
 void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
 	const FAnimNotifyEventReference& EventReference)

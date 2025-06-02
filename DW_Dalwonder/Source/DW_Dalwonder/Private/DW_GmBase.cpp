@@ -104,28 +104,3 @@ void ADW_GmBase::CloseLastPopupUI()
         }
     }
 }
-
-UUserWidget* ADW_GmBase::CloseLastPopupUI_AndReturn()
-{
-    if (PopupWidgets.Num() == 0)
-        return nullptr;
-
-    UUserWidget* LastWidget = PopupWidgets.Last();
-    if (LastWidget)
-    {
-        LastWidget->RemoveFromParent();
-        PopupWidgets.Pop();
-
-        // 마우스 커서와 InputMode도 필요한 경우 여기서 처리
-        if (PopupWidgets.Num() == 0)
-        {
-            if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
-            {
-                PC->SetShowMouseCursor(false);
-                PC->SetInputMode(FInputModeGameOnly());
-            }
-        }
-    }
-
-    return LastWidget;
-}

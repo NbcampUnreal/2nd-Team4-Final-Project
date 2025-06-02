@@ -17,7 +17,7 @@ public:
     UDW_SkillComponent();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-    int32 CurrentSP = 10;
+    int32 CurrentSP = 5;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill")
     UDataTable* SkillDataTable;
