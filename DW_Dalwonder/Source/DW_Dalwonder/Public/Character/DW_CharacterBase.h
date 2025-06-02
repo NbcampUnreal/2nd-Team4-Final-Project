@@ -14,7 +14,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UCharacterStatComponent;
 class UUserWidget;
-class UNiagaraFunctionLibrary;
+class UiagaraFunctionLibrary;
 class UNiagaraSystem;
 class UPhysicalMaterial;
 
@@ -39,8 +39,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-	virtual void PostInitializeComponents() override;
 
 public:
 	// ▶ 플레이어 입력 바인딩 (InputAction → 함수 연결)
@@ -73,13 +71,21 @@ public:
 	UFUNCTION()
 	void Lockon(const FInputActionValue& Value);
 
-	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = -1);
+	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = 0) const;
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
 	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }
 	
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	// -----------------------------
+	// 📌 데미지 처리 함수
+	// -----------------------------
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
 
 	// -----------------------------
 	// 📌 카메라 및 무기 관련 컴포넌트
@@ -96,9 +102,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	UCharacterStatComponent* StatComponent;				   // 캐릭터의 스탯 컴포넌트
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimInstance* AnimInstance;
 
 	bool bIsSprinting = false;
 
@@ -122,7 +125,7 @@ public:
 	void CancelAttack();
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void EndAttack(UAnimMontage* Montage, bool bInterrupted);
 
 	// 패링 상태 설정
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -150,13 +153,13 @@ public:
 
 	// 조작 차단 여부 설정 (피격 중 무력화 등)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void BlockCharacterControl(bool bShouldBlock, float Length = 0.f);
+	void BlockCharacterControl(bool bShouldBlock);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Dead();
 
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void SetIdleState();
+	UFUNCTION(blueprintCallable, Category = "Combat")
+	void SetAttackTimer(UAnimMontage* Montage, int32 SectionIndex = -1);
 
 	// 공격한 대상 저장하기 위한 Set
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -165,6 +168,12 @@ public:
 	// 현재 전투 상태 (Idle, Attacking 등)
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Combat")
 	ECharacterCombatState CurrentCombatState = ECharacterCombatState::Idle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	int32 ComboIndex = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bCanAttack = true;
 
 	// 기본 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -206,27 +215,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* DeadMontage;
 
-	// 전투 상태 타이머
-	UPROPERTY()
-	FTimerHandle IdleStateTimer;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float DodgeDistance = 600.f;
-
-	UPROPERTY()
-	FTimerHandle DodgeTimer;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float InvincibleDuration = 1.5f;
-
-	UPROPERTY()
-	FTimerHandle InvincibleTimer;
-
+protected:
+	// 패링 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanCombo = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	int32 CurrentComboIndex = 0;
+	bool bIsParrying = false;
 
 	// 가드 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -236,13 +228,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsInvincible = false;
 
-	// 전투 중 여부
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bIsOnCombat = false;
-
-protected:
 	UPROPERTY()
-	FTimerHandle BlockTimer;
+	FTimerHandle AttackTimer;
 
 public:
 	// -----------------------------
@@ -256,7 +243,7 @@ public:
 	// 락온 여부
 	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
 	bool bIsLockOn = false;
-	
+
 	// 전환 함수
 	UFUNCTION(BlueprintCallable, Category = "LockOn")
 	void SwitchLockOnTarget();
@@ -292,6 +279,7 @@ public:
 	TArray<AActor*> LockOnCandidates;
 
 	int32 LockOnIndex = 0;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn|UI")
 	TSubclassOf<UUserWidget> LockOnWidgetClass;
