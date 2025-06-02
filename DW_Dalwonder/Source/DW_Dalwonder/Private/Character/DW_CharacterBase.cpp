@@ -362,6 +362,8 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 
 void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 {
+	if (CurrentCombatState == ECharacterCombatState::Dead) return;
+	
 	BlockCharacterControl(true);
 	
 	if (IsValid(AnimInstance))
@@ -510,16 +512,28 @@ float ADW_CharacterBase::TakeDamage
 		return ActualDamage;
 	}
 
-	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 	// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
-	if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
+	if (DamageCauser->Implements<IDW_MonsterBaseInterface::UClassType>())
 	{
-		Monster->Parried();
-		PlayMontage(ParryMontage);
-		ActualDamage = 0.f;
-		return ActualDamage;
+		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+		{
+			Monster->Parried();
+			PlayMontage(ParryMontage);
+			ActualDamage = 0.f;
+			return ActualDamage;
+		}
 	}
-
+	else
+	{
+		if (CurrentCombatState == ECharacterCombatState::Parrying)
+		{
+			PlayMontage(ParryMontage);
+			ActualDamage = 0.f;
+			return ActualDamage;
+		}
+	}
+	
 	// 캐릭터가 가드 상태일 때
 	if (bIsGuarding)
 	{
@@ -676,16 +690,20 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 
 void ADW_CharacterBase::Dead()
 {
+	SetCombatState(ECharacterCombatState::Dead);
+	DisableInput(Cast<APlayerController>(GetController()));
+	SetInvincible(true);
+	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		PlayMontage(DeadMontage, 1);
+		AnimInstance->Montage_Play(DeadMontage);
+		FName SectionName = DeadMontage->GetSectionName(1);
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 	else
 	{
-		PlayMontage(DeadMontage);
+		AnimInstance->Montage_Play(DeadMontage);
 	}
-
-	SetCombatState(ECharacterCombatState::Dead);
 }
 
 void ADW_CharacterBase::SetIdleState()
