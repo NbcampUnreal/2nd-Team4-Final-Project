@@ -39,7 +39,6 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 
 		if (OtherActor->ActorHasTag("Player"))
 		{
-			// Launch 이외 정의
 			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
 			HitEffectSpawnLogic(Hit);
 			Destroy();

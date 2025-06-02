@@ -76,10 +76,6 @@
 		{
 			"Name": "Volumetrics",
 			"Enabled": true
-		},
-		{
-			"Name": "CascadeToNiagaraConverter",
-			"Enabled": true
 		}
 	]
 }
