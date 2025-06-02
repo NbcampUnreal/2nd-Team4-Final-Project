@@ -117,22 +117,35 @@ void AAISpawner::InitSpawnByRadius()
 
 void AAISpawner::SpawnMonstersFromDataTable()
 {
+	if (!GetWorld()) return;
 	if (!SpawnDataTable) return;
 
-	static const FString ContextString(TEXT("Monster Spawn Context"));
-	TArray<FName> RowNames = SpawnDataTable->GetRowNames();
+	TArray<FAISpawnRow*> Rows;
+	const FString ContextString(TEXT("AISpawnerContext"));
+	SpawnDataTable->GetAllRows(ContextString, Rows);
 
-	for (const FName& RowName : RowNames)
+	/*static const FString ContextString(TEXT("Monster Spawn Context"));
+	TArray<FName> RowNames = SpawnDataTable->GetRowNames();*/
+
+	for (FAISpawnRow* RowName : Rows)
 	{
-		const FAISpawnRow* SpawnInfo = SpawnDataTable->FindRow<FAISpawnRow>(RowName, ContextString);
-		if (SpawnInfo && SpawnInfo->SpawnClass)
+		if (RowName && RowName->SpawnClass && RowName->Amount)
 		{
-			for (int32 i = 0; i < SpawnInfo->Amount; ++i)
+			for (int32 i = 0; i < RowName->Amount; ++i)
 			{
-				FTransform SpawnLocation = GetRandomSpawnPoint();
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				GetWorld()->SpawnActor<AActor>(SpawnInfo->SpawnClass, SpawnLocation, SpawnParams);
+				if (UClass* SpawningClass = RowName->SpawnClass.Get())
+				{
+					FTransform SpawnLocation = GetRandomSpawnPoint();
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+					if (SpawningClass == nullptr) return;
+
+					GetWorld()->SpawnActor<AActor>(SpawningClass, SpawnLocation, SpawnParams);
+					
+					
+				}
+
 			}
 		}
 	}
@@ -169,4 +182,9 @@ FTransform AAISpawner::GetRandomSpawnPoint()
 	FRotator PointLotation = FRotator(0.f, FMath::FRandRange(0.f, 360.f), 0.f);
 
 	return FTransform(PointLotation, PointLocation, FVector(1.f, 1.f, 1.f));
+}
+
+bool AAISpawner::CanBeCut_Implementation(const FHitResult& Hit)
+{
+	return true;
 }

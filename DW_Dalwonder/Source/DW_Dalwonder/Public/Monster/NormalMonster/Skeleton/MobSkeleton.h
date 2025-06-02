@@ -22,6 +22,13 @@ private:
 public:
 	virtual void PlayAlertMontage() override;
 
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
+
 	// ---------- Animation Function ----------
 	// Use first skill anim montage.
 	UFUNCTION(BlueprintCallable)
@@ -71,8 +78,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bIsStrafe;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float HitDelay;
+
 	FVector SpawnLocation;
 	FVector RandomLocation1;
 	FVector RandomLocation2;
 
+	FTimerHandle HitDelayTimer;
 };

@@ -18,10 +18,10 @@ public:
 
     virtual void BeginPlay() override;
 
-    UFUNCTION(BlueprintCallable, Category = "UI") //UI��ü ����
+    UFUNCTION(BlueprintCallable, Category = "UI") // UI 전체 관리
     void SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass);
 
-    //�˾� UI ����
+    // 팝업 UI 관리
     UPROPERTY()
     TArray<UUserWidget*> PopupWidgets;
 
@@ -33,6 +33,12 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void CloseLastPopupUI();
+
+    //차례로 닫고 마지막 ESC닫기용
+    UUserWidget* CloseLastPopupUI_AndReturn();
+
+    // 열려있는 UI 반환
+    int32 GetPopupWidgetCount() const { return PopupWidgets.Num(); }
 
 protected:
     UPROPERTY()

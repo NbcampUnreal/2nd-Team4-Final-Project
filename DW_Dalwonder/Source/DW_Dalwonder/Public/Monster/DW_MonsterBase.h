@@ -6,6 +6,7 @@
 #include "DW_MonsterBaseInterface.h"
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
+#include "Interface/BearableInterface.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISenseConfig_Damage.h"
@@ -15,7 +16,7 @@
 
 
 UCLASS()
-class DW_DALWONDER_API ADW_MonsterBase : public ACharacter, public IDW_MonsterBaseInterface
+class DW_DALWONDER_API ADW_MonsterBase : public ACharacter, public IDW_MonsterBaseInterface, public IBearableInterface
 {
 	GENERATED_BODY()
 
@@ -49,6 +50,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* DeadMontage;
 
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
@@ -69,6 +72,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Base")
 	TArray<USoundBase*> HitSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	class UNiagaraSystem* HitNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
@@ -106,9 +112,21 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	bool bDrawDebugTrace = true;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack|Debug")
+	bool bUseOtherHand = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceStartVector;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
 
+	UPROPERTY()
+	class UNavigationInvokerComponent* NavInvokerComp;
+
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void ResetRoot();
+
+	UPROPERTY()
 	TSet<AActor*> AlreadyAttackingActors;
 
 	// 몬스터의 최대 속도 정의
@@ -199,6 +217,8 @@ public:
 
 	virtual void Dead() override;
 
+
+
 	// 데미지를 받을 때 호출
 	virtual float TakeDamage(
 		float DamageAmount,
@@ -216,4 +236,5 @@ public:
 	// 플레이어와의 거리 반환
 	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
+	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
 };

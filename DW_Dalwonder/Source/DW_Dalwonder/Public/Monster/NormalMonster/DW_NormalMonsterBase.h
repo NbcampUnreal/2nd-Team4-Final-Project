@@ -20,6 +20,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
 public:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="NormalMonster")
@@ -34,6 +36,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Montage")
 	UAnimMontage* AlertMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float AlertDelay;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation")
+	bool bShouldRotateToPlayer = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float DeadMontageTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float DestroyTime;
+
+	// SpawnMontage 중에 AlertMontage 재생을 막기 위한 재정의
+	virtual void InitialSpawn() override;
+	// SpawnMontage 종료 델리게이트 함수
+	UFUNCTION()
+	void OnSpawnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	virtual void AlertNearbyMonsters_Implementation(const int32 AlertDistance) override;
 
 	virtual void FoundPlayer_Implementation() override;
@@ -43,6 +62,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	virtual void PlayAlertMontage() override;
 
+	void Dead() override;
+
+	void DeadLogic();
+	void DestroyMonster();
+
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
+
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void ResetAlert();
+
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void BehaviorOn();
+
+	UFUNCTION()
+	void RotateToPlayer();
+
+private:
+	FTimerHandle AlertDelayTimer;
+
+	// SpawnMontage가 재생중인지 확인하는 변수
+	bool bIsPlayingSpawnMontage = false;
+	// SpawnMontage 재생중에 플레이어가 감지됐다면 AlertMontage를 즉시 실행하지 않고 예약할 변수
+	bool bWantsToPlayAlertMontage = false;
 };

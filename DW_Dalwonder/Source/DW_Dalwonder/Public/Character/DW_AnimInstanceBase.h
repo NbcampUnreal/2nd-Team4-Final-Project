@@ -17,6 +17,10 @@ public:
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float DodgeDirection;
+	
 protected:
 	UPROPERTY()
 	TObjectPtr<ADW_CharacterBase> OwnerCharacter;
@@ -44,4 +48,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIsLockOn = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bIsDodging = false;
 };

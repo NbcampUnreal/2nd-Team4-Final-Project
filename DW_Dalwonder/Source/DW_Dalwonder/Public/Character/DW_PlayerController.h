@@ -7,6 +7,9 @@
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
+class UInventoryMenuWidgetBase;
+class ADW_CharacterBase;
+
 
 UCLASS()
 class DW_DALWONDER_API ADW_PlayerController : public APlayerController
@@ -17,6 +20,28 @@ public:
 	ADW_PlayerController();
 
 	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UInventoryMenuWidgetBase> InventoryWidgetClass;
+
+	// 생성된 인벤토리 위젯 인스턴스
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UInventoryMenuWidgetBase* InventoryWidgetInstance;
+
+	// 인벤토리 UI가 현재 열려 있는지 여부
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	bool bIsInventoryOpen;
+
+	// 인벤토리 UI를 업데이트하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void RequestInventoryUIUpdate();
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void ToggleInventoryUI(); // EnhancedInputAction_IA_Inventory에 바인딩될 함수
+
+
+	
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -37,13 +62,43 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InteractAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputAction* InventoryInputAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* GuardAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* DodgeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* LockonAction;
+
+	// -----------------------------
+	// UI 관련
+	// -----------------------------
+#pragma region UI
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ESCAction;
+
+	//HUD
+	UPROPERTY()
+	UUserWidget* HUDWidgetInstance;
+
 protected:
 	// HUD
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 
-private:
-	//HUD
-	UPROPERTY()
-	UUserWidget* HUDWidgetInstance;
+public:
+	ADW_CharacterBase* GetControlledCharacter() const;
+	
+	// HUD 표시
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ShowGameHUD();
+#pragma endregion
 };

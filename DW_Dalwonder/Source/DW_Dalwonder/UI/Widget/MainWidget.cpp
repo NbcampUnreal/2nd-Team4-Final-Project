@@ -4,8 +4,10 @@
 #include "UI/Widget/MainWidget.h"
 #include "UI/Widget/CustomButtonWidget.h"
 #include "DW_GmBase.h"
+#include "DW_GmInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "TimerManager.h"
 
 void UMainWidget::NativeConstruct()
 {
@@ -26,12 +28,9 @@ void UMainWidget::NativeConstruct()
 
 void UMainWidget::OnNewGameClicked()
 {
-	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-	if (GameMode && CharacterWidgetClass)
-	{
-		GameMode->SwitchUI(CharacterWidgetClass);
-		GameMode->ClosePopupUI(this);
-	}
+	//게임 시작 로직 (레벨이동? or UI없애기)
+	UGameplayStatics::OpenLevel(this, "TestLoadingMap");
+	RemoveFromParent();
 }
 
 void UMainWidget::OnContinueGameClicked()
@@ -39,8 +38,7 @@ void UMainWidget::OnContinueGameClicked()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (GameMode && SavedGameWidgetClass)
 	{
-		GameMode->SwitchUI(SavedGameWidgetClass);
-		GameMode->ClosePopupUI(this);
+		GameMode->ShowPopupUI(SavedGameWidgetClass);
 	}
 }
 
@@ -49,8 +47,7 @@ void UMainWidget::OnOptionClicked()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (GameMode && OptionMenuWidgetClass)
 	{
-		GameMode->SwitchUI(OptionMenuWidgetClass);
-		GameMode->ClosePopupUI(this);
+		GameMode->ShowPopupUI(OptionMenuWidgetClass);
 	}
 }
 

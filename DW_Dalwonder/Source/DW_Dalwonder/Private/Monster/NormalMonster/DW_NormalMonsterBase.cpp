@@ -5,11 +5,13 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Perception/AISense_Damage.h"
 
 ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
-                                                AlertMontage(nullptr)
+                                                AlertMontage(nullptr), AlertDelay(1.f)
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	Tags.Add(TEXT("NormalMonster"));
 }
@@ -17,6 +19,83 @@ ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstRespo
 void ADW_NormalMonsterBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ADW_NormalMonsterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldRotateToPlayer && PlayerCharacter)
+	{
+		FRotator CurrentRotation = GetActorRotation();
+
+		FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+		DirectionToPlayer.Z = 0;
+
+		if (!DirectionToPlayer.IsNearlyZero())
+		{
+			FRotator TargetRotation = DirectionToPlayer.Rotation();
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.5f);
+
+			SetActorRotation(NewRotation);
+
+			float YawDifference = FMath::Abs(FMath::FindDeltaAngleDegrees(CurrentRotation.Yaw, TargetRotation.Yaw));
+
+			if (YawDifference < 5.f)
+			{
+				bShouldRotateToPlayer = false; // 회전 완료
+			}
+		}
+	}
+}
+
+void ADW_NormalMonsterBase::InitialSpawn()
+{
+	if (IsValid(SpawnMontage))
+	{
+		UAnimMontage* Montage = SpawnMontage;
+
+		if (Montage && GetMesh())
+		{
+			float Duration = GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+
+			if (AAIController* AICon = Cast<AAIController>(GetController()))
+			{
+				if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+				{
+					BBC->SetValueAsBool(FName("bCanBehavior"), false);
+				}
+			}
+
+			bIsPlayingSpawnMontage = true;
+
+			if (Duration > 0.f)
+			{
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &ADW_NormalMonsterBase::OnSpawnMontageEnded);
+				GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, Montage);
+			}
+		}
+	}
+}
+
+void ADW_NormalMonsterBase::OnSpawnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("bCanBehavior"), true);
+		}
+	}
+	
+	bIsPlayingSpawnMontage = false;
+
+	if (bWantsToPlayAlertMontage)
+	{
+		bWantsToPlayAlertMontage = false;
+		PlayAlertMontage();
+	}
 }
 
 void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 AlertDistance)
@@ -47,6 +126,8 @@ void ADW_NormalMonsterBase::AlertNearbyMonsters_Implementation(const int32 Alert
 					{
 						BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
 						BBC->SetValueAsBool(FName("bIsPlayerFound"), true);
+
+						Other->RotateToPlayer();
 					}
 				}
 				
@@ -78,8 +159,14 @@ void ADW_NormalMonsterBase::FoundPlayer_Implementation()
 	// 최초 감지자만 몽타주 재생
 	if (bIsFirstResponder)
 	{
-		PlayAlertMontage();
-		
+		if (bIsPlayingSpawnMontage)
+		{
+			bWantsToPlayAlertMontage = true;
+		}
+		else
+		{
+			PlayAlertMontage();
+		}
 	}
 }
 
@@ -109,12 +196,88 @@ void ADW_NormalMonsterBase::PlayAlertMontage()
 		if (Montage && GetMesh())
 		{
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+
+			if (AAIController* AICon = Cast<AAIController>(GetController()))
+			{
+				if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+				{
+					BBC->SetValueAsBool(FName("bCanBehavior"), false);
+
+					GetWorldTimerManager().SetTimer(AlertDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, AlertDelay, false);
+				}
+			}
 		}
 	}
+}
+
+void ADW_NormalMonsterBase::Dead()
+{
+	Super::Dead();
+
+	FTimerHandle DeadLogicTime;
+	GetWorldTimerManager().SetTimer(DeadLogicTime, this, &ADW_NormalMonsterBase::DeadLogic, DeadMontageTime, false);
+}
+
+void ADW_NormalMonsterBase::DeadLogic()
+{
+	SetActorTickEnabled(false);
+	GetCharacterMovement()->DisableMovement();
+
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetSimulatePhysics(true);
+
+	FTimerHandle DestroyDelayTimer;
+	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyMonster, DestroyTime, false);
+
+}
+
+void ADW_NormalMonsterBase::DestroyMonster()
+{
+	Destroy();
+}
+
+float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (GetWorld())
+	{
+		UAISense_Damage::ReportDamageEvent(
+			GetWorld(),
+			this,                                   
+			DamageCauser,                                  
+			DamageAmount,
+			DamageCauser ? DamageCauser->GetActorLocation() : FVector::ZeroVector,
+			GetActorLocation()
+		);
+	}
+
+	bIsAlerted = true;
+
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	return 0.0f;
 }
 
 void ADW_NormalMonsterBase::ResetAlert()
 {
 	bIsAlerted = false;
 	bIsFirstResponder = true;
+}
+
+void ADW_NormalMonsterBase::BehaviorOn()
+{
+	GetWorldTimerManager().ClearTimer(AlertDelayTimer);
+
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("bCanBehavior"), true);
+		}
+	}
+}
+
+void ADW_NormalMonsterBase::RotateToPlayer()
+{
+	bShouldRotateToPlayer = true;
 }

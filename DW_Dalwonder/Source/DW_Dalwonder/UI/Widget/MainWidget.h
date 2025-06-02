@@ -47,9 +47,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButtonWidget* ExitButton;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> CharacterWidgetClass;
-
+	// 연결 위젯들
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> SavedGameWidgetClass;
 
