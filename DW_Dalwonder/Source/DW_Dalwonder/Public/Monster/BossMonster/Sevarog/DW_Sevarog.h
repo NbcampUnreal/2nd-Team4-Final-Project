@@ -34,18 +34,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* SurroundedAttackNS;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* RepDeadNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* BoxAttackNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsRealBoss = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle")
+	UNiagaraComponent* TrailNS;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void Tick(float DeltaTime) override;
 
 	void AirAttack();
 
 	UFUNCTION(BlueprintCallable)
-	void DoTeleport();
+	void DoTeleport() const;
 
 	UFUNCTION(BlueprintCallable)
-	void DoRangedTeleport();
+	void DoRangedTeleport() const;
 
 	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
 
 	void SurroundedAttack();
+
+	void BoxAttack();
+
+	virtual void Dead() override;
 };

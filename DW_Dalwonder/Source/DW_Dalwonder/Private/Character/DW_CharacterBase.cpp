@@ -532,23 +532,30 @@ void ADW_CharacterBase::EndGuard()
 	PlayMontage(GuardMontage, 2);
 }
 
-void ADW_CharacterBase::KnockBackCharacter()
+void ADW_CharacterBase::KnockBackCharacter(const FVector& Direction, const float Strength, const bool bIsZOnly)
 {
 	BlockCharacterControl(false);
+
+	FVector KnockBackVelocity;
 	
-	const float KnockBackMultiplier = 50.f;
-	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
+	if (!bIsZOnly)
+	{
+		KnockBackVelocity = Direction.GetSafeNormal() * Strength;
+	}
 	
-	LaunchCharacter(KnockBackDirection, true, true);
-	if (IsValid(KnockBackMontage) == true)
+	KnockBackVelocity.Z = Strength / 2;
+
+	LaunchCharacter(KnockBackVelocity, true, true);
+
+	if (IsValid(KnockBackMontage))
 	{
 		float KnockBackLength = KnockBackMontage->GetPlayLength();
 		FTimerHandle KnockBackTimerHandle;
-		GetWorldTimerManager().SetTimer(KnockBackTimerHandle, FTimerDelegate::CreateLambda([&]
+		GetWorldTimerManager().SetTimer(KnockBackTimerHandle, FTimerDelegate::CreateLambda([this]
 		{
 			BlockCharacterControl(true);
-		}
-		), KnockBackLength, false, 0.f);
+		}), KnockBackLength, false);
+
 		PlayAnimMontage(KnockBackMontage);
 	}
 }
