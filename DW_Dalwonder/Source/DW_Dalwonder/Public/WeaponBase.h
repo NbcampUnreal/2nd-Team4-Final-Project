@@ -51,6 +51,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
 	UDataTable* EnhancementDataTable;
 
+	// 무기의 루트 컴포넌트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
+	USceneComponent* GrabPoint;
+
 	// 무기의 스태틱 메시 (외형)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
 	UStaticMeshComponent* StaticMesh;

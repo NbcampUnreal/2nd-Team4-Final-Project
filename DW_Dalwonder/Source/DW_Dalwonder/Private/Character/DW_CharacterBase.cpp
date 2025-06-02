@@ -1005,7 +1005,6 @@ void ADW_CharacterBase::ToggleESCMenu()
 	if (GameMode->GetPopupWidgetCount() > 0)
 	{
 		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
-
 		// ESC 메뉴 닫혔는지 체크
 		if (ClosedWidget == ESCMenuWidgetInstance)
 		{
@@ -1214,7 +1213,7 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		}
 	}
 
-	// 👉 화면 중심 가까운 순 정렬
+	// 화면 중심 가까운 순 정렬
 	LockOnCandidates.Sort([&](AActor& A, AActor& B)
 	{
 		FVector2D APos, BPos;
