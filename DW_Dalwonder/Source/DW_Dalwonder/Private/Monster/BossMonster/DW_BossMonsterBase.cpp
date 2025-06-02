@@ -44,7 +44,7 @@ void ADW_BossMonsterBase::SetCurrentPhase(int32 NewPhase)
 		{
 			BBC->SetValueAsInt(FName("CurrentPhase"), NewPhase);
 		}
-	}
+	}	
 }
 
 void ADW_BossMonsterBase::SetBGM(USoundBase* NewBGM)
