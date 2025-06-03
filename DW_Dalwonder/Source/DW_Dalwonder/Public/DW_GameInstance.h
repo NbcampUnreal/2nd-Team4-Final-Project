@@ -5,6 +5,7 @@
 #include "DW_GameInstance.generated.h"
 
 class ULoadingScreenWidget;
+class UDW_SaveGame;
 
 /** GameInstance: OpenLevel + MoviePlayer �ε� ��ũ�� ���� */
 UCLASS()
@@ -21,6 +22,28 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void LoadLevelWithLoadingScreenByName(FName LevelName);
+
+    // 게임 저장
+    UFUNCTION(BlueprintCallable, Category = "SaveSystem")
+    void SaveGameData();
+
+    UFUNCTION(BlueprintCallable)
+    void SaveGameDataToSlot(const FString& SlotName);
+
+    //게임 불러오기
+    UPROPERTY()
+    UDW_SaveGame* LoadedSaveGame;  // 로드된 세이브 데이터를 임시 저장
+
+    UFUNCTION(BlueprintCallable, Category = "SaveSystem")
+    void LoadGameData();
+
+    UFUNCTION(BlueprintCallable)
+    void LoadGameDataFromSlot(const FString& SlotName);
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyLoadedData();  // 로드 완료
+
+public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
     FName LevelToLoad;

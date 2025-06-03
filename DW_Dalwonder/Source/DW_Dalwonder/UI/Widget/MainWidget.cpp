@@ -3,6 +3,7 @@
 
 #include "UI/Widget/MainWidget.h"
 #include "UI/Widget/CustomButtonWidget.h"
+#include "UI/Widget/SavedGameWidget.h"
 #include "DW_GmBase.h"
 #include "DW_GmInstance.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,7 +39,14 @@ void UMainWidget::OnContinueGameClicked()
 	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
 	if (GameMode && SavedGameWidgetClass)
 	{
-		GameMode->ShowPopupUI(SavedGameWidgetClass);
+		// ShowPopupUI() 호출 → UUserWidget* 반환
+		UUserWidget* CreatedWidget = GameMode->ShowPopupUI(SavedGameWidgetClass);
+
+		// SavedGameWidget으로 캐스팅하여 Load 모드 설정
+		if (USavedGameWidget* LoadWidget = Cast<USavedGameWidget>(CreatedWidget))
+		{
+			LoadWidget->SetMode(ESaveGameWidgetMode::Load);
+		}
 	}
 }
 

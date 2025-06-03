@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
+#include "DW_GameInstance.h"
 
 ADW_GmBase::ADW_GmBase()
 {
@@ -12,6 +13,10 @@ void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        GI->ApplyLoadedData();
+    }
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
