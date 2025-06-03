@@ -63,19 +63,9 @@ void UESCMenuWidget::OnInventoryClicked()
 
 void UESCMenuWidget::OnSaveClicked()
 {
-    if (ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+    if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
     {
-        if (SavedGameWidgetClass)
-        {
-            // ShowPopupUI는 생성된 UUserWidget*을 반환함
-            UUserWidget* CreatedWidget = GameMode->ShowPopupUI(SavedGameWidgetClass);
-
-            // SavedGameWidget 타입으로 캐스팅 후 모드 설정
-            if (USavedGameWidget* SaveWidget = Cast<USavedGameWidget>(CreatedWidget))
-            {
-                SaveWidget->SetMode(ESaveGameWidgetMode::Save);
-            }
-        }
+        GameInstance->SaveGameData();   //저장
     }
 }
 

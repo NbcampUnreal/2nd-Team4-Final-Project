@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "DW_AttributeSaveData.h"
 #include "DW_SaveGame.generated.h"
 
 /**
@@ -18,5 +19,8 @@ public:
 	// 캐릭터 위치를 저장할 변수
 	UPROPERTY(VisibleAnywhere, Category = "SaveData")
 	FVector SavedPlayerLocation;
+	// 캐릭터 스탯 저장 변수
+	UPROPERTY(VisibleAnywhere, Category = "SaveData")
+	FAttributeSaveData SavedAttributes;
 
 };

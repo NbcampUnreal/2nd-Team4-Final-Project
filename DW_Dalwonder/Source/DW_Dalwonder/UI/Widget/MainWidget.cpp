@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "TimerManager.h"
+#include "DW_GameInstance.h"
 
 void UMainWidget::NativeConstruct()
 {
@@ -36,17 +37,9 @@ void UMainWidget::OnNewGameClicked()
 
 void UMainWidget::OnContinueGameClicked()
 {
-	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-	if (GameMode && SavedGameWidgetClass)
+	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
-		// ShowPopupUI() 호출 → UUserWidget* 반환
-		UUserWidget* CreatedWidget = GameMode->ShowPopupUI(SavedGameWidgetClass);
-
-		// SavedGameWidget으로 캐스팅하여 Load 모드 설정
-		if (USavedGameWidget* LoadWidget = Cast<USavedGameWidget>(CreatedWidget))
-		{
-			LoadWidget->SetMode(ESaveGameWidgetMode::Load);
-		}
+		GameInstance->LoadGameData(); // 게임로드
 	}
 }
 

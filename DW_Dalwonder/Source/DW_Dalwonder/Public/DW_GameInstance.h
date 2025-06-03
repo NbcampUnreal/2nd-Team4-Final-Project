@@ -27,18 +27,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "SaveSystem")
     void SaveGameData();
 
-    UFUNCTION(BlueprintCallable)
-    void SaveGameDataToSlot(const FString& SlotName);
-
     //게임 불러오기
-    UPROPERTY()
-    UDW_SaveGame* LoadedSaveGame;  // 로드된 세이브 데이터를 임시 저장
-
     UFUNCTION(BlueprintCallable, Category = "SaveSystem")
     void LoadGameData();
-
-    UFUNCTION(BlueprintCallable)
-    void LoadGameDataFromSlot(const FString& SlotName);
 
     UFUNCTION(BlueprintCallable)
     void ApplyLoadedData();  // 로드 완료
@@ -69,7 +60,12 @@ private:
     void BeginLoadingScreen(const FString& MapName);
     void EndLoadingScreen(UWorld* LoadedWorld);
 
+private:
+
     UPROPERTY()
     class ULoadingScreenWidget* LoadingWidget;
+
+    FString DefaultSaveSlot = TEXT("DW_SaveData");
+    UDW_SaveGame* LoadedSaveGame = nullptr;
 
 };
