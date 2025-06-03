@@ -8,7 +8,7 @@ public class DW_Dalwonder : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "Niagara" , "LevelSequence" , "MovieScene", "NavigationSystem", "MoviePlayer", "ChaosSolverEngine", "GeometryCollectionEngine", "PhysicsCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "Niagara" , "LevelSequence" , "MovieScene", "NavigationSystem", "MoviePlayer", "ChaosSolverEngine", "GeometryCollectionEngine", "PhysicsCore" , "MediaAssets"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

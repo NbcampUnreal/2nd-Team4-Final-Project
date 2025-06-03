@@ -3,7 +3,6 @@
 #include "AIController.h"
 #include "NavigationInvokerComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "NiagaraSystem.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -395,8 +394,6 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	
-	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
 	if (HitNS)
 	{
@@ -418,8 +415,14 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 				true
 			);
 		}
-
 	}
+
+	if (bIsInvincible)
+	{
+		DamageAmount = 0;
+	}
+	
+	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
 	if (MonsterHP <= 0)
 	{
