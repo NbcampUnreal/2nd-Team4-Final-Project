@@ -7,6 +7,8 @@
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossDead);
+
 UCLASS()
 class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
 {
@@ -15,6 +17,9 @@ class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
 public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
+
+	UPROPERTY(BlueprintAssignable, Category="Boss")
+	FOnBossDead OnBossDead;
 
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	USceneComponent* Hammer;
@@ -78,4 +83,6 @@ public:
 	virtual void SetCurrentPhase(int32 NewPhase) override;
 	
 	virtual void Dead() override;
+
+	void ActivateRagdoll() const;
 };
