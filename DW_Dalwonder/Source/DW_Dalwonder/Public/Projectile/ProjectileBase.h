@@ -72,6 +72,15 @@ public:
 	// ProjectileMovement의 RotationFollowsVelocity 활성화 여부입니다. Gravity가 0보다 크고 해당 변수가 True면 포물선을 그리며 날아갑니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Movement")
 	bool bRotationFromVelocity;
+	// Hit시 캐릭터 Launch의 여부입니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch")
+	bool bDoLaunch;
+	// Launch의 힘을 조절합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	float LaunchImpulse;
+	// Launch의 방향을 조절합니다. True일 때, Z축으로만 날아갑니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	bool bIsZOnly;
 
 	// 발사체가 플레이어와 충돌했을 때 스폰시킬 나이아가라 시스템 클래스입니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|HitEffect")

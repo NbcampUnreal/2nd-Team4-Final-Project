@@ -5,6 +5,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "TimerManager.h"
+#include "Character/DW_CharacterBase.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -130,7 +131,7 @@ void ATelegraghActor::DestroyToDelay()
 void ATelegraghActor::DOTIntervalLogic()
 {
 	if (DOTTargetActor && DOTTargetActor->ActorHasTag("Player"))
-	{
+	{		
 		UGameplayStatics::ApplyDamage(DOTTargetActor, DOTDamage, nullptr, this, nullptr);
 	}
 	else
