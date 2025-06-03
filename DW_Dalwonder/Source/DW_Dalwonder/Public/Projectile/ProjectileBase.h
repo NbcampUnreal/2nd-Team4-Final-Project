@@ -51,26 +51,26 @@ public:
 	// ---------- 변수 선언 ----------
 public:
 	// 발사체 충돌 가능 범위를 조절합니다. 위치는 Niagara Component의 Location을 변경해주세요.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	float CollisionRadius;
 	// 발사체가 액터와 충돌 후 남아있게 할지에 대한 변수입니다. False면 사라지고 True면 유지합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	bool bRemainNiagara;
 	// 발사체가 액터와 충돌했을 때부터 파괴되기까지의 시간입니다. bRemainNiagara가 True일 경우 유효합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	float HitDestroyDelay;
 	// 발사체가 스폰됐을 때부터 파괴되기까지의 시간입니다. 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	float DestroyDelay;
 
 	// ProjectileMovement의 발사 속도를 조절합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Movement")
 	float Speed;
 	// ProjectileMovement의 중력을 조절합니다. 0일 경우 지면과 평행하게 날아갑니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Movement")
 	float Gravity;
 	// ProjectileMovement의 RotationFollowsVelocity 활성화 여부입니다. Gravity가 0보다 크고 해당 변수가 True면 포물선을 그리며 날아갑니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Movement")
 	bool bRotationFromVelocity;
 	// Hit시 캐릭터 Launch의 여부입니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch")
@@ -83,20 +83,20 @@ public:
 	bool bIsZOnly;
 
 	// 발사체가 플레이어와 충돌했을 때 스폰시킬 나이아가라 시스템 클래스입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|HitEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|HitEffect")
 	UNiagaraSystem* HitEffect;
 	// HitEffect 스폰시 발사체가 충돌된 위치로부터 얼만큼 떨어뜨릴지에 대한 변수입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|HitEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|HitEffect")
 	float HitEffectOffset;
 	// HitEffect의 크기를 조절합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|HitEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|HitEffect")
 	float HitEffectSize;
 	// HitEffect가 플레이어 외 충돌시에도 생성하게 할지에 대한 변수입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|HitEffect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|HitEffect")
 	bool bSpawnAtLand;
 
 	// 플레이어에게 충돌시 가할 데미지입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Damage")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Damage")
 	float DamageAmount;
 
 protected:

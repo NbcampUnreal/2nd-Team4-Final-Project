@@ -15,11 +15,16 @@ AMobSkeleton::AMobSkeleton()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->SetupAttachment(GetCapsuleComponent());
+	NiagaraComponent->SetAutoActivate(false);
+
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
 
 	bIsStrafe = false;
 }
@@ -28,8 +33,27 @@ void AMobSkeleton::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//SetSpawnLocation();
 
+	CurrentZ = GetActorLocation().Z;
+
+	//SetSpawnLocation();
+	DefaultHP = MonsterMaxHP;
+	DefaultDamage = MonsterDamage;
+
+}
+
+void AMobSkeleton::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
+
+	float ZOffset = AnimInstance->GetCurveValue(FName("ZOffset"));
+
+	FVector Location = GetActorLocation();
+	Location.Z = CurrentZ + ZOffset; 
+	SetActorLocation(Location);
 }
 
 void AMobSkeleton::PlayAlertMontage()
@@ -54,7 +78,10 @@ void AMobSkeleton::PlayAlertMontage()
 
 float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	
+	if (bHaveEnergeSheild)
+	{
+		DamageAmount /= 2;
+	}
 
 	if (DamageAmount >= MonsterMaxHP * 0.3f)
 	{
@@ -79,6 +106,108 @@ float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	}
 
     return 0.0f;
+}
+
+void AMobSkeleton::Dead()
+{
+	NiagaraComponent->Deactivate();
+
+	Super::Dead();
+}
+
+void AMobSkeleton::AffectToEnergeShield()
+{
+	if (bHaveEnergeSheild)
+	{
+		return;
+	}
+
+	bHaveEnergeSheild = true;
+
+	if (NiagaraComponent)
+	{
+		NiagaraComponent->Activate(true);
+	}
+
+	GetWorldTimerManager().SetTimer(EnergeShieldTimer, this, &AMobSkeleton::EnergeShieldDeactive, 10.f, false);
+
+}
+
+void AMobSkeleton::EnergeShieldDeactive()
+{
+	GetWorldTimerManager().ClearTimer(ScaleUpTimer);
+
+	bHaveEnergeSheild = false;
+
+	NiagaraComponent->Deactivate();
+}
+
+void AMobSkeleton::AffectToEnhance()
+{
+	if (bHaveEnhanced)
+	{
+		return;
+	}
+
+	bHaveEnhanced = true;
+
+	MonsterMaxHP += DefaultHP / 2;
+	MonsterHP += DefaultHP / 2;
+
+	MonsterDamage += DefaultDamage / 2;
+	
+	GetWorldTimerManager().SetTimer(ScaleUpTimer, this, &AMobSkeleton::ScaleUp, 0.05f, true);
+	GetWorldTimerManager().SetTimer(EnhancedTimer, this, &AMobSkeleton::EnhanceDeactive, 10.f, false);
+
+}
+
+void AMobSkeleton::ScaleUp()
+{
+	if (ScaleUpCount > 40)
+	{
+		ScaleUpCount = 40;
+		GetWorldTimerManager().ClearTimer(ScaleUpTimer);
+	}
+
+	float Alpha = FMath::Clamp(ScaleUpCount / 40.f, 0.f, 1.f);
+	float NewScale = FMath::Lerp(1.f, 1.3f, Alpha);
+
+	SetActorScale3D(FVector(NewScale));
+
+	ScaleUpCount++;
+
+}
+
+void AMobSkeleton::ScaleDown()
+{
+	if (ScaleUpCount < 0)
+	{
+		ScaleUpCount = 0;
+		GetWorldTimerManager().ClearTimer(ScaleDownTimer);
+	}
+
+	float Alpha = FMath::Clamp(ScaleUpCount / 40.f, 0.f, 1.f);
+	float NewScale = FMath::Lerp(1.f, 1.3f, Alpha);
+
+	SetActorScale3D(FVector(NewScale));
+
+	ScaleUpCount--;
+
+}
+
+void AMobSkeleton::EnhanceDeactive()
+{
+	GetWorldTimerManager().SetTimer(ScaleDownTimer, this, &AMobSkeleton::ScaleDown, 0.05f, true);
+
+	bHaveEnhanced = false;
+
+	MonsterMaxHP = DefaultHP;
+	if (MonsterHP > DefaultHP)
+	{
+		MonsterHP = DefaultHP;
+	}
+
+	MonsterDamage = DefaultDamage;
 }
 
 void AMobSkeleton::UseFirstSkill()

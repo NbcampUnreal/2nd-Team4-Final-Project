@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Monster/NormalMonster/DW_NormalMonsterBase.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h" 
+#include "NiagaraComponent.h"
 #include "MobSkeleton.generated.h"
 
 /**
@@ -19,6 +22,8 @@ private:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
 public:
 	virtual void PlayAlertMontage() override;
 
@@ -28,6 +33,22 @@ public:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 	) override;
+
+	void Dead() override;
+
+	UFUNCTION()
+	void AffectToEnergeShield(); 
+	void EnergeShieldDeactive();
+
+	UFUNCTION()
+	void AffectToEnhance();
+	void ScaleUp();
+	void ScaleDown();
+	void EnhanceDeactive();
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UNiagaraComponent* NiagaraComponent;
 
 	// ---------- Animation Function ----------
 	// Use first skill anim montage.
@@ -81,9 +102,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	float HitDelay;
 
+	float DefaultHP;
+	float DefaultDamage;
+
+	float CurrentZ;
+
 	FVector SpawnLocation;
 	FVector RandomLocation1;
 	FVector RandomLocation2;
 
 	FTimerHandle HitDelayTimer;
+	FTimerHandle EnergeShieldTimer;
+	FTimerHandle ScaleUpTimer;
+	FTimerHandle ScaleDownTimer;
+	FTimerHandle EnhancedTimer;
+
+	int32 ScaleUpCount = 0;
+
+	bool bHaveEnergeSheild = false;
+	bool bHaveEnhanced = false;
 };
