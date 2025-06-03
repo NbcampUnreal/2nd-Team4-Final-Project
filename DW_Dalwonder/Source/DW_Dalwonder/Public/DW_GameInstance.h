@@ -65,7 +65,9 @@ private:
     UPROPERTY()
     class ULoadingScreenWidget* LoadingWidget;
 
-    FString DefaultSaveSlot = TEXT("DW_SaveData");
+    UPROPERTY()
     UDW_SaveGame* LoadedSaveGame = nullptr;
+
+    FString DefaultSaveSlot = TEXT("DW_SaveData");
 
 };

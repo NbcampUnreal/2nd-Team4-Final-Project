@@ -35,6 +35,8 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnSkillUpdated OnSkillUpdated;
 
+    UFUNCTION(BlueprintCallable)
+    void ApplyAllSkillBonuses(UDW_AttributeComponent* AttributeComponent);
 private:
     FSkillState* FindSkillState(FName SkillID);
     void ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel);

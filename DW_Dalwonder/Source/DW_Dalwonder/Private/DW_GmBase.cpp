@@ -3,6 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "DW_GameInstance.h"
+#include "DW_SaveGame.h"
 
 ADW_GmBase::ADW_GmBase()
 {

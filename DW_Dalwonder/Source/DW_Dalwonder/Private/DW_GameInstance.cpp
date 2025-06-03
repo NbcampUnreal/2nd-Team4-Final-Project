@@ -58,11 +58,19 @@ void UDW_GameInstance::SaveGameData()
     ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     if (!PlayerCharacter) return;
 
+    // 1. 위치 저장
     SaveGameInstance->SavedPlayerLocation = PlayerCharacter->GetActorLocation();
 
+    // 2. 스탯 저장
     if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
     {
         AttrComp->SaveData(SaveGameInstance->SavedAttributes);
+    }
+
+    // 3. 스킬 트리 저장
+    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
+    {
+        SaveGameInstance->SavedSkillStates = SkillComp->SkillStateMap;
     }
 
     UGameplayStatics::SaveGameToSlot(SaveGameInstance, DefaultSaveSlot, 0);
@@ -70,21 +78,10 @@ void UDW_GameInstance::SaveGameData()
 
 void UDW_GameInstance::LoadGameData()
 {
-    if (!UGameplayStatics::DoesSaveGameExist(DefaultSaveSlot, 0))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("기본 저장 슬롯 [%s] 이 존재하지 않습니다."), *DefaultSaveSlot);
-        return;
-    }
+    if (!UGameplayStatics::DoesSaveGameExist(DefaultSaveSlot, 0)) return;
 
-    LoadedSaveGame = Cast<UDW_SaveGame>(
-        UGameplayStatics::LoadGameFromSlot(DefaultSaveSlot, 0)
-    );
-
-    if (!LoadedSaveGame)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("저장 데이터를 불러오지 못했습니다."));
-        return;
-    }
+    LoadedSaveGame = Cast<UDW_SaveGame>(UGameplayStatics::LoadGameFromSlot(DefaultSaveSlot, 0));
+    if (!LoadedSaveGame) return;
 
     UGameplayStatics::OpenLevel(GetWorld(), TEXT("TestLoadingMap"));
 }
@@ -96,16 +93,25 @@ void UDW_GameInstance::ApplyLoadedData()
     ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     if (!PlayerCharacter) return;
 
-    // 위치 적용
+    // 1. 위치 적용
     PlayerCharacter->SetActorLocation(LoadedSaveGame->SavedPlayerLocation);
 
-    // Attribute 적용
-    if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
+    // 2. Attribute 적용
+    UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>();
+    if (AttrComp)
     {
         AttrComp->LoadData(LoadedSaveGame->SavedAttributes);
     }
 
-    UE_LOG(LogTemp, Log, TEXT("게임 불러오기 완료: 위치 적용 및 스탯 복원"));
+    // 3. Skill 복원 + 보너스 적용
+    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
+    {
+        SkillComp->SkillStateMap = LoadedSaveGame->SavedSkillStates;
+        if (AttrComp)
+        {
+            SkillComp->ApplyAllSkillBonuses(AttrComp);
+        }
+    }
 
     LoadedSaveGame = nullptr; // 일회성 데이터로 초기화
 }
