@@ -46,6 +46,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
     TArray<AActor*> MarkingPointActors;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    FName MarkingPointTag;
+
 private:
     AActor* PlayerActor;
     FTimerHandle VolumeUpdateTimer;

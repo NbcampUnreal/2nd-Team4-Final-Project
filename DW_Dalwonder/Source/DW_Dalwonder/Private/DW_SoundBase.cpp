@@ -1,4 +1,4 @@
-#include "DW_SoundBase.h"
+﻿#include "DW_SoundBase.h"
 #include "Components/AudioComponent.h"
 #include "Components/SceneComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,17 +14,58 @@ ADW_SoundBase::ADW_SoundBase()
     AudioComponent->bAllowSpatialization = true;
 }
 
+// DW_SoundBase.cpp
+
 void ADW_SoundBase::BeginPlay()
 {
     Super::BeginPlay();
 
     PlayerActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
+    if (!MarkingPointTag.IsNone())
+    {
+        TArray<AActor*> FoundActors;
+        UGameplayStatics::GetAllActorsWithTag(GetWorld(), MarkingPointTag, FoundActors);
+        MarkingPointActors = FoundActors;
+    }
+
     if (SoundAsset)
     {
         AudioComponent->SetSound(SoundAsset);
         AudioComponent->Play();
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("총 마킹 포인트 수: %d"), MarkingPointActors.Num());
+
+    for (int32 i = 0; i < MarkingPointActors.Num(); ++i)
+    {
+        if (MarkingPointActors[i])
+        {
+            UE_LOG(LogTemp, Warning, TEXT("마킹 %d: %s"), i, *MarkingPointActors[i]->GetName());
+        }
+    }
+
+
+
+
+#if WITH_EDITOR
+    for (AActor* MarkingActor : MarkingPointActors)
+    {
+        if (!MarkingActor) continue;
+
+        DrawDebugSphere(
+            GetWorld(),
+            MarkingActor->GetActorLocation(),
+            50000.0f,
+            32,
+            FColor::Red,
+            true,
+            10.0f,
+            0,
+            20.0f
+        );
+    }
+#endif
 
     GetWorldTimerManager().SetTimer(
         VolumeUpdateTimer,
@@ -34,6 +75,8 @@ void ADW_SoundBase::BeginPlay()
         true
     );
 }
+
+
 
 void ADW_SoundBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
