@@ -365,6 +365,11 @@ void ADW_MonsterBase::Parried()
 
 void ADW_MonsterBase::Dead()
 {
+
+	if (bIsDead) return;
+	
+	bIsDead = true;
+	
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;

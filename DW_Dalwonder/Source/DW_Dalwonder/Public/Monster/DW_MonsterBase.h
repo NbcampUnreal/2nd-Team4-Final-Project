@@ -109,6 +109,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bCanParried;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bIsDead;
+
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	float DebugDrawTime = 1.0f;
 

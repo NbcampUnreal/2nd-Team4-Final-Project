@@ -352,4 +352,33 @@ void ADW_Sevarog::Dead()
 
 		Destroy();
 	}
+	
+	else
+	{
+		if (AAIController* Ctr = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bIsDead"), true);
+			}
+		}
+		
+		OnBossDead.Broadcast();
+	}
+}
+
+void ADW_Sevarog::ActivateRagdoll() const
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+	
+	MeshComp->SetCollisionProfileName(FName("Ragdoll"));
+	
+	MeshComp->bPauseAnims = true;
+	MeshComp->bNoSkeletonUpdate = false;
+	
+	MeshComp->SetAllBodiesSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->WakeAllRigidBodies();
+	MeshComp->bBlendPhysics = true;
 }
