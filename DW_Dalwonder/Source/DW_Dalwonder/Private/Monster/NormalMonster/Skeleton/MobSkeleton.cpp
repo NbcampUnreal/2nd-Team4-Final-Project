@@ -83,7 +83,7 @@ float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 		DamageAmount /= 2;
 	}
 
-	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	/*if (DamageAmount >= MonsterMaxHP * 0.3f)
 	{
 		if (AAIController* AICon = Cast<AAIController>(GetController()))
 		{
@@ -96,14 +96,14 @@ float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 				GetWorldTimerManager().SetTimer(HitDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, HitDelay, false);
 			}
 		}
-	}
+	}*/
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	if (MonsterHP <= 0)
+	/*if (MonsterHP <= 0)
 	{
 		GetWorldTimerManager().ClearTimer(HitDelayTimer);
-	}
+	}*/
 
     return 0.0f;
 }
