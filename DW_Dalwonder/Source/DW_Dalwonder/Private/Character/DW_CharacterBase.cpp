@@ -521,9 +521,9 @@ void ADW_CharacterBase::CancelAttack()
 	}
 	
 	// 튕김 애니메이션 재생
-	if (IsValid(DodgeMontage))
+	if (IsValid(CancelAttackMontage))
 	{
-		PlayMontage(DodgeMontage);
+		PlayMontage(CancelAttackMontage);
 	}
 }
 
