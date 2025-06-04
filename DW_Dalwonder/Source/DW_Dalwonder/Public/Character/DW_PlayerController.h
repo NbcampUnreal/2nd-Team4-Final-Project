@@ -35,8 +35,6 @@ public:
 	UFUNCTION()
 	void ToggleESCMenu();
 
-	void SetInputModeGameOnly();
-
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* InputMappingContext;

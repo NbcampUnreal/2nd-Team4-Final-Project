@@ -91,19 +91,9 @@ void ADW_PlayerController::ToggleESCMenu()
                     MyCharacter->EnableInput(this); // 이 PlayerController에 대한 입력 활성화
                 }
             }
-
-            // Input Mode를 게임 전용으로 복원합니다.
-            //SetInputModeGameOnly(); // 별도 함수로 빼서 깔끔하게 처리
         }
         return; // 다른 UI가 닫혔거나 ESC 메뉴가 닫혔으므로 여기서 함수 종료
     }
-
-    // --- 팝업된 UI가 없을 때만 ESC 메뉴를 엽니다 ---
-    // ESC 메뉴 위젯 인스턴스가 없다면 새로 생성합니다.
-    //if (!ESCMenuWidgetInstance)
-    //{
-    //    ESCMenuWidgetInstance = CreateWidget<UUserWidget>(this, ESCMenuWidgetClass); // 'this'를 Owner로 지정
-    //}
 
     if (!ESCMenuWidgetInstance)
     {
@@ -125,13 +115,6 @@ void ADW_PlayerController::ToggleESCMenu()
             }
         }
     }
-}
-
-void ADW_PlayerController::SetInputModeGameOnly()
-{
-    FInputModeGameOnly InputModeGameOnly;
-    SetInputMode(InputModeGameOnly);
-    bShowMouseCursor = false;
 }
 
 void ADW_PlayerController::ShowGameHUD()
