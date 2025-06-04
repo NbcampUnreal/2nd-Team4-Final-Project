@@ -65,16 +65,6 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 		const FVector Start = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
 		const FVector End   = FMath::Lerp(CurrStart, CurrEnd, Alpha);
 
-		DrawDebugCapsule(
-			World,
-			(Start + End) * 0.5f,
-			(End - Start).Size() * 0.5f,
-			SphereRadius,
-			FRotationMatrix::MakeFromZ(End - Start).ToQuat(),
-			FColor::Green,
-			false, 0.2f, 0, 1.f
-		);
-		
 		TArray<FHitResult> HitResults;
 		if (World->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_SwordTrace, SweepShape, Params))
 		{
@@ -103,8 +93,17 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				}
 				else
 				{
-					PlayerCharacter->CancelAttack();
-					return;
+					UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+
+					if (RootPrimitive && RootPrimitive->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+					{
+						// NoCollision이면 공격 유지
+					}
+					else
+					{
+						PlayerCharacter->CancelAttack();
+						return;
+					}
 				}
 
 				// 데미지 적용 (중복 방지)
