@@ -309,6 +309,8 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 {
 	if (!bCanControl) return;
+
+	if (bIsLockOn) return;
 	
 	if (Value.Get<bool>())
 	{
@@ -355,6 +357,8 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
+	if (!bIsLockOn) return;
+	
 	if (CurrentCombatState == ECharacterCombatState::Dodging)
 	{
 		return;
