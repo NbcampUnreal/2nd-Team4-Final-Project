@@ -985,41 +985,6 @@ void ADW_CharacterBase::UpdateHUD()
 	}
 }
 
-//void ADW_CharacterBase::ToggleESCMenu()
-//{
-//	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-//	if (!GameMode || !ESCMenuWidgetClass) return;
-//
-//	if (GameMode->GetPopupWidgetCount() > 0)
-//	{
-//		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
-//		// ESC 메뉴 닫혔는지 체크
-//		if (ClosedWidget == ESCMenuWidgetInstance)
-//		{
-//			ESCMenuWidgetInstance = nullptr;
-//			bIsESCMenuOpen = false;
-//		}
-//		return;
-//	}
-//
-//	// ESC 메뉴 열기
-//	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-//	if (ESCMenuWidgetInstance)
-//	{
-//		GameMode->ShowPopupUI(ESCMenuWidgetClass);
-//		bIsESCMenuOpen = true;
-//
-//		if (APlayerController* PC = Cast<APlayerController>(GetController()))
-//		{
-//			PC->SetShowMouseCursor(true);
-//			FInputModeGameAndUI InputMode;
-//			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-//			InputMode.SetHideCursorDuringCapture(false);
-//			PC->SetInputMode(InputMode);
-//		}
-//	}
-//}
-
 void ADW_CharacterBase::ToggleLockOn()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
