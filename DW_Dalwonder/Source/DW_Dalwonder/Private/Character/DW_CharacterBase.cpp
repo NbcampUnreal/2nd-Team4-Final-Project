@@ -259,17 +259,6 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			{
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
 			}
-
-			if (PlayerController->ESCAction)
-			{
-				// ESC 바인딩
-				EnhancedInputComponent->BindAction(
-					PlayerController->ESCAction,
-					ETriggerEvent::Started,
-					this,
-					&ADW_CharacterBase::ToggleESCMenu
-				);
-			}
 		}
 	}
 }
@@ -818,40 +807,35 @@ void ADW_CharacterBase::Interact()
 			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
 
 			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
-			if (bSuccess)
+			/*if (bSuccess)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
 			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Item ID '%s' not found in ItemDataManager."), *TargetItemID.ToString());
-			}
+			}*/
 		}
 
-		if (GEngine)
+		/*if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, bAdded ? FColor::Green : FColor::Red,
 				FString::Printf(TEXT("Item %s %s"),
 					*Data.ItemName.ToString(),
 					bAdded ? TEXT("added to inventory!") : TEXT("failed to add!")
 				));
-		}
+		}*/
 
 		if (bAdded)
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
 		}
-
-		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
-		{
-			PC->RequestInventoryUIUpdate();
-		}
 	}
-	else
+	/*else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
-	}
+	}*/
 }
 
 
@@ -997,40 +981,40 @@ void ADW_CharacterBase::UpdateHUD()
 	}
 }
 
-void ADW_CharacterBase::ToggleESCMenu()
-{
-	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-	if (!GameMode || !ESCMenuWidgetClass) return;
-
-	if (GameMode->GetPopupWidgetCount() > 0)
-	{
-		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
-		// ESC 메뉴 닫혔는지 체크
-		if (ClosedWidget == ESCMenuWidgetInstance)
-		{
-			ESCMenuWidgetInstance = nullptr;
-			bIsESCMenuOpen = false;
-		}
-		return;
-	}
-
-	// ESC 메뉴 열기
-	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-	if (ESCMenuWidgetInstance)
-	{
-		GameMode->ShowPopupUI(ESCMenuWidgetClass);
-		bIsESCMenuOpen = true;
-
-		if (APlayerController* PC = Cast<APlayerController>(GetController()))
-		{
-			PC->SetShowMouseCursor(true);
-			FInputModeGameAndUI InputMode;
-			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			InputMode.SetHideCursorDuringCapture(false);
-			PC->SetInputMode(InputMode);
-		}
-	}
-}
+//void ADW_CharacterBase::ToggleESCMenu()
+//{
+//	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+//	if (!GameMode || !ESCMenuWidgetClass) return;
+//
+//	if (GameMode->GetPopupWidgetCount() > 0)
+//	{
+//		UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
+//		// ESC 메뉴 닫혔는지 체크
+//		if (ClosedWidget == ESCMenuWidgetInstance)
+//		{
+//			ESCMenuWidgetInstance = nullptr;
+//			bIsESCMenuOpen = false;
+//		}
+//		return;
+//	}
+//
+//	// ESC 메뉴 열기
+//	ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
+//	if (ESCMenuWidgetInstance)
+//	{
+//		GameMode->ShowPopupUI(ESCMenuWidgetClass);
+//		bIsESCMenuOpen = true;
+//
+//		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+//		{
+//			PC->SetShowMouseCursor(true);
+//			FInputModeGameAndUI InputMode;
+//			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+//			InputMode.SetHideCursorDuringCapture(false);
+//			PC->SetInputMode(InputMode);
+//		}
+//	}
+//}
 
 void ADW_CharacterBase::ToggleLockOn()
 {

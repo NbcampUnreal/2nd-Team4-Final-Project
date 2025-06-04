@@ -22,26 +22,20 @@ public:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UInventoryMenuWidgetBase> InventoryWidgetClass;
+	//ESC메뉴
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
 
-	// 생성된 인벤토리 위젯 인스턴스
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UInventoryMenuWidgetBase* InventoryWidgetInstance;
+	UPROPERTY()
+	UUserWidget* ESCMenuWidgetInstance;
 
-	// 인벤토리 UI가 현재 열려 있는지 여부
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	bool bIsInventoryOpen;
+	bool bIsESCMenuOpen = false;
 
-	// 인벤토리 UI를 업데이트하는 함수
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void RequestInventoryUIUpdate();
+	// ESC 메뉴 이벤트
+	UFUNCTION()
+	void ToggleESCMenu();
 
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void ToggleInventoryUI(); // EnhancedInputAction_IA_Inventory에 바인딩될 함수
-
-
-	
+	void SetInputModeGameOnly();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -62,8 +56,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InteractAction;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
-	UInputAction* InventoryInputAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ESCAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* SprintAction;
@@ -82,9 +76,6 @@ public:
 	// -----------------------------
 #pragma region UI
 public:
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* ESCAction;
-
 	//HUD
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
@@ -95,8 +86,6 @@ protected:
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 
 public:
-	ADW_CharacterBase* GetControlledCharacter() const;
-	
 	// HUD 표시
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ShowGameHUD();

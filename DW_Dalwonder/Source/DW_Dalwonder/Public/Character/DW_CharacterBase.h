@@ -365,27 +365,13 @@ private:
 
 #pragma region UI
 public:
+
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
-
-	//ESC메뉴
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* ESCMenuWidgetInstance;
-
-	bool bIsESCMenuOpen = false;
-
-public:
 
 	//HUD업데이트함수
 	UFUNCTION()
 	void UpdateHUD();
-
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
 
 protected:
 

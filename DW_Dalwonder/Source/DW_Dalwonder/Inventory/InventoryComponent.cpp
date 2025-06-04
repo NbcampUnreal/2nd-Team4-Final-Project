@@ -31,7 +31,7 @@ bool UInventoryComponent::AddItem(const FItemData& ItemData)
                 Slot.Quantity += ToAdd;
                 RemainingQuantity -= ToAdd;
 
-                ShowInventoryStatus();
+                //ShowInventoryStatus();
                 if (RemainingQuantity <= 0)
                     return true;
             }
@@ -64,7 +64,7 @@ bool UInventoryComponent::AddItem(const FItemData& ItemData)
 
             RemainingQuantity -= ToAdd;
 
-            ShowInventoryStatus();
+            //ShowInventoryStatus();
             if (RemainingQuantity <= 0)
                 return true;
         }
@@ -73,13 +73,13 @@ bool UInventoryComponent::AddItem(const FItemData& ItemData)
     // 남은 수량이 처리되지 못함 (슬롯 부족)
     if (RemainingQuantity > 0)
     {
-        if (GEngine)
+        /*if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red,
                 FString::Printf(TEXT("인벤토리 가득참!!!"),
                     RemainingQuantity, *ItemData.ItemName.ToString()));
         }
-        ShowInventoryStatus();
+        ShowInventoryStatus();*/
         return false;
     }
 
