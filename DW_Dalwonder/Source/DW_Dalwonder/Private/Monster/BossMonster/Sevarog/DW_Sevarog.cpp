@@ -24,6 +24,10 @@ ADW_Sevarog::ADW_Sevarog()
 	TrailNS = CreateDefaultSubobject<UNiagaraComponent>("TrailParticle");
 	TrailNS->SetupAttachment(RootComponent);
 
+	Phase2TrailNS = CreateDefaultSubobject<UNiagaraComponent>("Phase2TrailParticle");
+	Phase2TrailNS->SetupAttachment(GetMesh(), TEXT("head"));
+	Phase2TrailNS->bAutoActivate = false;
+
 	//부착 후 에디터에서 위치 세부 조정 필요
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("weapon_r"));
@@ -35,6 +39,7 @@ ADW_Sevarog::ADW_Sevarog()
 float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
+	
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	if (CurrentPhase == 1 && MonsterHP * 2 <= MonsterMaxHP)
@@ -92,6 +97,8 @@ void ADW_Sevarog::AirAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
@@ -194,6 +201,8 @@ void ADW_Sevarog::SurroundedAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
@@ -222,8 +231,8 @@ void ADW_Sevarog::SurroundedAttack()
 
 void ADW_Sevarog::BoxAttack()
 {
-	const FVector LocalOffset = FVector(300.f, 0.f, -200.f);
-	const FVector BoxExtent = FVector(300.f, 150.f, 200.f);
+	const FVector LocalOffset = FVector(400.f, 0.f, -200.f);
+	const FVector BoxExtent = FVector(300.f, 100.f, 200.f);
 	
 	const FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
 
@@ -247,6 +256,8 @@ void ADW_Sevarog::BoxAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 
 			}
@@ -275,6 +286,49 @@ void ADW_Sevarog::BoxAttack()
 	);
 }
 
+void ADW_Sevarog::SetInvincible(const bool NewInvincible)
+{
+	bIsInvincible = NewInvincible;
+}
+
+void ADW_Sevarog::DoPhase2() const
+{
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("InitPhase2"), true);
+		}
+	}
+
+	if (IsValid(InitPhase2Montage))
+	{
+		UAnimMontage* Montage = InitPhase2Montage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+
+	Phase2TrailNS->Activate();
+}
+
+
+void ADW_Sevarog::SetCurrentPhase(int32 NewPhase)
+{
+	Super::SetCurrentPhase(NewPhase);
+
+	switch (CurrentPhase)
+	{
+		case 2: DoPhase2();
+		break;
+		
+		default: UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
+		break;
+	}
+}
+
 void ADW_Sevarog::Dead()
 {
 	Super::Dead();
@@ -298,4 +352,33 @@ void ADW_Sevarog::Dead()
 
 		Destroy();
 	}
+	
+	else
+	{
+		if (AAIController* Ctr = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bIsDead"), true);
+			}
+		}
+		
+		OnBossDead.Broadcast();
+	}
+}
+
+void ADW_Sevarog::ActivateRagdoll() const
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+	
+	MeshComp->SetCollisionProfileName(FName("Ragdoll"));
+	
+	MeshComp->bPauseAnims = true;
+	MeshComp->bNoSkeletonUpdate = false;
+	
+	MeshComp->SetAllBodiesSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->WakeAllRigidBodies();
+	MeshComp->bBlendPhysics = true;
 }

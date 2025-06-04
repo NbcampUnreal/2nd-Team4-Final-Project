@@ -99,12 +99,18 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MonsterDamageMultiplier;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsInvincible = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bCanParried;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bIsDead;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	float DebugDrawTime = 1.0f;
@@ -119,7 +125,7 @@ public:
 	FVector PrevTraceStartVector;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
-
+	
 	UPROPERTY()
 	class UNavigationInvokerComponent* NavInvokerComp;
 
