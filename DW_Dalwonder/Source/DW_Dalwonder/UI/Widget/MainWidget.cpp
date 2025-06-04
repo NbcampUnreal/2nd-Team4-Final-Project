@@ -19,7 +19,18 @@ void UMainWidget::NativeConstruct()
 		NewGameButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnNewGameClicked);
 
 	if (ContinueGameButton)
+	{
 		ContinueGameButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnContinueGameClicked);
+
+		// 저장 파일 존재 여부 확인
+		const FString SaveSlotName = TEXT("DW_SaveData");
+		const int32 UserIndex = 0;
+
+		if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+		{
+			ContinueGameButton->SetIsEnabled(false);
+		}
+	}
 
 	if (OptionButton)
 		OptionButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnOptionClicked);
