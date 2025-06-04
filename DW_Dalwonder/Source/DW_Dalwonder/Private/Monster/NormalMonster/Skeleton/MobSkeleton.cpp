@@ -54,6 +54,7 @@ void AMobSkeleton::Tick(float DeltaTime)
 	FVector Location = GetActorLocation();
 	Location.Z = CurrentZ + ZOffset; 
 	SetActorLocation(Location);
+
 }
 
 void AMobSkeleton::PlayAlertMontage()
