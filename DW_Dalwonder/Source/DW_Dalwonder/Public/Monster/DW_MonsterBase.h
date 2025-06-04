@@ -73,6 +73,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound|Base")
 	TArray<USoundBase*> HitSounds;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	class UNiagaraSystem* HitNS;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
 
@@ -96,12 +99,18 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MonsterDamageMultiplier;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsInvincible = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bCanParried;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bIsDead;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	float DebugDrawTime = 1.0f;
@@ -116,10 +125,14 @@ public:
 	FVector PrevTraceStartVector;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
+	
+	UPROPERTY()
+	class UNavigationInvokerComponent* NavInvokerComp;
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void ResetRoot();
 
+	UPROPERTY()
 	TSet<AActor*> AlreadyAttackingActors;
 
 	// 몬스터의 최대 속도 정의

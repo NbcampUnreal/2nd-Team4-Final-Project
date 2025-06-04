@@ -7,6 +7,8 @@
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossDead);
+
 UCLASS()
 class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
 {
@@ -16,6 +18,9 @@ public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
 
+	UPROPERTY(BlueprintAssignable, Category="Boss")
+	FOnBossDead OnBossDead;
+
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	USceneComponent* Hammer;
 	
@@ -24,6 +29,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* RangedTeleportMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* InitPhase2Montage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* AirAttackNS;
@@ -43,16 +51,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	bool bIsRealBoss = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraComponent* TrailNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraComponent* Phase2TrailNS;
+
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void Tick(float DeltaTime) override;
 
 	void AirAttack();
 
 	UFUNCTION(BlueprintCallable)
-	void DoTeleport();
+	void DoTeleport() const;
 
 	UFUNCTION(BlueprintCallable)
-	void DoRangedTeleport();
+	void DoRangedTeleport() const;
 
 	void SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) const;
 
@@ -60,5 +76,13 @@ public:
 
 	void BoxAttack();
 
+	void SetInvincible(const bool NewState);
+
+	void DoPhase2() const;
+	
+	virtual void SetCurrentPhase(int32 NewPhase) override;
+	
 	virtual void Dead() override;
+
+	void ActivateRagdoll() const;
 };

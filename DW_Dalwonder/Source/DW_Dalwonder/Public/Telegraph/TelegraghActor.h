@@ -57,47 +57,57 @@ public:
 	// ---------- 변수 선언 ----------
 public:
 	// 사전 경고인 텔레그래프를 사용할지에 대한 변수입니다. False면 TelegraphEffect가 무효되며 즉발기로 바뀝니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	bool bUseTelegraph = true;
 
 	// 사전 경고를 표기할 텔레그래프 나이아가라 시스템 에셋입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
 	class UNiagaraSystem* TelegraphEffect;
 
 	// RealEffect의 재생을 늦추는 Delay 시간입니다. 텔레그래프 시작 시점과 동시에 계산합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
 	float TelegraphTime = 2.0f;
 
 	// 텔레그래프의 LinearColor를 설정합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
 	FLinearColor TelegraphColor = FLinearColor(1.f, 0.f, 0.f, 1.f);
 
 	// RealEffect의 이펙트 크기를 조절합니다. 발사체 충돌 범위의 2배로 설정하면 크기가 맞습니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class", meta = (EditCondition = "bUseTelegraph", EditConditionHides))
 	float TelegraphScale = 500.f;
 
 	// 경고가 끝난 뒤 재생될 나이아가라 시스템 에셋입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	class UNiagaraSystem* RealEffect;
 
 	// 발사체 충돌 가능 범위를 조절합니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
 	float CollisionRadius = 250.f;
 
 	// 플레이어에게 가하는 데미지입니다. 도트 데미지일 경우 지속시간 동안 해당 수치를 나누어 입힙니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Effect")
 	float DamageAmount;
 
+	// Hit시 캐릭터 Launch의 여부입니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch")
+	bool bDoLaunch;
+	// Launch의 힘을 조절합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	float LaunchImpulse;
+	// Launch의 방향을 조절합니다. True일 때, Z축으로만 날아갑니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Launch", meta = (EditCondition = "bDoLaunch", EditConditionHides))
+	bool bIsZOnly;
+
 	// 도트 데미지로 전환하시겠습니까?
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|DOT")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|DOT")
 	bool bIsDOT;
 
 	// 도트 데미지를 가하는 시간 간격입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|DOT", meta = (EditCondition = "bIsDOT", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|DOT", meta = (EditCondition = "bIsDOT", EditConditionHides))
 	float DOTInterval;
 
 	// 도트 필드 유지 시간입니다.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|DOT", meta = (EditCondition = "bIsDOT", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|DOT", meta = (EditCondition = "bIsDOT", EditConditionHides))
 	float DOTDuration;
 	// ---------- ---------- ----------
 

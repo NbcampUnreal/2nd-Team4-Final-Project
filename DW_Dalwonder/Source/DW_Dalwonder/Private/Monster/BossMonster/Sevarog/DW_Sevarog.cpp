@@ -4,8 +4,10 @@
 #include "Monster/BossMonster/Sevarog/DW_Sevarog.h"
 
 #include "AIController.h"
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Character/DW_CharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Monster/MonsterStatsTable.h"
@@ -19,6 +21,13 @@ ADW_Sevarog::ADW_Sevarog()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	TrailNS = CreateDefaultSubobject<UNiagaraComponent>("TrailParticle");
+	TrailNS->SetupAttachment(RootComponent);
+
+	Phase2TrailNS = CreateDefaultSubobject<UNiagaraComponent>("Phase2TrailParticle");
+	Phase2TrailNS->SetupAttachment(GetMesh(), TEXT("head"));
+	Phase2TrailNS->bAutoActivate = false;
+
 	//부착 후 에디터에서 위치 세부 조정 필요
 	TraceStart->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("weapon_r"));
@@ -30,6 +39,7 @@ ADW_Sevarog::ADW_Sevarog()
 float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
+	
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	if (CurrentPhase == 1 && MonsterHP * 2 <= MonsterMaxHP)
@@ -40,10 +50,32 @@ float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& Dam
 	return 0;
 }
 
+void ADW_Sevarog::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (PlayerCharacter)
+	{
+		FRotator CurrentRotation = GetActorRotation();
+
+		FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+		DirectionToPlayer.Z = 0;
+
+		if (!DirectionToPlayer.IsNearlyZero())
+		{
+			FRotator TargetRotation = DirectionToPlayer.Rotation();
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 1.5f);
+
+			SetActorRotation(NewRotation);
+		}
+	
+	}
+}
+
 void ADW_Sevarog::AirAttack()
 {
-	FVector HammerLocation = Hammer->GetComponentLocation();
-	float Radius = 250.0f;
+	const FVector HammerLocation = Hammer->GetComponentLocation();
+	constexpr float Radius = 200.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
@@ -65,6 +97,8 @@ void ADW_Sevarog::AirAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
@@ -74,8 +108,8 @@ void ADW_Sevarog::AirAttack()
 
 	if (!AirAttackNS) return;
 
-	FVector SpawnLocation = Hammer->GetComponentLocation();
-	FRotator SpawnRotation = GetActorRotation();
+	const FVector SpawnLocation = Hammer->GetComponentLocation();
+	const FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -88,7 +122,7 @@ void ADW_Sevarog::AirAttack()
 	);
 }
 
-void ADW_Sevarog::DoTeleport()
+void ADW_Sevarog::DoTeleport() const
 {
 	if (IsValid(TeleportMontage))
 	{
@@ -101,7 +135,7 @@ void ADW_Sevarog::DoTeleport()
 	}
 }
 
-void ADW_Sevarog::DoRangedTeleport()
+void ADW_Sevarog::DoRangedTeleport() const
 {
 	if (IsValid(RangedTeleportMontage))
 	{
@@ -144,14 +178,14 @@ void ADW_Sevarog::SpawnMonster(const TSubclassOf<ADW_MonsterBase>& SpawnMob) con
 
 void ADW_Sevarog::SurroundedAttack()
 {
-	FVector HammerLocation = Hammer->GetComponentLocation();
-	float Radius = 400.0f;
+	const FVector HammerLocation = GetActorLocation() - FVector(0,0,150.f);
+	constexpr float Radius = 350.0f;
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->OverlapMultiByChannel(
+	const bool bHit = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
 		HammerLocation,
 		FQuat::Identity,
@@ -167,17 +201,22 @@ void ADW_Sevarog::SurroundedAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
 	}
 
-	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+	if (bDrawDebugTrace)
+	{
+		DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+	}
 
 	if (!SurroundedAttackNS) return;
 
-	FVector SpawnLocation = Hammer->GetComponentLocation();
-	FRotator SpawnRotation = GetActorRotation();
+	const FVector SpawnLocation = GetActorLocation() - FVector(0,0,150.f);
+	const FRotator SpawnRotation = GetActorRotation();
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -192,17 +231,16 @@ void ADW_Sevarog::SurroundedAttack()
 
 void ADW_Sevarog::BoxAttack()
 {
-	FVector LocalOffset = FVector(300.f, 0.f, -200.f);
-	FVector BoxExtent = FVector(300.f, 150.f, 200.f);
-
-	// 회전 반영한 박스 위치
-	FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
+	const FVector LocalOffset = FVector(400.f, 0.f, -200.f);
+	const FVector BoxExtent = FVector(300.f, 100.f, 200.f);
+	
+	const FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
 
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->OverlapMultiByChannel(
+	const bool bHit = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
 		BoxCenter,
 		GetActorQuat(),
@@ -218,19 +256,24 @@ void ADW_Sevarog::BoxAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+
 			}
 		}
 	}
 
-	// 디버그용 박스 시각화
-	DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, GetActorQuat(), FColor::Red, false, 1.0f);
+	if (bDrawDebugTrace)
+	{
+		DrawDebugBox(GetWorld(), BoxCenter, BoxExtent, GetActorQuat(), FColor::Red, false, 1.0f);
+	}
 
-	// 이펙트 스폰
+
 	if (!BoxAttackNS) return;
 
-	FVector EffectOffset = FVector(50.f, 0.f, -200.f);
-	FVector EffectLocation = GetActorLocation() + GetActorRotation().RotateVector(EffectOffset);
+	const FVector EffectOffset = FVector(50.f, 0.f, -200.f);
+	const FVector EffectLocation = GetActorLocation() + GetActorRotation().RotateVector(EffectOffset);
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
@@ -243,6 +286,49 @@ void ADW_Sevarog::BoxAttack()
 	);
 }
 
+void ADW_Sevarog::SetInvincible(const bool NewInvincible)
+{
+	bIsInvincible = NewInvincible;
+}
+
+void ADW_Sevarog::DoPhase2() const
+{
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsBool(FName("InitPhase2"), true);
+		}
+	}
+
+	if (IsValid(InitPhase2Montage))
+	{
+		UAnimMontage* Montage = InitPhase2Montage;
+		
+		if (Montage && GetMesh())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
+
+	Phase2TrailNS->Activate();
+}
+
+
+void ADW_Sevarog::SetCurrentPhase(int32 NewPhase)
+{
+	Super::SetCurrentPhase(NewPhase);
+
+	switch (CurrentPhase)
+	{
+		case 2: DoPhase2();
+		break;
+		
+		default: UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
+		break;
+	}
+}
+
 void ADW_Sevarog::Dead()
 {
 	Super::Dead();
@@ -251,8 +337,8 @@ void ADW_Sevarog::Dead()
 	{
 		if (!RepDeadNS) return;
 
-		FVector SpawnLocation = GetActorLocation();
-		FRotator SpawnRotation = GetActorRotation();
+		const FVector SpawnLocation = GetActorLocation();
+		const FRotator SpawnRotation = GetActorRotation();
 
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
@@ -266,4 +352,33 @@ void ADW_Sevarog::Dead()
 
 		Destroy();
 	}
+	
+	else
+	{
+		if (AAIController* Ctr = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bIsDead"), true);
+			}
+		}
+		
+		OnBossDead.Broadcast();
+	}
+}
+
+void ADW_Sevarog::ActivateRagdoll() const
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+	
+	MeshComp->SetCollisionProfileName(FName("Ragdoll"));
+	
+	MeshComp->bPauseAnims = true;
+	MeshComp->bNoSkeletonUpdate = false;
+	
+	MeshComp->SetAllBodiesSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->WakeAllRigidBodies();
+	MeshComp->bBlendPhysics = true;
 }

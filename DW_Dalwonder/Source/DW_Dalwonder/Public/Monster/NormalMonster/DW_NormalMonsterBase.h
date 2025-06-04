@@ -83,8 +83,12 @@ public:
 	UFUNCTION()
 	void RotateToPlayer();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float HitDelay;
+
 private:
 	FTimerHandle AlertDelayTimer;
+	FTimerHandle HitDelayTimer;
 
 	// SpawnMontage가 재생중인지 확인하는 변수
 	bool bIsPlayingSpawnMontage = false;

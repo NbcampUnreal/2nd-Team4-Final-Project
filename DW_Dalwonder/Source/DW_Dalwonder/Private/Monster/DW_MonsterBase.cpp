@@ -1,6 +1,8 @@
 ﻿#include "Monster/DW_MonsterBase.h"
 
 #include "AIController.h"
+#include "NavigationInvokerComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -11,11 +13,12 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
                                     PlayerCharacter(nullptr), MonsterMaxHP(0),MonsterHP(0), MonsterDamage(0),
-									MonsterSpeed(100), MonsterAccelSpeed(100), MonsterDamageMultiplier(1.0f)
+                                    MonsterSpeed(100), MonsterAccelSpeed(100), MonsterDamageMultiplier(1.0f)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -26,6 +29,9 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+
+	NavInvokerComp = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
+	NavInvokerComp->SetGenerationRadii(5000.f, 6000.f);
 
 	//★★★TraceStart와 End는 자식 클래스에서 필요한 Bone에 SetupAttachment가 필요함. Base에서는 임시로 RootComponent에 부착함.★★★
 	//★★★Monster/BossMonster/Sevarog/DW_Sevarog.cpp의 생성자에서 부착 해 놓은 예시가 있음★★★
@@ -359,6 +365,11 @@ void ADW_MonsterBase::Parried()
 
 void ADW_MonsterBase::Dead()
 {
+
+	if (bIsDead) return;
+	
+	bIsDead = true;
+	
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;
@@ -388,6 +399,33 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (HitNS)
+	{
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+			const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+
+			const FVector SpawnLocation = HitLocation;
+			const FRotator SpawnRotation = GetActorRotation();
+			
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				HitNS,
+				SpawnLocation,
+				SpawnRotation,
+				FVector(1.f),
+				true,
+				true
+			);
+		}
+	}
+
+	if (bIsInvincible)
+	{
+		DamageAmount = 0;
+	}
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
