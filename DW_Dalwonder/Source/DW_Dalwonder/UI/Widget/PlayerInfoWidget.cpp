@@ -32,10 +32,6 @@ void UPlayerInfoWidget::NativeConstruct()
 			);
 		}
 	}
-
-	//뒤로가기 버튼
-	if (BackButton)
-		BackButton->OnCustomClicked.AddDynamic(this, &UPlayerInfoWidget::OnBackClicked);
 }
 
 void UPlayerInfoWidget::UpdatePlayerInfo(float MaxHP, float MaxStamina, float Damage, float Defense, float Weight, float MoveSpeed, float HPRegen, float StaminaRegen)
@@ -50,10 +46,3 @@ void UPlayerInfoWidget::UpdatePlayerInfo(float MaxHP, float MaxStamina, float Da
 	if (StRegenText)   StRegenText->SetText(FText::FromString(FString::Printf(TEXT("Stamina Regen : %.1f"), StaminaRegen)));
 }
 
-void UPlayerInfoWidget::OnBackClicked()
-{
-	if (ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
-	{
-		GameMode->CloseLastPopupUI();  // 현재 위젯 닫기
-	}
-}
