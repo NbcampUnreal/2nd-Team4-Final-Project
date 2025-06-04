@@ -2,30 +2,14 @@
 
 
 #include "UI/Widget/LoadingWidget.h"
-#include "Components/ProgressBar.h"
-#include "Components/TextBlock.h"
 
-void ULoadingWidget::SetLoadingProgress(float InPercent)
-{
-    if (LoadingProgressBar)
-    {
-        LoadingProgressBar->SetPercent(InPercent);
-    }
 
-    if (LoadingText)
-    {
-        FString ProgressText = FString::Printf(TEXT("%.0f%%"), InPercent * 100);
-        LoadingText->SetText(FText::FromString(ProgressText));
-    }
-}
+//void ULoadingWidget::UpdateProgress(float InPercent)
+//{
+//    OnProgressUpdated(InPercent); // 블루프린트 구현 호출
+//}
+//
+//void ULoadingWidget::OnProgressUpdated_Implementation(float Progress)
+//{
+//}
 
-void ULoadingWidget::NativeConstruct()
-{
-    Super::NativeConstruct();
-
-    // 초기화 시 로딩바 0%
-    if (LoadingProgressBar)
-    {
-        LoadingProgressBar->SetPercent(0.f);
-    }
-}

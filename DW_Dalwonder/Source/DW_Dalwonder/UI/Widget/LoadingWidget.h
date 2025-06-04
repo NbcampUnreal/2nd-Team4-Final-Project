@@ -15,18 +15,18 @@ class DW_DALWONDER_API ULoadingWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	// 퍼센트 값 업데이트 (0~1)
+	UFUNCTION(BlueprintImplementableEvent, Category = "Loading")
+	void OnProgressUpdated(float Progress);
 
-    virtual void NativeConstruct() override;
+//public:
+//    UFUNCTION(BlueprintCallable, Category = "Loading")
+//    void UpdateProgress(float InPercent);
+//
+//protected:
+//    // 블루프린트에서 구현할 이벤트
+//    UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+//    void OnProgressUpdated(float Progress);
+//    virtual void OnProgressUpdated_Implementation(float Progress);
 
-    // 퍼센트를 설정하는 함수
-    UFUNCTION(BlueprintCallable)
-    void SetLoadingProgress(float InPercent);
-
-private:
-    // 위젯 바인딩용 변수
-    UPROPERTY(meta = (BindWidget))
-    class UProgressBar* LoadingProgressBar;
-
-    UPROPERTY(meta = (BindWidget))
-    class UTextBlock* LoadingText;
 };
