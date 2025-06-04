@@ -1232,17 +1232,32 @@ void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 
 	FVector WorldLocation;
 
-	// 캡슐 기준 높이 계산 (가슴 위치 근처)
-	UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(LockOnTarget->GetComponentByClass(UCapsuleComponent::StaticClass()));
-	if (Capsule)
+	// 메시 소켓 기준으로 락온 마커 위치 지정
+	USkeletalMeshComponent* TargetMesh = LockOnTarget->FindComponentByClass<USkeletalMeshComponent>();
+	
+	if (TargetMesh->DoesSocketExist("spine_02"))
 	{
-		WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+		WorldLocation = TargetMesh->GetSocketLocation("spine_02");
+	}
+	else if (TargetMesh->DoesSocketExist("spine2"))
+	{
+		WorldLocation = TargetMesh->GetSocketLocation("spine2");
 	}
 	else
 	{
-		WorldLocation = LockOnTarget->GetActorLocation();
+		// 예외 상황엔 캡슐 기준으로
+		UCapsuleComponent* Capsule = LockOnTarget->FindComponentByClass<UCapsuleComponent>();
+		if (Capsule)
+		{
+			WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+		}
+		else
+		{
+			WorldLocation = LockOnTarget->GetActorLocation();
+		}
 	}
 
+	// 화면에 락온 마커 표시
 	FVector2D ScreenPosition;
 	if (PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
 	{
