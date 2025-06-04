@@ -3,11 +3,13 @@
 
 #include "UI/Widget/MainWidget.h"
 #include "UI/Widget/CustomButtonWidget.h"
+#include "UI/Widget/SavedGameWidget.h"
 #include "DW_GmBase.h"
 #include "DW_GmInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "TimerManager.h"
+#include "DW_GameInstance.h"
 
 void UMainWidget::NativeConstruct()
 {
@@ -17,7 +19,18 @@ void UMainWidget::NativeConstruct()
 		NewGameButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnNewGameClicked);
 
 	if (ContinueGameButton)
+	{
 		ContinueGameButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnContinueGameClicked);
+
+		// 저장 파일 존재 여부 확인
+		const FString SaveSlotName = TEXT("DW_SaveData");
+		const int32 UserIndex = 0;
+
+		if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+		{
+			ContinueGameButton->SetIsEnabled(false);
+		}
+	}
 
 	if (OptionButton)
 		OptionButton->OnCustomClicked.AddDynamic(this, &UMainWidget::OnOptionClicked);
@@ -35,10 +48,9 @@ void UMainWidget::OnNewGameClicked()
 
 void UMainWidget::OnContinueGameClicked()
 {
-	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-	if (GameMode && SavedGameWidgetClass)
+	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
-		GameMode->ShowPopupUI(SavedGameWidgetClass);
+		GameInstance->LoadGameData(); // 게임로드
 	}
 }
 

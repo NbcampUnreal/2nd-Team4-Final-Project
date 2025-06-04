@@ -97,6 +97,8 @@ void ADW_Sevarog::AirAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
@@ -199,6 +201,8 @@ void ADW_Sevarog::SurroundedAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 			}
 		}
@@ -227,8 +231,8 @@ void ADW_Sevarog::SurroundedAttack()
 
 void ADW_Sevarog::BoxAttack()
 {
-	const FVector LocalOffset = FVector(300.f, 0.f, -200.f);
-	const FVector BoxExtent = FVector(300.f, 150.f, 200.f);
+	const FVector LocalOffset = FVector(400.f, 0.f, -200.f);
+	const FVector BoxExtent = FVector(300.f, 100.f, 200.f);
 	
 	const FVector BoxCenter = GetActorLocation() + GetActorRotation().RotateVector(LocalOffset);
 
@@ -252,6 +256,8 @@ void ADW_Sevarog::BoxAttack()
 			AActor* HitActor = Result.GetActor();
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
+				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
+				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
 
 			}
@@ -346,4 +352,33 @@ void ADW_Sevarog::Dead()
 
 		Destroy();
 	}
+	
+	else
+	{
+		if (AAIController* Ctr = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bIsDead"), true);
+			}
+		}
+		
+		OnBossDead.Broadcast();
+	}
+}
+
+void ADW_Sevarog::ActivateRagdoll() const
+{
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
+	
+	MeshComp->SetCollisionProfileName(FName("Ragdoll"));
+	
+	MeshComp->bPauseAnims = true;
+	MeshComp->bNoSkeletonUpdate = false;
+	
+	MeshComp->SetAllBodiesSimulatePhysics(true);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->WakeAllRigidBodies();
+	MeshComp->bBlendPhysics = true;
 }

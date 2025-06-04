@@ -253,7 +253,28 @@ float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& 
 
 	bIsAlerted = true;
 
+	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	{
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bCanBehavior"), false);
+
+				PlayHitMontage();
+
+				GetWorldTimerManager().SetTimer(HitDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, HitDelay, false);
+			}
+		}
+	}
+
+
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (MonsterHP <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(HitDelayTimer);
+	}
 
 	return 0.0f;
 }
