@@ -52,7 +52,7 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));
 	SceneCaptureComponent->SetupAttachment(RootComponent);
 
-	SceneCaptureComponent->SetRelativeLocation(FVector(120.f, 0.f, 30.f));  // 위치 조정
+	SceneCaptureComponent->SetRelativeLocation(FVector(250.f, 0.f, 30.f));  // 위치 조정
 	SceneCaptureComponent->SetRelativeRotation(FRotator(-10.f, 180.f, 0.f)); // 캐릭터를 바라보게 회전
 
 	// 기본 렌더링 세팅
@@ -309,6 +309,8 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 {
 	if (!bCanControl) return;
+
+	if (bIsLockOn) return;
 	
 	if (Value.Get<bool>())
 	{
@@ -355,6 +357,8 @@ void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
+	if (!bIsLockOn) return;
+	
 	if (CurrentCombatState == ECharacterCombatState::Dodging)
 	{
 		return;
