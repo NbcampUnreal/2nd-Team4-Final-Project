@@ -2,6 +2,7 @@
 #include "DW_IntroVideoWidget.h"
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
+#include "MediaSoundComponent.h"
 #include "FileMediaSource.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
@@ -11,6 +12,8 @@
 ADW_IntroVideoActor::ADW_IntroVideoActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	MediaSoundComponent = CreateDefaultSubobject<UMediaSoundComponent>(TEXT("MediaSound"));
+	MediaSoundComponent->SetupAttachment(RootComponent);
 }
 
 void ADW_IntroVideoActor::BeginPlay()
@@ -41,6 +44,10 @@ void ADW_IntroVideoActor::BeginPlay()
 	}
 
 	MediaPlayer->OnEndReached.AddDynamic(this, &ADW_IntroVideoActor::OnMediaEndReached);
+
+	MediaPlayer->OpenSource(MediaSource);
+
+	MediaSoundComponent->SetMediaPlayer(MediaPlayer);
 
 	MediaPlayer->OpenSource(MediaSource);
 }
