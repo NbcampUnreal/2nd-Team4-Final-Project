@@ -172,6 +172,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* AttackMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* CancelAttackMontage;
+
 	// 공중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* FallingAttackMontage;
@@ -195,10 +198,6 @@ public:
 	// 가드 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardMontage;
-
-	// 구르기(회피) 애니메이션
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* DodgeMontage;
 	
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")

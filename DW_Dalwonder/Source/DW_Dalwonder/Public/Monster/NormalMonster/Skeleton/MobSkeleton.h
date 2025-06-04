@@ -99,8 +99,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bIsStrafe;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	float HitDelay;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float HitDelay;*/
 
 	float DefaultHP;
 	float DefaultDamage;
@@ -111,7 +111,7 @@ public:
 	FVector RandomLocation1;
 	FVector RandomLocation2;
 
-	FTimerHandle HitDelayTimer;
+	//FTimerHandle HitDelayTimer;
 	FTimerHandle EnergeShieldTimer;
 	FTimerHandle ScaleUpTimer;
 	FTimerHandle ScaleDownTimer;

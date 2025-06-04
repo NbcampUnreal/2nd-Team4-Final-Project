@@ -33,15 +33,8 @@ public:
 		float HPRegen,
 		float StaminaRegen
 	);
-
-	// 버튼 클릭 이벤트 함수
-	UFUNCTION()
-	void OnBackClicked();
 	
 private:
-
-	UPROPERTY(meta = (BindWidget))
-	class UCustomButtonWidget* BackButton;
 	
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HPText;
