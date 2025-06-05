@@ -17,6 +17,5 @@ void ADW_Warrior::BeginPlay()
 void ADW_Warrior::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 	
 }
