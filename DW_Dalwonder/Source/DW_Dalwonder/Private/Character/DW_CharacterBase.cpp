@@ -245,7 +245,9 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 			if (PlayerController->InteractAction)
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
+#endif
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
@@ -253,11 +255,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::Interact);
 
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
+#endif
 			}
 			else
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
+#endif
 			}
 		}
 	}
@@ -442,7 +448,9 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
+#endif
 
 	if (CurrentCombatState != ECharacterCombatState::Idle && CurrentCombatState != ECharacterCombatState::Dodging)
 	{
@@ -765,17 +773,23 @@ void ADW_CharacterBase::Interact()
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *HitActor->GetName());
+#endif
 			IDW_InteractInterface::Execute_Interact(HitActor, this);
 		}
 		else
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 인터페이스 미구현 액터: %s"), *GetNameSafe(HitActor));
+#endif
 		}
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 아무것도 맞지 않음."));
+#endif
 	}
 
 	if (CurrentItem)
