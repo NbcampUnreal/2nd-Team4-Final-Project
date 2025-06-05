@@ -59,12 +59,16 @@ void USavedGameWidget::HandleSlotClicked(FString SlotName)
 		if (WidgetMode == ESaveGameWidgetMode::Save)
 		{
 			//GI->SaveGameDataToSlot(SlotName);
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Log, TEXT("[SavedGameWidget] 저장됨: %s"), *SlotName);
+#endif
 		}
 		else if (WidgetMode == ESaveGameWidgetMode::Load)
 		{
 			//GI->LoadGameDataFromSlot(SlotName);
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Log, TEXT("[SavedGameWidget] 불러오기 완료: %s"), *SlotName);
+#endif
 		}
 	}
 }
