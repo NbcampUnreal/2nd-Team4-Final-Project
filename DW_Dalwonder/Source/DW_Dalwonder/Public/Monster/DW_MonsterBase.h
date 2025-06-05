@@ -237,6 +237,7 @@ public:
 	virtual void CastPlayerCharacter() override;
 
 	// 플레이어 캐릭터 참조 반환
+	UFUNCTION(BlueprintCallable)
 	virtual class ADW_CharacterBase* GetPlayerCharacter() override;
 
 	// 플레이어와의 거리 반환
