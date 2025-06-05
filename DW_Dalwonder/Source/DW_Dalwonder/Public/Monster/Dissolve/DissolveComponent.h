@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "NiagaraSystem.h"
 #include "DissolveComponent.generated.h"
 
 /**
@@ -26,7 +27,7 @@ public:
 
 	// 디졸브를 실행시킬 함수입니다. 첫 번째 인자로 텍스쳐의 인덱스를, 두 번째 인자로 지속시간을 받습니다. 
 	UFUNCTION(BlueprintCallable)
-	void DissolveStart(int32 TextureIndex, float Duration);
+	void DissolveStart(int32 NiagaraIndex, int32 TextureIndex, float Duration);
 
 protected:
 	// 디졸브가 시작한 시점에서 Duration만큼이 지난 뒤 실행할 함수.
@@ -38,6 +39,9 @@ public:
 	// 디졸브 텍스쳐입니다. 머터리얼과 나이아가라 시스템 모두 할당됩니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Dissolve|Class")
 	TArray<UTexture*> DissolveTexture;
+	// 디졸브 나이아가라 시스템 에셋입니다. DissolveTexture와 같은 인덱스에 할당하는게 권장됩니다. 꼭 안맞춰도됨.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "A_Dissolve|Class")
+	TArray<UNiagaraSystem*> DissolveNiagaraSystems;
 	// 할당한 디졸브 텍스쳐를 어디서든 랜덤하게 할당시킬지 여부입니다. True일 경우 호출되는 DissolveStart의 텍스쳐 인덱스는 무시됩니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Dissolve|Class")
 	bool bApplyRandomTexture;
@@ -47,7 +51,10 @@ public:
 	FLinearColor MaterialEdgeColor = FLinearColor::White;
 	// 디졸브 테두리에 지정한 색상의 두께입니다. 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Dissolve|Material")
-	float MaterialEdgeThickness = 0.0f;
+	float MaterialEdgeThickness = 0.15f;
+	// 디졸브 테두리의 이미시브 강도입니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Dissolve|Material")
+	float MaterialEmissiveIntansity = 1.0f;
 
 	// 디졸브 테두리의 파티클 색상입니다. 나이아가라 시스템에 할당됩니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Dissolve|Niagara")
@@ -62,20 +69,22 @@ private:
 	FName TextureParameterName = "DissolveTexture";
 	FName ColorParameterName = "EdgeColor";
 	FName DissolveEdgeParameterName = "EdgeThickness";
+	FName EmissiveIntansityParameterName = "EdgeEmissive";
 
 	TMap<int32, UMaterialInstanceDynamic*> DynamicMaterialMap;
 
 	USkeletalMeshComponent* MeshComp;
+	UNiagaraComponent* NiagaraComp;
 
 	float DissolveDuration = 5.f;
 	float CurrentTime = 0.f;
 
-	float StartValue = 0.f;
-	float EndValue = 1.f;
+	float StartValue = 1.f;
+	float EndValue = 0.f;
 	float EndValue_NS = -1.f;
 
 	FTimerHandle ZeroTimer;
 	FTimerHandle EndTimer;
 	
-	bool bIsDissolveFirst;
+	bool bIsDissolveFirst = false;
 };
