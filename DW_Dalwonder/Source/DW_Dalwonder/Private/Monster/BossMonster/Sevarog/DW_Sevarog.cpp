@@ -324,7 +324,10 @@ void ADW_Sevarog::SetCurrentPhase(int32 NewPhase)
 		case 2: DoPhase2();
 		break;
 		
-		default: UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
+		default: 
+#if WITH_EDITOR
+			UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
+#endif
 		break;
 	}
 }
