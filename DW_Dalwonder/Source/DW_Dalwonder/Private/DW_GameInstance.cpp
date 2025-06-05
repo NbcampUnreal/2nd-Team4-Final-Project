@@ -92,115 +92,28 @@ void UDW_GameInstance::ApplyLoadedData()
 
 void UDW_GameInstance::LoadLevelWithLoadingScreen(FName LevelName)
 {
+    // 서브시스템 가져오기
     UDW_LevelLoadSubsystem* LoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
-    if (!LoadSubsystem)
-    {
-        UE_LOG(LogTemp, Error, TEXT(" LevelLoadSubsystem 찾기 실패"));
-        return;
-    }
+    if (!LoadSubsystem) return;
+    
+    if (!LoadingWidgetClass) return;
 
-    if (!LoadingWidgetClass)
-    {
-        UE_LOG(LogTemp, Error, TEXT(" GameInstance에 LoadingWidgetClass가 설정되지 않았습니다."));
-        return;
-    }
-
+    // 로딩 위젯 넘겨주고 맵 비동기 로드 시작
     LoadSubsystem->SetLoadingWidgetClass(LoadingWidgetClass);
     LoadSubsystem->StreamLevelAsync(LevelName);
-
-    //UWorld* World = GetWorld();
-    //if (!World)
-    //{
-    //    UE_LOG(LogTemp, Error, TEXT(" UDW_GameInstance::GetWorld() == nullptr"));
-    //    return;
-    //}
-
-    //if (!LoadingWidgetClass)
-    //{
-    //    UE_LOG(LogTemp, Error, TEXT(" LoadingWidgetClass가 설정되지 않았습니다."));
-    //    return;
-    //}
-
-    //// 위젯 생성
-    //LoadingWidget = CreateWidget<ULoadingWidget>(World, LoadingWidgetClass);
-    //if (!LoadingWidget)
-    //{
-    //    UE_LOG(LogTemp, Error, TEXT(" 로딩 위젯 생성 실패"));
-    //    return;
-    //}
-
-    //LoadingWidget->AddToViewport();
-    //LoadingWidget->UpdateProgress(0.f);
-
-    //// Subsystem 접근 및 설정
-    //if (UDW_LevelLoadSubsystem* Sub = GetSubsystem<UDW_LevelLoadSubsystem>())
-    //{
-    //    Sub->SetLoadingWidgetClass(LoadingWidgetClass);
-    //    Sub->OnProgressUpdated.AddUObject(this, &UDW_GameInstance::HandleProgressUpdated);
-    //    Sub->OnLoadingFinished.AddUObject(this, &UDW_GameInstance::HandleLoadingFinished);
-
-    //    Sub->StartLoadingLevel(LevelName);
-
-    //    // Tick 시작
-    //    World->GetTimerManager().SetTimer(
-    //        LoadingTickHandle,
-    //        this,
-    //        &UDW_GameInstance::TickLoading,
-    //        0.05f,
-    //        true
-    //    );
-
-    //    UE_LOG(LogTemp, Log, TEXT(" 로딩 시작: %s"), *LevelName.ToString());
-    //}
 }
 
 void UDW_GameInstance::StartLevelStreaming()
 {
-    if (!LevelLoadSubsystem || PendingLevelName.IsNone())
+    if (!LevelLoadSubsystem)
     {
-        UE_LOG(LogTemp, Warning, TEXT("StartLevelStreaming: Subsystem is null or LevelName is None"));
-        return;
+        LevelLoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
     }
 
-    UE_LOG(LogTemp, Log, TEXT("StartLevelStreaming: Streaming Level %s"), *PendingLevelName.ToString());
+    // 서브시스템로드실패 및 맵이름 없을때
+    if (!LevelLoadSubsystem || PendingLevelName.IsNone()) return;
 
     LevelLoadSubsystem->StreamLevelAsync(PendingLevelName);
 }
 
-//void UDW_GameInstance::HandleProgressUpdated(float Progress)
-//{
-//    if (LoadingWidget)
-//    {
-//        UE_LOG(LogTemp, Warning, TEXT(" HandleProgressUpdated: %f"), Progress);
-//        LoadingWidget->UpdateProgress(Progress);
-//    }
-//}
-//
-//void UDW_GameInstance::HandleLoadingFinished()
-//{
-//    if (UWorld* World = GetWorld())
-//    {
-//        World->GetTimerManager().ClearTimer(LoadingTickHandle);
-//    }
-//
-//    if (LoadingWidget)
-//    {
-//        LoadingWidget->RemoveFromParent();
-//        LoadingWidget = nullptr;
-//    }
-//
-//    if (UDW_LevelLoadSubsystem* Sub = GetSubsystem<UDW_LevelLoadSubsystem>())
-//    {
-//        FString MapToOpen = Sub->GetPendingLevelName();
-//        UGameplayStatics::OpenLevel(this, FName(*MapToOpen));
-//    }
-//}
-//
-//void UDW_GameInstance::TickLoading()
-//{
-//    if (UDW_LevelLoadSubsystem* Sub = GetSubsystem<UDW_LevelLoadSubsystem>())
-//    {
-//        Sub->InternalTick(); // 진행률 추적
-//    }
-//}
 

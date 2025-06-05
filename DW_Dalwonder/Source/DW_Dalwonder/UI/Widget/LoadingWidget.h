@@ -19,14 +19,24 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Loading")
 	void OnProgressUpdated(float Progress);
 
-//public:
-//    UFUNCTION(BlueprintCallable, Category = "Loading")
-//    void UpdateProgress(float InPercent);
-//
-//protected:
-//    // 블루프린트에서 구현할 이벤트
-//    UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-//    void OnProgressUpdated(float Progress);
-//    virtual void OnProgressUpdated_Implementation(float Progress);
+    // BP에서 구현: 텍스트 바꾸기
+    UFUNCTION(BlueprintImplementableEvent, Category = "Loading")
+    void OnTipUpdated(const FString& TipText);
+
+    // 위젯 시작 시 호출
+    virtual void NativeConstruct() override;
+
+private:
+    void UpdateRandomTip();
+
+    FTimerHandle TipTimerHandle;
+
+    TArray<FString> TipList = {
+        TEXT("TIP: 구르기는 무적 프레임이 있어요!"),
+        TEXT("TIP: 적의 패턴을 관찰하세요."),
+        TEXT("TIP: 강공격은 스태미너를 많이 소모합니다."),
+        TEXT("TIP: 스킬트리는 초기화할 수 없어요!"),
+        TEXT("TIP: 무기를 강화하면 큰 도움이 됩니다!")
+    };
 
 };

@@ -4,13 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-//#include "Engine/StreamableManager.h"
 #include "Engine/LevelStreamingDynamic.h"
 #include "DW_LevelLoadSubsystem.generated.h"
-
-// 로딩 진행률 갱신 델리게이트
-//DECLARE_MULTICAST_DELEGATE_OneParam(FOnLoadingProgressUpdated, float);
-//DECLARE_MULTICAST_DELEGATE(FOnLoadingFinished);
 
 class ULoadingWidget;
 
@@ -21,38 +16,22 @@ UCLASS()
 class DW_DALWONDER_API UDW_LevelLoadSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-	
-//public:
-//    void SetLoadingWidgetClass(TSubclassOf<ULoadingWidget> InClass);
-//    void StartLoadingLevel(FName LevelName);
-//
-//    void InternalTick(); // 외부에서 Tick 호출
-//
-//    FOnLoadingProgressUpdated OnProgressUpdated;
-//    FOnLoadingFinished OnLoadingFinished;
-//
-//    FString GetPendingLevelName() const;
-//
-//private:
-//    FString PendingLevelName;
-//    FStreamableManager StreamableManager;
-//    TSharedPtr<FStreamableHandle> LoadingHandle;
-//
-//    TSubclassOf<ULoadingWidget> LoadingWidgetClass;
-//
-//    void OnLoadComplete();
 
 public:
-    // 로딩 시작
+    // 맵 스트리밍 및 로딩 위젯 시작
     UFUNCTION(BlueprintCallable)
     void StreamLevelAsync(FName LevelName);
 
-    // 로딩 위젯 클래스 설정 (GameInstance 등에서 호출)
+    // 로딩 위젯 클래스 설정 (GameInstance에서 받아옴 호출)
     void SetLoadingWidgetClass(TSubclassOf<ULoadingWidget> InClass);
 
     // 캐릭터 스폰 조정
     UFUNCTION(BlueprintCallable)
     void SpawnPlayerCharacterAtPlayerStart();
+
+    // PlayerStart로딩될때까지 기다리기
+    UFUNCTION(BlueprintCallable)
+    void WaitForPlayerStartThenSpawn();
 
 protected:
     // 로딩 상태 업데이트 (Tick에서 호출됨)
@@ -73,7 +52,7 @@ private:
     UPROPERTY()
     ULoadingWidget* LoadingWidget = nullptr;
 
-    // 로딩 위젯 클래스 (BP 기반)
+    // 로딩 위젯 클래스 (BP 기반 GameInstance에서 받아옴)
     UPROPERTY(EditAnywhere)
     TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 

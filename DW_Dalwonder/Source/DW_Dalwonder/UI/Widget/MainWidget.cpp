@@ -41,12 +41,11 @@ void UMainWidget::NativeConstruct()
 
 void UMainWidget::OnNewGameClicked()
 {
-	//게임 시작 로직 (레벨이동? or UI없애기)
 	//UGameplayStatics::OpenLevel(this, "LoadingMap");
 	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
 		GameInstance->bIsNewGame = true;
-		GameInstance->LoadLevelWithLoadingScreen(TEXT("Start_Testmap_WP"));
+		UGameplayStatics::OpenLevel(this, "LoadingMap");
 	}
 
 	RemoveFromParent();
@@ -57,13 +56,11 @@ void UMainWidget::OnContinueGameClicked()
 	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
 		GameInstance->bIsNewGame = false;
-		GameInstance->LoadLevelWithLoadingScreen(TEXT("Start_Testmap_WP"));
+		GameInstance->LoadGameData(); // 게임로드
+		UGameplayStatics::OpenLevel(this, "LoadingMap");
 	}
 
-	//if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
-	//{
-	//	GameInstance->LoadGameData(); // 게임로드
-	//}
+	RemoveFromParent();
 }
 
 void UMainWidget::OnOptionClicked()

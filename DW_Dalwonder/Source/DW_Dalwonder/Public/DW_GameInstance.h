@@ -59,20 +59,4 @@ private:
     UPROPERTY(EditAnywhere, Category = "Loading")
     TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 
-    // 로딩 위젯 인스턴스
-    //UPROPERTY()
-    //TObjectPtr<ULoadingWidget> LoadingWidget;
-
-    //// 로딩 Tick 타이머 핸들
-    //FTimerHandle LoadingTickHandle;
-
-    //// 진행률 콜백
-    //void HandleProgressUpdated(float Progress);
-
-    //// 완료 콜백
-    //void HandleLoadingFinished();
-
-    //// 로딩 진행 갱신
-    //void TickLoading();
-
 };
