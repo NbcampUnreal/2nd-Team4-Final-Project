@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "DW_IntroVideoActor.generated.h"
 
+class UMediaSoundComponent;
 class UMediaSource;
 class UMediaTexture;
 class UMediaPlayer;
@@ -43,6 +44,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Timing")
 	float DelayAfterVideo = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Video|Audio")
+	UMediaSoundComponent* MediaSoundComponent = nullptr;
 
 private:
 	/** 式式式式式式式式式式式式式 Internals 式式式式式式式式式式式式式 */
