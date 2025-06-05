@@ -45,7 +45,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	float DeadMontageTime;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	float DestroyTime;
+	float DestroyTime = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UDissolveComponent* DissolveComp;
 
 	// SpawnMontage 중에 AlertMontage 재생을 막기 위한 재정의
 	virtual void InitialSpawn() override;
@@ -65,6 +68,7 @@ public:
 	void Dead() override;
 
 	void DeadLogic();
+	void DestroyDissolve();
 	void DestroyMonster();
 
 	virtual float TakeDamage(
