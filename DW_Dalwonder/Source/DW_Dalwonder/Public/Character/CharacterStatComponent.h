@@ -167,7 +167,7 @@ protected:
 	float MaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float HealthGenRate = 1.f;
+	float HealthGenRate = 0.2f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	bool bEnableHealthGen = true;
@@ -179,7 +179,7 @@ protected:
 	float MaxStamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaGenRate = 1.f;
+	float StaminaGenRate = 0.2f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	bool bEnableStaminaGen = true;

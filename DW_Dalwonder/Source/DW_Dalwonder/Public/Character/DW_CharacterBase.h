@@ -66,8 +66,8 @@ public:
 	UFUNCTION()
 	void Attack(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void Sprint(const FInputActionValue& Value);
+	UFUNCTION(blueprintCallable)
+	void Sprint(bool bOnSprint);
 
 	UFUNCTION()
 	void Dodge(const FInputActionValue& Value);

@@ -16,7 +16,6 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
-	SprintAction(nullptr),
 	GuardAction(nullptr),
 	DodgeAction(nullptr),
 	LockonAction(nullptr),
