@@ -1,4 +1,4 @@
-#include "Item/ItemDataManager.h"
+#include "ItemDataManager.h"
 
 
 // static 멤버 변수 초기화
@@ -48,16 +48,13 @@ void UItemDataManager::SetInstance(UItemDataManager* InInstance)
     }
 }
 
-void UItemDataManager::InitializeDataManager(class UDataTable* InItemBaseDataTable,
-    class UDataTable* InEquipmentSubDataTable,
-    class UDataTable* InConsumableSubDataTable)
+void UItemDataManager::InitializeDataManager(class UDataTable* InItemBaseDataTable)
 {
     ItemBaseDataTable = InItemBaseDataTable;
-    EquipmentSubDataTable = InEquipmentSubDataTable;
-    ConsumableSubDataTable = InConsumableSubDataTable;
-
 
     // 데이터테이블 유효성 검사
+    if (!ItemBaseDataTable) { UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ItemBaseDataTable is not assigned!")); }
+
     if (!ItemBaseDataTable) { 
 #if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ItemBaseDataTable is not assigned!"));
@@ -137,5 +134,4 @@ FGenericItemSubData UItemDataManager::GetItemSubDataByType(FName ItemID, EItemTy
 
     return ResultData;
 }
-
 

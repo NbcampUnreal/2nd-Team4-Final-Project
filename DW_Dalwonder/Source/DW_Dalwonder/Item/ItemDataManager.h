@@ -3,28 +3,7 @@
 #include "UObject/NoExportTypes.h"
 #include "Engine/DataTable.h"
 #include "ItemData.h"
-#include "EquipmentSubData.h"
-#include "ConsumableSubData.h"
 #include "ItemDataManager.generated.h"
-
-USTRUCT(BlueprintType)
-struct FGenericItemSubData
-{
-    GENERATED_BODY()
-
-    UPROPERTY(BlueprintReadWrite, Category = "Item Sub Data")
-    FEquipmentSubData EquipmentData;
-
-    UPROPERTY(BlueprintReadWrite, Category = "Item Sub Data")
-    FConsumableSubData ConsumableData;
-
-    // 기본 생성자
-    FGenericItemSubData()
-        : EquipmentData(), ConsumableData()
-    {
-    }
-};
-
 
 UCLASS(Blueprintable, BlueprintType)
 class DW_DALWONDER_API UItemDataManager : public UObject
@@ -44,20 +23,12 @@ public:
     static void SetInstance(UItemDataManager* InInstance);
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
-    void InitializeDataManager(class UDataTable* InItemBaseDataTable,
-        class UDataTable* InEquipmentSubDataTable,
-        class UDataTable* InConsumableSubDataTable);
+    void InitializeDataManager(class UDataTable* InItemBaseDataTable);
 
 
 	// 아이템 기본 데이터 테이블과 서브 데이터 테이블
     UPROPERTY()
     class UDataTable* ItemBaseDataTable;
-
-    UPROPERTY()
-    class UDataTable* EquipmentSubDataTable;
-
-    UPROPERTY()
-    class UDataTable* ConsumableSubDataTable;
 
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
