@@ -81,8 +81,10 @@ public:
         }
         else
         {
+#if WITH_EDITOR
             UE_LOG(LogTemp, Warning, TEXT("GetSubData: Unsupported TBaseSubData type requested."));
-            bOutSuccess = false;
+#endif
+			bOutSuccess = false;
             return ResultData;
         }
 
@@ -98,13 +100,17 @@ public:
             }
             else
             {
+#if WITH_EDITOR
                 UE_LOG(LogTemp, Warning, TEXT("GetSubData: ItemID '%s' not found in data table for type."), *ItemID.ToString());
-            }
+#endif
+			}
         }
         else
         {
+#if WITH_EDITOR
             UE_LOG(LogTemp, Error, TEXT("GetSubData: Target DataTable is not assigned for requested type."));
-        }
+#endif
+		}
 
         bOutSuccess = false;
         return ResultData;
