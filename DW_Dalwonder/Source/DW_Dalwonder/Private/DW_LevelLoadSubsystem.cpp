@@ -2,11 +2,17 @@
 
 
 #include "DW_LevelLoadSubsystem.h"
+#include "DW_GameInstance.h"
+#include "DW_SaveGame.h"
 #include "UI/Widget/LoadingWidget.h"
+#include "Character/DW_CharacterBase.h"
+#include "Character/DW_PlayerController.h"
 #include "Engine/LevelStreamingDynamic.h"
 #include "TimerManager.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
+#include "GameFramework/PlayerController.h"
 
 void UDW_LevelLoadSubsystem::SetLoadingWidgetClass(TSubclassOf<ULoadingWidget> InClass)
 {
@@ -66,13 +72,12 @@ void UDW_LevelLoadSubsystem::StreamLevelAsync(FName LevelName)
     UWorld* World = GetWorld();
     if (!World)
     {
-        UE_LOG(LogTemp, Error, TEXT(" StreamLevelAsync: World is null"));
+        UE_LOG(LogTemp, Error, TEXT("StreamLevelAsync: World is null"));
         return;
     }
 
-    UE_LOG(LogTemp, Log, TEXT(" 스트리밍 레벨 로딩 시작: %s"), *LevelName.ToString());
+    UE_LOG(LogTemp, Log, TEXT("스트리밍 레벨 로딩 시작: %s"), *LevelName.ToString());
 
-    // 로딩 위젯 생성
     if (LoadingWidgetClass)
     {
         LoadingWidget = CreateWidget<ULoadingWidget>(World, LoadingWidgetClass);
@@ -83,19 +88,16 @@ void UDW_LevelLoadSubsystem::StreamLevelAsync(FName LevelName)
         }
     }
 
-    // 진행률 초기화
     CurrentProgress = 0.0f;
 
-    // LatentInfo는 안 써도 되지만 형식상 작성
     FLatentActionInfo LatentInfo;
     LatentInfo.CallbackTarget = this;
 
     bool bSuccess = false;
-    
-    // 5.4에서 지원되는 스트리밍 함수 사용
+
     StreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
-        GetWorld(),
-        TEXT("/Game/ThirdPerson/Maps/Start_Testmap_WP"), // LevelName 나중에 바꾸기
+        World,
+        TEXT("/Game/ThirdPerson/Maps/Start_Testmap_WP"), // 나중에 바뀔 수 있음
         FVector::ZeroVector,
         FRotator::ZeroRotator,
         bSuccess
@@ -103,11 +105,10 @@ void UDW_LevelLoadSubsystem::StreamLevelAsync(FName LevelName)
 
     if (!StreamingLevel)
     {
-        UE_LOG(LogTemp, Error, TEXT(" 스트리밍 레벨 로딩 실패: %s"), *LevelName.ToString());
+        UE_LOG(LogTemp, Error, TEXT("스트리밍 레벨 로딩 실패: %s"), *LevelName.ToString());
         return;
     }
 
-    // 진행률 추적 시작
     World->GetTimerManager().SetTimer(
         TickTimerHandle,
         this,
@@ -127,19 +128,81 @@ void UDW_LevelLoadSubsystem::TickStreamingProgress()
     if (bLoaded && bVisible)
     {
         LoadingWidget->OnProgressUpdated(1.0f);
-        UE_LOG(LogTemp, Log, TEXT(" 스트리밍 레벨 로딩 완료"));
+        UE_LOG(LogTemp, Log, TEXT("스트리밍 레벨 로딩 완료"));
 
         LoadingWidget->RemoveFromParent();
         LoadingWidget = nullptr;
 
         StreamingLevel = nullptr;
         GetWorld()->GetTimerManager().ClearTimer(TickTimerHandle);
+
+        //  캐릭터 수동 스폰 호출
+        SpawnPlayerCharacterAtPlayerStart();
+
         return;
     }
 
-    // 서서히 퍼센트 상승 (체감용 가짜 퍼센트)
     CurrentProgress = FMath::Clamp(CurrentProgress + 0.05f, 0.f, 0.95f);
     LoadingWidget->OnProgressUpdated(CurrentProgress);
 
-    UE_LOG(LogTemp, Log, TEXT(" 로딩 진행률: %.2f%%"), CurrentProgress * 100);
+    UE_LOG(LogTemp, Log, TEXT("로딩 진행률: %.2f%%"), CurrentProgress * 100);
+}
+
+void UDW_LevelLoadSubsystem::SpawnPlayerCharacterAtPlayerStart()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(World));
+    if (!GameInstance) return;
+
+    APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+    if (!PC) return;
+
+    FVector SpawnLocation;
+    FRotator SpawnRotation;
+
+    if (!GameInstance->bIsNewGame && GameInstance->LoadedSaveGame)
+    {
+        // 저장된 위치에서 스폰
+        SpawnLocation = GameInstance->LoadedSaveGame->SavedPlayerLocation;
+        SpawnRotation = GameInstance->LoadedSaveGame->SavedPlayerRotation;
+    }
+    else
+    {
+        // PlayerStart 위치
+        TArray<AActor*> PlayerStarts;
+        UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), PlayerStarts);
+
+        if (PlayerStarts.Num() == 0)
+        {
+            UE_LOG(LogTemp, Error, TEXT("Spawn 실패: PlayerStart 없음"));
+            return;
+        }
+
+        AActor* StartPoint = PlayerStarts[0];
+        SpawnLocation = StartPoint->GetActorLocation();
+        SpawnRotation = StartPoint->GetActorRotation();
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = PC;
+
+    ADW_CharacterBase* NewCharacter = World->SpawnActor<ADW_CharacterBase>(ADW_CharacterBase::StaticClass(), SpawnLocation, SpawnRotation, SpawnParams);
+    if (NewCharacter)
+    {
+        PC->Possess(NewCharacter);
+        UE_LOG(LogTemp, Log, TEXT("플레이어 수동 스폰 완료"));
+
+        // 저장된 데이터 적용
+        if (!GameInstance->bIsNewGame)
+        {
+            GameInstance->ApplyLoadedData();
+            GameInstance->bIsNewGame = true;
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("플레이어 스폰 실패"));
+    }
 }

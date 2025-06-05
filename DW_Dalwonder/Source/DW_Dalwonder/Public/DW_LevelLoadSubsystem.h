@@ -50,6 +50,10 @@ public:
     // 로딩 위젯 클래스 설정 (GameInstance 등에서 호출)
     void SetLoadingWidgetClass(TSubclassOf<ULoadingWidget> InClass);
 
+    // 캐릭터 스폰 조정
+    UFUNCTION(BlueprintCallable)
+    void SpawnPlayerCharacterAtPlayerStart();
+
 protected:
     // 로딩 상태 업데이트 (Tick에서 호출됨)
     void TickStreamingProgress();

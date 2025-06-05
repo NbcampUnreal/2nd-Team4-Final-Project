@@ -20,6 +20,11 @@ public:
 	// 캐릭터 위치를 저장할 변수
 	UPROPERTY(VisibleAnywhere, Category = "SaveData")
 	FVector SavedPlayerLocation;
+
+	// 캐릭터 회전값
+	UPROPERTY(VisibleAnywhere, Category = "SaveData")
+	FRotator SavedPlayerRotation;
+
 	// 캐릭터 기본 스탯 저장 변수(스킬트리 값을 불러와서 올려줄꺼임)
 	UPROPERTY(VisibleAnywhere, Category = "SaveData")
 	FAttributeSaveData SavedAttributes;

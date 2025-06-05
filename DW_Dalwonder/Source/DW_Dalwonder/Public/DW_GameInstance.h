@@ -33,11 +33,25 @@ public:
     UFUNCTION(BlueprintCallable)
     void LoadLevelWithLoadingScreen(FName LevelName);
 
+    /** 로딩맵에서 호출할 함수 */
+    UFUNCTION(BlueprintCallable)
+    void StartLevelStreaming();
 
-private:
+public:
 
     UPROPERTY()
     UDW_SaveGame* LoadedSaveGame = nullptr;
+
+    UPROPERTY(BlueprintReadWrite, Category = "Game Start Type")
+    bool bIsNewGame = true; // 기본값은 새 게임
+
+    UPROPERTY()
+    UDW_LevelLoadSubsystem* LevelLoadSubsystem;
+
+    UPROPERTY()
+    FName PendingLevelName;
+
+private:
 
     FString DefaultSaveSlot = TEXT("DW_SaveData");
 

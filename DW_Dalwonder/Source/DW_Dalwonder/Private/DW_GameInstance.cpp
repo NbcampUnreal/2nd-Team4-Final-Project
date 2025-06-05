@@ -29,13 +29,16 @@ void UDW_GameInstance::SaveGameData()
     // 1. 위치 저장
     SaveGameInstance->SavedPlayerLocation = PlayerCharacter->GetActorLocation();
 
-    // 2. 스탯 저장
+    // 2. 회전값 저장
+    SaveGameInstance->SavedPlayerRotation = PlayerCharacter->GetActorRotation();
+
+    // 3. 스탯 저장
     if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
     {
         AttrComp->SaveData(SaveGameInstance->SavedAttributes);
     }
 
-    // 3. 스킬 트리 저장
+    // 4. 스킬 트리 저장
     if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
     {
         SaveGameInstance->SavedSkillStates = SkillComp->SkillStateMap;
@@ -64,14 +67,17 @@ void UDW_GameInstance::ApplyLoadedData()
     // 1. 위치 적용
     PlayerCharacter->SetActorLocation(LoadedSaveGame->SavedPlayerLocation);
 
-    // 2. Attribute 적용
+    // 2. 회전값 적용
+    PlayerCharacter->SetActorRotation(LoadedSaveGame->SavedPlayerRotation);
+
+    // 3. Attribute 적용
     UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>();
     if (AttrComp)
     {
         AttrComp->LoadData(LoadedSaveGame->SavedAttributes);
     }
 
-    // 3. Skill 복원 + 보너스 적용
+    // 4. Skill 복원 + 보너스 적용
     if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
     {
         SkillComp->SkillStateMap = LoadedSaveGame->SavedSkillStates;
@@ -146,6 +152,19 @@ void UDW_GameInstance::LoadLevelWithLoadingScreen(FName LevelName)
 
     //    UE_LOG(LogTemp, Log, TEXT(" 로딩 시작: %s"), *LevelName.ToString());
     //}
+}
+
+void UDW_GameInstance::StartLevelStreaming()
+{
+    if (!LevelLoadSubsystem || PendingLevelName.IsNone())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("StartLevelStreaming: Subsystem is null or LevelName is None"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("StartLevelStreaming: Streaming Level %s"), *PendingLevelName.ToString());
+
+    LevelLoadSubsystem->StreamLevelAsync(PendingLevelName);
 }
 
 //void UDW_GameInstance::HandleProgressUpdated(float Progress)
