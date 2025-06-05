@@ -177,7 +177,7 @@ void UAIOptimizer::LayerCheckLoop()
 		break;
 
 	default:
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not valid Layer."));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not valid Layer."));
 		break;
 	}
 }
@@ -192,7 +192,7 @@ int32 UAIOptimizer::DistanceLayer()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not"));
 		return -1;
 	}
 

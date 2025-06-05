@@ -7,11 +7,14 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AISense_Damage.h"
+#include "Monster/Dissolve/DissolveComponent.h"
 
 ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
                                                 AlertMontage(nullptr), AlertDelay(1.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	DissolveComp = CreateDefaultSubobject<UDissolveComponent>(TEXT("DissolveComponent"));
 
 	Tags.Add(TEXT("NormalMonster"));
 }
@@ -228,8 +231,16 @@ void ADW_NormalMonsterBase::DeadLogic()
 	GetMesh()->SetSimulatePhysics(true);
 
 	FTimerHandle DestroyDelayTimer;
-	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyMonster, DestroyTime, false);
+	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyDissolve, DestroyTime, false);
 
+}
+
+void ADW_NormalMonsterBase::DestroyDissolve()
+{
+	DissolveComp->DissolveStart(0, 0, 5.f);
+
+	FTimerHandle DestroyDelayTimer;
+	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyMonster, 8.f, false);
 }
 
 void ADW_NormalMonsterBase::DestroyMonster()
