@@ -240,7 +240,9 @@ int32 ADW_MonsterBase::GetRandomMontage()
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("Montage가 없삼"));
+#endif
 		return 0;
 	}
 }
@@ -338,7 +340,9 @@ void ADW_MonsterBase::PerformAttackTrace()
 					// 데미지 처리
 					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
 
+#if WITH_EDITOR
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
+#endif
 				}
 			}
 		}
@@ -347,7 +351,9 @@ void ADW_MonsterBase::PerformAttackTrace()
 
 void ADW_MonsterBase::Parried()
 {
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Parry"));
+#endif
 
 	bIsAttacking = false;
 	bCanParried = false;
@@ -480,7 +486,9 @@ float ADW_MonsterBase::GetPlayerDistance()
 {
 	if (!IsValid(PlayerCharacter))
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("GetPlayerDistance: PlayerCharacter 참조 실패, -1.0f 반환"));
+#endif
 		return -1.0f; // 유효하지 않으면 음수 리턴
 	}
 

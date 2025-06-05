@@ -107,6 +107,8 @@ void UInventoryComponent::ShowInventoryStatus()
             Msg = FString::Printf(TEXT("[Slot %d] (Empty)"), i);
         }
 
+#if WITH_EDITOR
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::White, Msg);
+#endif
     }
 }
