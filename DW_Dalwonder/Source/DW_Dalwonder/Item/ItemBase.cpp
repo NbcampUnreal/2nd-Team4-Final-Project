@@ -28,6 +28,7 @@ void UItemBase::LoadItemFromCode(int32 InItemCode)
 
     if (bSuccess)
     {
+        ItemGrade = ParsedGrade;
         EnchantLevel = ParsedEnchantLevel;
 
         // 데이터 테이블이 유효한지 확인하고 로드
