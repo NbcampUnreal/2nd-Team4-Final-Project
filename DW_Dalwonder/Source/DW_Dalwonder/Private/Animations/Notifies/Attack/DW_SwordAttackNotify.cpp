@@ -78,7 +78,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 					continue;
 				}
 				
-				if (FMath::Abs(Hit.ImpactNormal.Z) >= 0.8f)
+				if (FMath::Abs(Hit.ImpactNormal.Z) >= 0.65f)
 				{
 					continue;
 				}
