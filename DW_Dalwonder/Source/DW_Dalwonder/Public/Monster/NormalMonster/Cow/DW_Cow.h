@@ -14,4 +14,6 @@ class DW_DALWONDER_API ADW_Cow : public ADW_NormalMonsterBase
 public:
 	// Sets default values for this character's properties
 	ADW_Cow();
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };
