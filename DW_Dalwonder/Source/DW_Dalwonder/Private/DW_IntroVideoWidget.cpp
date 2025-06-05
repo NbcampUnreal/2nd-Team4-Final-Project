@@ -20,7 +20,9 @@ void UDW_IntroVideoWidget::NativeConstruct()
 
 	if (MediaMaterial && MediaTexture && VideoImage)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("O 위젯: MediaMaterial, MediaTexture, VideoImage 모두 유효"));
+#endif
 
 		MediaMID = UMaterialInstanceDynamic::Create(MediaMaterial, this);
 		if (MediaMID)
@@ -32,18 +34,24 @@ void UDW_IntroVideoWidget::NativeConstruct()
 			Brush.ImageSize = FVector2D(1920, 1080);
 			VideoImage->SetBrush(Brush);
 
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Error, TEXT("O 위젯: Dynamic Material 적용 완료"));
+#endif
 		}
 		else
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Error, TEXT("X 위젯: Dynamic Material 생성 실패"));
+#endif
 		}
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("X 위젯: 필수 요소 누락 - MediaMaterial: %s, MediaTexture: %s, VideoImage: %s"),
 			*FString(MediaMaterial ? TEXT("O") : TEXT("X")),
 			*FString(MediaTexture ? TEXT("O") : TEXT("X")),
 			*FString(VideoImage ? TEXT("O") : TEXT("X")));
+#endif
 	}
 }

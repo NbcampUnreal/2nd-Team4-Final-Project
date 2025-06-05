@@ -25,34 +25,46 @@ void UDW_GmInstance::Init()
 
 void UDW_GmInstance::BeginLoadingScreen(const FString& MapName)
 {
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("UDW_GmInstance::BeginLoadingScreen : &s"), *MapName);
+#endif
 
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("Loading Screen 시작: %s"), *MapName);
+#endif
 
     if (!LoadingWidgetClass)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("LoadingWidgetClass is NULL"));
+#endif
         return;
     }
 
     UWorld* World = GetWorld();
     if (!World)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("GetWorld() 실패"));
+#endif
         return;
     }
 
     UGameViewportClient* Viewport = World->GetGameViewport();
     if (!Viewport)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("Viewport 없음"));
+#endif
         return;
     }
 
     UUserWidget* Widget = CreateWidget<UUserWidget>(World, LoadingWidgetClass);
     if (!Widget)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("CreateWidget 실패"));
+#endif
         return;
     }
 
@@ -60,12 +72,16 @@ void UDW_GmInstance::BeginLoadingScreen(const FString& MapName)
     Viewport->AddViewportWidgetContent(LoadingSlateWidget.ToSharedRef(), 100);
     LoadingWidget = Widget;
 
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("로딩 위젯 Viewport에 추가 완료"));
+#endif
 }
 
 void UDW_GmInstance::EndLoadingScreen(UWorld* InLoadedWorld)
 {
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("UDW_GmInstance::EndLoadingScreen : &s"), *InLoadedWorld->GetName());
+#endif
 
     if (UWorld* World = InLoadedWorld)
     {

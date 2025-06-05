@@ -35,13 +35,17 @@ void ADW_SoundBase::BeginPlay()
         AudioComponent->Play();
     }
 
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("총 마킹 포인트 수: %d"), MarkingPointActors.Num());
+#endif
 
     for (int32 i = 0; i < MarkingPointActors.Num(); ++i)
     {
         if (MarkingPointActors[i])
         {
+#if WITH_EDITOR
             UE_LOG(LogTemp, Warning, TEXT("마킹 %d: %s"), i, *MarkingPointActors[i]->GetName());
+#endif
         }
     }
 

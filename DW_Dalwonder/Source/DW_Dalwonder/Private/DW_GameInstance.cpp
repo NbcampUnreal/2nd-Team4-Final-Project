@@ -29,7 +29,9 @@ void UDW_GameInstance::LoadLevelWithLoadingScreen()
 {
     if (LevelToLoad.IsNone())
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("LevelToLoad is not set!"));
+#endif
         return;
     }
 
