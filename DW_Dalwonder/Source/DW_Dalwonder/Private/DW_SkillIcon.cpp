@@ -8,14 +8,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
-UDW_SkillIcon::UDW_SkillIcon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMat(TEXT("/Game/UI/Materials/M_Dot.M_Dot"));
-    if (DotMat.Succeeded())
-    {
-        DotMaterial = DotMat.Object;
-    }
-}
 
 void UDW_SkillIcon::NativeConstruct()
 {
