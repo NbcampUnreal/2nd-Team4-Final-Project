@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Monster/NormalMonster/Cow/DW_Cow.h"
+#include "Monster/NormalMonster/Pig/DW_Pig.h"
 
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -9,16 +9,16 @@
 
 
 // Sets default values
-ADW_Cow::ADW_Cow()
+ADW_Pig::ADW_Pig()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
-	
+	PrimaryActorTick.bCanEverTick = true;
+		
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
-float ADW_Cow::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+float ADW_Pig::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
