@@ -62,7 +62,9 @@ void ADW_PlayerController::ToggleESCMenu()
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (!GameMode || !ESCMenuWidgetClass)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("GameMode or ESCMenuWidgetClass is invalid!"));
+#endif
         return;
     }
 

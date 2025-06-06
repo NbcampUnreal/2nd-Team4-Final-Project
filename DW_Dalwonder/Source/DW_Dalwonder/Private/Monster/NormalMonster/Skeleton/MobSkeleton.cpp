@@ -40,21 +40,37 @@ void AMobSkeleton::BeginPlay()
 	DefaultHP = MonsterMaxHP;
 	DefaultDamage = MonsterDamage;
 
+	FTimerHandle SpawnTickHandle;
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(SpawnTickHandle,
+			this,
+			&AMobSkeleton::SpawnTickEnd,
+			3.1f,
+			false);
+	}
 }
 
 void AMobSkeleton::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (bSpawnTick)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (!AnimInstance) return;
+		float ZOffset = AnimInstance->GetCurveValue(FName("ZOffset"));
 
-	float ZOffset = AnimInstance->GetCurveValue(FName("ZOffset"));
+		FVector Location = GetActorLocation();
+		Location.Z = CurrentZ + ZOffset;
+		SetActorLocation(Location);
+	}
+}
 
-	FVector Location = GetActorLocation();
-	Location.Z = CurrentZ + ZOffset; 
-	SetActorLocation(Location);
-
+void AMobSkeleton::SpawnTickEnd()
+{
+	bSpawnTick = false;
 }
 
 void AMobSkeleton::PlayAlertMontage()
@@ -279,8 +295,8 @@ bool AMobSkeleton::SetRandomLocations(float RanRadius, float DistanceFromMe)
 						RandomLocation1 = OutLocation1.Location;
 						RandomLocation2 = OutLocation2.Location;
 
-						DrawDebugSphere(GetWorld(), RandomLocation1, 30.f, 12, FColor::Green, false, 5.f);
-						DrawDebugSphere(GetWorld(), RandomLocation2, 30.f, 12, FColor::Green, false, 5.f);
+						//DrawDebugSphere(GetWorld(), RandomLocation1, 30.f, 12, FColor::Green, false, 5.f);
+						//DrawDebugSphere(GetWorld(), RandomLocation2, 30.f, 12, FColor::Green, false, 5.f);
 
 						return true;
 					}

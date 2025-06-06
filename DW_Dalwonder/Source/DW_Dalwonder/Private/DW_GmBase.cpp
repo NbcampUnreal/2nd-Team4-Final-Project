@@ -3,11 +3,14 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "DW_GameInstance.h"
+#include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
 
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
+    // 자동 Pawn 스폰 막기
+    bStartPlayersAsSpectators = true;
 }
 
 void ADW_GmBase::BeginPlay()
@@ -134,4 +137,21 @@ UUserWidget* ADW_GmBase::CloseLastPopupUI_AndReturn()
     }
 
     return LastWidget;
+}
+
+void ADW_GmBase::ShowResultUI(const FString& MessageText)
+{
+    if (!ResultWidgetClass) return;
+
+    UResultWidget* ResultUI = Cast<UResultWidget>(ShowPopupUI(ResultWidgetClass));
+    if (ResultUI)
+    {
+        // ResultUI->SetLetterSpacing(80);
+        ResultUI->SetResultText(MessageText);
+
+        FTimerHandle Handle;
+        GetWorld()->GetTimerManager().SetTimer(Handle, [=, this]() {
+        this->ClosePopupUI(ResultUI);
+        }, 5.f, false);
+    }
 }

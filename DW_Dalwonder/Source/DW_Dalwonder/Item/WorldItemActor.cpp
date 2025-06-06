@@ -50,7 +50,9 @@ void AWorldItemActor::BeginPlay()
             ItemBase->ItemBaseData.ItemID,
             bSuccess);
 
+#if WITH_EDITOR
         if(!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("월드아이템 비상!!!!")));
+#endif
 	}
 	
 
@@ -93,6 +95,8 @@ void AWorldItemActor::OnPlayerExitRadius(UPrimitiveComponent* OverlappedComp, AA
 void AWorldItemActor::Interact(ADW_CharacterBase* PlayerCharacter)
 {
     if (!bCanInteract || !PlayerCharacter) return;
+#if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("아이템과 상호작용!"));
+#endif
     Destroy();
 }

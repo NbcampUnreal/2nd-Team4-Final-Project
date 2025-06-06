@@ -236,7 +236,9 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 			if (PlayerController->InteractAction)
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
+#endif
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
@@ -244,11 +246,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::Interact);
 
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
+#endif
 			}
 			else
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
+#endif
 			}
 		}
 	}
@@ -426,7 +432,9 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
+#endif
 
 	if (CurrentCombatState != ECharacterCombatState::Idle && CurrentCombatState != ECharacterCombatState::Dodging)
 	{
@@ -749,60 +757,40 @@ void ADW_CharacterBase::Interact()
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *HitActor->GetName());
+#endif
 			IDW_InteractInterface::Execute_Interact(HitActor, this);
 		}
 		else
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 인터페이스 미구현 액터: %s"), *GetNameSafe(HitActor));
+#endif
 		}
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 아무것도 맞지 않음."));
+#endif
 	}
 
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
+		UItemBase* Data = CurrentItem->ItemBase; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
-		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
-		if (ItemDataManager)
-		{
-			bool bSuccess;
-			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
-
-			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
-			/*if (bSuccess)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Item ID '%s' not found in ItemDataManager."), *TargetItemID.ToString());
-			}*/
-		}
-
-		/*if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, bAdded ? FColor::Green : FColor::Red,
-				FString::Printf(TEXT("Item %s %s"),
-					*Data.ItemName.ToString(),
-					bAdded ? TEXT("added to inventory!") : TEXT("failed to add!")
-				));
-		}*/
-
 		if (bAdded)
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
 		}
 	}
-	/*else
+	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
-	}*/
+		
+	}
 }
 
 

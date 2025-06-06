@@ -22,7 +22,9 @@ void ADW_IntroVideoActor::BeginPlay()
 
 	if (!MediaSource || !MediaTexture)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("MediaSource 또는 MediaTexture가 설정되지 않았습니다."));
+#endif
 		return;
 	}
 
