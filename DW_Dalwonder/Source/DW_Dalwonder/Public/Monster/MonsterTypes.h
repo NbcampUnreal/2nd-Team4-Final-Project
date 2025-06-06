@@ -39,4 +39,5 @@ enum class EMonsterName : uint8
 	Cow UMETA(DisplayName = "Cow"),
 	Pig UMETA(DisplayName = "Pig"),
 	Chick UMETA(DisplayName = "Chick"),
+	Elephant UMETA(DisplayName = "Elephant"),
 };
