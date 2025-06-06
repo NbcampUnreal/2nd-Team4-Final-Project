@@ -8,10 +8,9 @@
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
-//#include "GameFramework/CharacterMovementComponent.h"
-#include "LevelSequenceActor.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-//#include "Monster/MonsterStatsTable.h"
+#include "Monster/MonsterStatsTable.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
 
@@ -294,7 +293,6 @@ void ADW_Sevarog::SetInvincible(const bool NewInvincible)
 
 void ADW_Sevarog::DoPhase2() const
 {
-	
 	if (AAIController* Ctr = Cast<AAIController>(GetController()))
 	{
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
@@ -312,10 +310,8 @@ void ADW_Sevarog::DoPhase2() const
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
 		}
 	}
-	if (Phase2TrailNS)
-	{
-		Phase2TrailNS->Activate();
-	}
+
+	Phase2TrailNS->Activate();
 }
 
 
@@ -323,15 +319,12 @@ void ADW_Sevarog::SetCurrentPhase(int32 NewPhase)
 {
 	Super::SetCurrentPhase(NewPhase);
 
-	switch (NewPhase)
+	switch (CurrentPhase)
 	{
-		case 2:
-		TriggerPhase2Sequence();
-		DoPhase2();
+		case 2: DoPhase2();
 		break;
 		
-		default:
-		UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
+		default: UE_LOG(LogTemp, Error, TEXT("Sevarog : CurrentPhase Invalid"));
 		break;
 	}
 }
@@ -389,28 +382,3 @@ void ADW_Sevarog::ActivateRagdoll() const
 	MeshComp->WakeAllRigidBodies();
 	MeshComp->bBlendPhysics = true;
 }
-
-void ADW_Sevarog::TriggerPhase2Sequence()
-{
-	
-	
-	FMovieSceneSequencePlaybackSettings Settings;
-	Settings.bAutoPlay = false;
-
-	SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
-		GetWorld(),
-		Sequenceindex,
-		Settings,
-		LevelSequenceActor
-	);
-
-	if (!SequencePlayer)
-	{
-		return;
-	}
-	
-	SequencePlayer->Play();
-}
-
-
-
