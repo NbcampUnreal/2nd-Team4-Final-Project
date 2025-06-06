@@ -21,6 +21,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	//ESC메뉴
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
@@ -80,9 +81,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
 
-public:
-	// HUD 표시
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void ShowGameHUD();
 #pragma endregion
 };

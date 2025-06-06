@@ -3,7 +3,8 @@
 ADW_Warrior::ADW_Warrior()
 {
 	Weapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("Weapon"));
-	Weapon->SetupAttachment(GetMesh());
+	FName WeaponSocketName = FName(TEXT("weapon_rSocket"));
+	Weapon->SetupAttachment(GetMesh(), WeaponSocketName);
 }
 
 void ADW_Warrior::BeginPlay()
@@ -16,12 +17,4 @@ void ADW_Warrior::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
-}
-
-void ADW_Warrior::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-
-	FName WeaponSocketName = FName(TEXT("weapon_rSocket"));
-	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 }

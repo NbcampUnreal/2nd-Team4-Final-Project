@@ -38,10 +38,7 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
-	//HUD 보여주기
-	ShowGameHUD();
-    SetInputMode(FInputModeGameOnly());
-    SetShowMouseCursor(false);
+	
 }
 
 void ADW_PlayerController::SetupInputComponent()
@@ -55,6 +52,24 @@ void ADW_PlayerController::SetupInputComponent()
 			EnhancedInputComponent->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
 		}
 	}
+}
+
+void ADW_PlayerController::OnPossess(APawn* InPawn)
+{
+    Super::OnPossess(InPawn);
+
+    // Pawn이 유효하고, 캐릭터일 경우만 HUD 생성
+    if (InPawn && HUDWidgetClass && !HUDWidgetInstance)
+    {
+        HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+        if (HUDWidgetInstance)
+        {
+            HUDWidgetInstance->AddToViewport();
+        }
+    }
+    // 입력 모드 설정 및 마우스 숨김
+    SetInputMode(FInputModeGameOnly());
+    SetShowMouseCursor(false);
 }
 
 void ADW_PlayerController::ToggleESCMenu()
@@ -118,15 +133,4 @@ void ADW_PlayerController::ToggleESCMenu()
     }
 }
 
-void ADW_PlayerController::ShowGameHUD()
-{
-	if (HUDWidgetClass && !HUDWidgetInstance)
-	{
-		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-		if (HUDWidgetInstance)
-		{
-			HUDWidgetInstance->AddToViewport();
-		}
-	}
-}
 
