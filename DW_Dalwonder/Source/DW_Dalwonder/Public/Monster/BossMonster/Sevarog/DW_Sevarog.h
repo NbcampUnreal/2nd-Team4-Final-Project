@@ -56,6 +56,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraComponent* Phase2TrailNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* DeadNS;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -83,5 +86,5 @@ public:
 	
 	virtual void Dead() override;
 
-	void ActivateRagdoll() const;
+	void ActivateRagdoll();
 };
