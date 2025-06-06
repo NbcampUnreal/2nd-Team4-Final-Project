@@ -9,6 +9,9 @@
 #include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
+class UWidgetComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class DW_DALWONDER_API AWorldItemActor : public AActor
 {
@@ -30,11 +33,15 @@ public:
 
     // 상호작용 문구 위젯 
     UPROPERTY(VisibleAnywhere)
-    class UWidgetComponent* InteractionWidget;
+    UWidgetComponent* InteractionWidget;
 
+    // 루트 컴포넌트
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* SceneRoot;
+    
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)
-    class UStaticMeshComponent* MeshComponent;
+    UStaticMeshComponent* MeshComponent;
 
     // 감지 범위 
     UPROPERTY(VisibleAnywhere)

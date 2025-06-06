@@ -58,9 +58,6 @@ public:
 	UInputAction* ESCAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* SprintAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* GuardAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")

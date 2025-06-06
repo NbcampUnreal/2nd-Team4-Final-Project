@@ -201,15 +201,6 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Attack);
 			}
 
-			if (PlayerController->SprintAction)
-			{
-				EnhancedInputComponent->BindAction(
-					PlayerController->SprintAction,
-					ETriggerEvent::Started,
-					this,
-					&ADW_CharacterBase::Sprint);
-			}
-
 			if (PlayerController->GuardAction)
 			{
 				EnhancedInputComponent->BindAction(
@@ -304,8 +295,6 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
 {
 	if (!bCanControl) return;
-
-	if (bIsLockOn) return;
 	
 	if (Value.Get<bool>())
 	{
@@ -336,29 +325,24 @@ void ADW_CharacterBase::Attack(const FInputActionValue& Value)
 	}
 }
 
-void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
+void ADW_CharacterBase::Sprint(bool bOnSprint)
 {
-	if (Value.Get<bool>())
+	if (bOnSprint)
 	{
-		if (bIsSprinting == false)
-		{
-			bIsSprinting = true;
-			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
-			GetCharacterStatComponent()->ConsumeStamina(1.f);
-		}
-		else
-		{
-			bIsSprinting = false;
-			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
-			GetCharacterStatComponent()->StopConsumeStamina();
-		}
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		GetCharacterStatComponent()->ConsumeStamina(1.f);
+	}
+	else
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
+		GetCharacterStatComponent()->StopConsumeStamina();
 	}
 }
 
 void ADW_CharacterBase::Dodge(const FInputActionValue& Value)
 {
-	if (!bIsLockOn) return;
-	
 	if (CurrentCombatState == ECharacterCombatState::Dodging)
 	{
 		return;
