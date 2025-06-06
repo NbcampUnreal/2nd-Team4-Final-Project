@@ -14,6 +14,13 @@ class DW_DALWONDER_API ADW_Elephant : public ADW_NormalMonsterBase
 public:
 	// Sets default values for this character's properties
 	ADW_Elephant();
+
+	virtual void BeginPlay() override;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	void ElephantAttack();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* AttackNS;
 };
