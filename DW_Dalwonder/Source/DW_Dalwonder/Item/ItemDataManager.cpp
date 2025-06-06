@@ -60,16 +60,6 @@ void UItemDataManager::InitializeDataManager(class UDataTable* InItemBaseDataTab
 		UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ItemBaseDataTable is not assigned!"));
 #endif
 	}
-    if (!EquipmentSubDataTable) { 
-#if WITH_EDITOR
-		UE_LOG(LogTemp, Error, TEXT("ItemDataManager: EquipmentSubDataTable is not assigned!"));
-#endif
-	}
-    if (!ConsumableSubDataTable) { 
-#if WITH_EDITOR
-		UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ConsumableSubDataTable is not assigned!")); 
-#endif 
-	}
 
 #if WITH_EDITOR
     UE_LOG(LogTemp, Log, TEXT("ItemDataManager Initialized successfully."));
@@ -93,45 +83,5 @@ FItemData UItemDataManager::GetItemBaseData(FName ItemID, bool& bOutSuccess)
     UE_LOG(LogTemp, Warning, TEXT("Failed to find ItemBaseData for ItemID: %s"), *ItemID.ToString());
 #endif
 	return FItemData();
-}
-
-FGenericItemSubData UItemDataManager::GetItemSubDataByType(FName ItemID, EItemType ItemType, bool& bOutSuccess)
-{
-    FGenericItemSubData ResultData;
-    bOutSuccess = false;
-
-    switch (ItemType)
-    {
-    case EItemType::Equipment:
-    {
-        bool bSubSuccess;
-        ResultData.EquipmentData = GetSubData<FEquipmentSubData>(ItemID, bSubSuccess);
-        if (bSubSuccess) { bOutSuccess = true; }
-		else {
-#if WITH_EDITOR
-			UE_LOG(LogTemp, Warning, TEXT("Failed to find EquipmentSubData for ItemID: %s"), *ItemID.ToString());
-#endif
-		}
-		break;
-    }
-    case EItemType::Consumable:
-    {
-        bool bSubSuccess;
-        ResultData.ConsumableData = GetSubData<FConsumableSubData>(ItemID, bSubSuccess);
-        if (bSubSuccess) { bOutSuccess = true; }
-        else { 
-#if WITH_EDITOR
-			UE_LOG(LogTemp, Warning, TEXT("Failed to find ConsumableSubData for ItemID: %s"), *ItemID.ToString()); }
-#endif
-		break;
-    }
-    default:
-#if WITH_EDITOR
-        UE_LOG(LogTemp, Error, TEXT("Unsupported ItemType for SubData retrieval: %s for ItemID: %s"), *UEnum::GetValueAsString(ItemType), *ItemID.ToString());
-#endif
-		break;
-    }
-
-    return ResultData;
 }
 
