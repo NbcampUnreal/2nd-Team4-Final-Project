@@ -40,6 +40,14 @@ public:
     // 열려있는 UI 반환
     int32 GetPopupWidgetCount() const { return PopupWidgets.Num(); }
 
+	UFUNCTION(BlueprintCallable)
+	void ShowResultUI(const FString& MessageText);
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ResultWidgetClass;
+
+	UUserWidget* ActiveResultWidget;
+
 protected:
     UPROPERTY()
     UUserWidget* CurrentWidget;

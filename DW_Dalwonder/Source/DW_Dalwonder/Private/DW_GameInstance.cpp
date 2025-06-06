@@ -16,6 +16,31 @@ void UDW_GameInstance::Shutdown()
     Super::Shutdown();
 }
 
+void UDW_GameInstance::LoadLevelWithLoadingScreen()
+{
+    if (LevelToLoad.IsNone())
+    {
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("LevelToLoad is not set!"));
+#endif
+        return;
+    }
+
+    ShowLoadingScreen();
+
+    GetWorld()->GetTimerManager().SetTimerForNextTick(
+        FTimerDelegate::CreateLambda([this]()
+            {
+                UGameplayStatics::OpenLevel(this, LevelToLoad);
+            }));
+}
+
+void UDW_GameInstance::LoadLevelWithLoadingScreenByName(FName LevelName)
+{
+    LevelToLoad = LevelName;
+    LoadLevelWithLoadingScreen();
+}
+
 void UDW_GameInstance::SaveGameData()
 {
     UDW_SaveGame* SaveGameInstance = Cast<UDW_SaveGame>(

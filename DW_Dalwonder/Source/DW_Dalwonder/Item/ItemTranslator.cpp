@@ -7,15 +7,19 @@ int32 UItemTranslator::MakeItemCode( EItemGrade ItemGrade, int32 EnchantLevel, i
     int32 GradeVal = static_cast<int32>(ItemGrade);
     if (GradeVal < 0 || GradeVal > 9) // ItemGrade를 0~9 (한 자리)로 제한
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("MakeItemCode: Invalid ItemGrade (%d) for single digit. Capping."), GradeVal);
-        GradeVal = FMath::Clamp(GradeVal, 0, 9); // 강제로 한 자리 숫자로 클램핑
+#endif
+		GradeVal = FMath::Clamp(GradeVal, 0, 9); // 강제로 한 자리 숫자로 클램핑
     }
 
     if (EnchantLevel < 0) EnchantLevel = 0;
     if (EnchantLevel > 99) // 강화 수치를 2자리로 제한 (00~99)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("MakeItemCode: EnchantLevel (%d) is too high, capping at 99."), EnchantLevel);
-        EnchantLevel = 99;
+#endif
+		EnchantLevel = 99;
     }
     if (ItemRowID < 0) ItemRowID = 0;
 
@@ -29,8 +33,10 @@ int32 UItemTranslator::MakeItemCode( EItemGrade ItemGrade, int32 EnchantLevel, i
 
     if (ItemCodeStr.Len() > 10) // int32의 최대 길이(약 10자리)를 초과할 경우
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("MakeItemCode: Generated ItemCode string \"%s\" is too long for int32. Returning 0."), *ItemCodeStr);
-        return 0; // 또는 -1 등 오류 값 반환
+#endif
+		return 0; // 또는 -1 등 오류 값 반환
     }
 
     // FString을 int32로 변환
@@ -49,8 +55,10 @@ void UItemTranslator::ParseItemCode(int32 ItemCode, EItemGrade& OutItemGrade, in
     // 최소 4자리 필요: 1(등급) + 2(강화) + 1(RowID 최소)
     if (ItemCodeStr.Len() < 4)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("ParseItemCode: ItemCode (%d) is too short to parse (min 5 digits expected)."), ItemCode);
-        return;
+#endif
+		return;
     }
 
     
@@ -62,8 +70,10 @@ void UItemTranslator::ParseItemCode(int32 ItemCode, EItemGrade& OutItemGrade, in
     const UEnum* ItemGradeEnum = FindObject<UEnum>(ANY_PACKAGE, TEXT("EItemGrade"), true);
     if (!ItemGradeEnum || !ItemGradeEnum->IsValidEnumValue(ParsedItemGradeInt))
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("ParseItemCode: Invalid ItemGrade (%d) parsed from code %d. Defaulting to EItemGrade::Normal."), ParsedItemGradeInt, ItemCode);
-        OutItemGrade = EItemGrade::Normal; // 유효하지 않으면 기본값으로 설정
+#endif
+		OutItemGrade = EItemGrade::Normal; // 유효하지 않으면 기본값으로 설정
     }
 
     // 2. 강화 수치 (두 번째부터 두 자리)
@@ -71,8 +81,10 @@ void UItemTranslator::ParseItemCode(int32 ItemCode, EItemGrade& OutItemGrade, in
     // 강화 수치 유효성 검사 (0-99 범위)
     if (OutEnchantLevel < 0 || OutEnchantLevel > 99)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("ParseItemCode: Invalid EnchantLevel (%d) parsed from code %d. Defaulting to 0."), OutEnchantLevel, ItemCode);
-        OutEnchantLevel = 0;
+#endif
+		OutEnchantLevel = 0;
     }
 
     // 3. 아이템 Row ID (네 번째부터 마지막 자리)

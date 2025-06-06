@@ -24,6 +24,8 @@ private:
 
 	virtual void Tick(float DeltaTime) override;
 
+	void SpawnTickEnd();
+
 public:
 	virtual void PlayAlertMontage() override;
 
@@ -121,4 +123,6 @@ public:
 
 	bool bHaveEnergeSheild = false;
 	bool bHaveEnhanced = false;
+
+	bool bSpawnTick = true;
 };

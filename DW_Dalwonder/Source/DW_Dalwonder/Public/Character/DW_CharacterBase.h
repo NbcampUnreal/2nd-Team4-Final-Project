@@ -198,10 +198,6 @@ public:
 	// 가드 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* GuardMontage;
-
-	// 구르기(회피) 애니메이션
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* DodgeMontage;
 	
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -368,27 +364,13 @@ private:
 
 #pragma region UI
 public:
+
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
-
-	//ESC메뉴
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* ESCMenuWidgetInstance;
-
-	bool bIsESCMenuOpen = false;
-
-public:
 
 	//HUD업데이트함수
 	UFUNCTION()
 	void UpdateHUD();
-
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
 
 protected:
 

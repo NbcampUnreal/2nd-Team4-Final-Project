@@ -116,7 +116,7 @@ public:
 	float DebugDrawTime = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
-	bool bDrawDebugTrace = true;
+	bool bDrawDebugTrace = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack|Debug")
 	bool bUseOtherHand = false;
@@ -237,6 +237,7 @@ public:
 	virtual void CastPlayerCharacter() override;
 
 	// 플레이어 캐릭터 참조 반환
+	UFUNCTION(BlueprintCallable)
 	virtual class ADW_CharacterBase* GetPlayerCharacter() override;
 
 	// 플레이어와의 거리 반환
