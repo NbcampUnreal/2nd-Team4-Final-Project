@@ -18,11 +18,3 @@ void ADW_Warrior::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	
 }
-
-void ADW_Warrior::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-
-	
-	//Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-}
