@@ -73,7 +73,7 @@ void UDW_LevelLoadSubsystem::TickStreamingProgress()
         // 100% 강제 갱신
         if (LoadingWidget)
         {
-            LoadingWidget->OnProgressUpdated(1.0f);
+            LoadingWidget->OnProgressUpdated(0.99f);
         }
 
         // 타이머 종료 및 스트리밍 핸들 제거
@@ -165,6 +165,8 @@ void UDW_LevelLoadSubsystem::SpawnPlayerCharacterAtPlayerStart()
     // 로딩 위젯 제거
     if (LoadingWidget)
     {
+        // 없어지기전에 100%
+        LoadingWidget->OnProgressUpdated(1.0f);
         LoadingWidget->RemoveFromParent();
         LoadingWidget = nullptr;
     }
