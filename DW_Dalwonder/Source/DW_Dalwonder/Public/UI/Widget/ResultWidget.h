@@ -26,6 +26,9 @@ public:
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* ResultTextAnimation;
 
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* ResultTextShadowAnimation;
+
 	FTimerHandle LetterSpacingTimerHandle;
 
 	int32 InitialSpacing = 0;

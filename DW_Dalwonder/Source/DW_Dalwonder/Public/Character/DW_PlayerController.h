@@ -9,7 +9,7 @@ class UInputAction;
 class UUserWidget;
 class UInventoryMenuWidgetBase;
 class ADW_CharacterBase;
-
+class UBossHUDWidget;
 
 UCLASS()
 class DW_DALWONDER_API ADW_PlayerController : public APlayerController
@@ -35,6 +35,8 @@ public:
 	// ESC 메뉴 이벤트
 	UFUNCTION()
 	void ToggleESCMenu();
+	void ShowBossHUD(const FString& BossName, float MaxHP);
+	void HideBossHUD();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -76,10 +78,13 @@ public:
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
 
+	UPROPERTY()
+	UBossHUDWidget* CachedBossHUD;
 protected:
 	// HUD
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
+	
 
 #pragma endregion
 };

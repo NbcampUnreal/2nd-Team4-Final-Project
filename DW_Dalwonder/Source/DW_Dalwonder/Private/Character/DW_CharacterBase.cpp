@@ -392,12 +392,11 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ddd;;"));
-		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
-		{
-			GM->ShowResultUI("지네 데몬 처치!");
-		};
-		// ToggleLockOn();
+		// if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		// {
+		// 	GM->ShowResultUI("ENEMY FELLED!");
+		// };
+		ToggleLockOn();
 	}
 }
 

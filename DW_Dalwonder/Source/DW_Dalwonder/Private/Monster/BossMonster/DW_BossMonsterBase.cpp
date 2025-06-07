@@ -1,5 +1,6 @@
 ﻿#include "Monster/BossMonster/DW_BossMonsterBase.h"
-
+#include "Character/DW_PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "AIController.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -25,6 +26,13 @@ void ADW_BossMonsterBase::BeginPlay()
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
 		{
 			BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+		}
+	}
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+		{
+			DWPC->ShowBossHUD(TEXT("Sevarog"), MonsterMaxHP);
 		}
 	}
 }
