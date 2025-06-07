@@ -6,6 +6,8 @@ ADW_SwordBase::ADW_SwordBase()
 	SwordTraceStartPoint->SetupAttachment(MeshComponent);
 	SwordTraceEndPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEndPoint"));
 	SwordTraceEndPoint->SetupAttachment(MeshComponent);
+
+	Tags.Add("Weapon");
 }
 
 void ADW_SwordBase::OnConstruction(const FTransform& Transform)

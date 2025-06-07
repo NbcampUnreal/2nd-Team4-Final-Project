@@ -99,8 +99,8 @@ void ADW_Sevarog::AirAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
@@ -205,8 +205,8 @@ void ADW_Sevarog::SurroundedAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
@@ -262,9 +262,8 @@ void ADW_Sevarog::BoxAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
-
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
