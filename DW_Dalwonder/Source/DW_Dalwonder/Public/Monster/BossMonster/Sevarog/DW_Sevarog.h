@@ -87,4 +87,6 @@ public:
 	virtual void Dead() override;
 
 	void ActivateRagdoll();
+
+	void DestroySelf();
 };

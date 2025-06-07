@@ -433,5 +433,11 @@ void ADW_Sevarog::ActivateRagdoll()
 		);
 	}
 
+	FTimerHandle DestroyHandle;
+	GetWorldTimerManager().SetTimer(DestroyHandle, this, &ADW_Sevarog::DestroySelf, 0.1f, false);
+}
+
+void ADW_Sevarog::DestroySelf()
+{
 	Destroy();
 }
