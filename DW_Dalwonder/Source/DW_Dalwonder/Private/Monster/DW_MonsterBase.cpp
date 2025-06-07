@@ -59,9 +59,6 @@ void ADW_MonsterBase::BeginPlay()
 	}
 
 	CastPlayerCharacter();
-
-	SetStats(DataTable);
-	
 }
 
 void ADW_MonsterBase::Tick(float DeltaTime)

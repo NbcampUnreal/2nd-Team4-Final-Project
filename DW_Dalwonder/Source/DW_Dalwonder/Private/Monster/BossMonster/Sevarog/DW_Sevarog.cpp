@@ -370,18 +370,36 @@ void ADW_Sevarog::Dead()
 	}
 }
 
-void ADW_Sevarog::ActivateRagdoll() const
+void ADW_Sevarog::ActivateRagdoll()
 {
-	USkeletalMeshComponent* MeshComp = GetMesh();
-	if (!MeshComp) return;
-	
-	MeshComp->SetCollisionProfileName(FName("Ragdoll"));
-	
-	MeshComp->bPauseAnims = true;
-	MeshComp->bNoSkeletonUpdate = false;
-	
-	MeshComp->SetAllBodiesSimulatePhysics(true);
-	MeshComp->SetSimulatePhysics(true);
-	MeshComp->WakeAllRigidBodies();
-	MeshComp->bBlendPhysics = true;
+	// USkeletalMeshComponent* MeshComp = GetMesh();
+	// if (!MeshComp) return;
+	//
+	// MeshComp->SetCollisionProfileName(FName("Ragdoll"));
+	//
+	// MeshComp->bPauseAnims = true;
+	// MeshComp->bNoSkeletonUpdate = false;
+	//
+	// MeshComp->SetAllBodiesSimulatePhysics(true);
+	// MeshComp->SetSimulatePhysics(true);
+	// MeshComp->WakeAllRigidBodies();
+	// MeshComp->bBlendPhysics = true;
+
+	const FVector SpawnLocation = GetActorLocation();
+	const FRotator SpawnRotation = GetActorRotation();
+
+	if (DeadNS)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			DeadNS,
+			SpawnLocation,
+			SpawnRotation,
+			FVector(1.f),
+			true,
+			true
+		);
+	}
+
+	Destroy();
 }

@@ -27,7 +27,6 @@ float ADW_Cow::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageE
 	{
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
 		{
-			//상태이상은 2가지이므로 하나가 True 된다면 나머지가 false 되어야 함
 			BBC->SetValueAsBool(FName("bHasDamaged"), true);
 		}
 	}
