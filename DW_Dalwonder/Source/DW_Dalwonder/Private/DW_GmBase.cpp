@@ -143,15 +143,23 @@ void ADW_GmBase::ShowResultUI(const FString& MessageText)
 {
     if (!ResultWidgetClass) return;
 
+    UE_LOG(LogTemp, Warning, TEXT("dd"));
+
     UResultWidget* ResultUI = Cast<UResultWidget>(ShowPopupUI(ResultWidgetClass));
     if (ResultUI)
     {
-        // ResultUI->SetLetterSpacing(80);
         ResultUI->SetResultText(MessageText);
+        ResultUI->StartLetterSpacingAnimation();
+
+        if (ResultUI->ResultTextAnimation)
+        {
+            ResultUI->PlayAnimation(ResultUI->ResultTextAnimation);
+        }
 
         FTimerHandle Handle;
-        GetWorld()->GetTimerManager().SetTimer(Handle, [=, this]() {
-        this->ClosePopupUI(ResultUI);
+        GetWorld()->GetTimerManager().SetTimer(Handle, [=, this]()
+        {
+            this->ClosePopupUI(ResultUI);
         }, 5.f, false);
     }
 }
