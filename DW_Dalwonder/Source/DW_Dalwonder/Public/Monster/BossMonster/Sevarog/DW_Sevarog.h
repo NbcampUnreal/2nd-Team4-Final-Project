@@ -80,7 +80,7 @@ public:
 
 	void SetInvincible(const bool NewState);
 
-	void DoPhase2() const;
+	void DoPhase2();
 	
 	virtual void SetCurrentPhase(int32 NewPhase) override;
 	
