@@ -755,7 +755,9 @@ void ADW_CharacterBase::Interact()
 		Params
 	);
 
+#if WITH_EDITOR
 	DrawDebugSphere(GetWorld(), End, realSphereRadius, 12, FColor::Green, false, 1.0f);
+#endif
 
 	if (bHit && Hit.bBlockingHit)
 	{

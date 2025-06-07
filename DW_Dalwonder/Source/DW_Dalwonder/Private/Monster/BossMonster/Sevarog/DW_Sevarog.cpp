@@ -104,7 +104,9 @@ void ADW_Sevarog::AirAttack()
 		}
 	}
 
+#if WITH_EDITOR
 	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+#endif
 
 	if (!AirAttackNS) return;
 
@@ -210,7 +212,9 @@ void ADW_Sevarog::SurroundedAttack()
 
 	if (bDrawDebugTrace)
 	{
+#if WITH_EDITOR
 		DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+#endif
 	}
 
 	if (!SurroundedAttackNS) return;
@@ -291,7 +295,7 @@ void ADW_Sevarog::SetInvincible(const bool NewInvincible)
 	bIsInvincible = NewInvincible;
 }
 
-void ADW_Sevarog::DoPhase2() const
+void ADW_Sevarog::DoPhase2()
 {
 	if (AAIController* Ctr = Cast<AAIController>(GetController()))
 	{
@@ -312,6 +316,34 @@ void ADW_Sevarog::DoPhase2() const
 	}
 
 	Phase2TrailNS->Activate();
+
+	//위치 변경
+	const UBlackboardComponent* BlackboardComp = nullptr;
+
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		BlackboardComp = AIController->GetBlackboardComponent();
+	}
+
+	if (BlackboardComp)
+	{
+		const FVector TargetLocation = BlackboardComp->GetValueAsVector("SpawnLocation");
+		
+		SetActorLocation(TargetLocation);
+	}
+
+	//잡몹 제거
+	TArray<AActor*> AllSevarogActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_Sevarog::StaticClass(), AllSevarogActors);
+
+	for (AActor* Actor : AllSevarogActors)
+	{
+		ADW_Sevarog* Sevarog = Cast<ADW_Sevarog>(Actor);
+		if (IsValid(Sevarog) && !Sevarog->bIsRealBoss)
+		{
+			Sevarog->Destroy();
+		}
+	}
 }
 
 

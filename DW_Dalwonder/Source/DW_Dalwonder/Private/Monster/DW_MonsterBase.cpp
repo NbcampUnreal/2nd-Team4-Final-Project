@@ -324,8 +324,10 @@ void ADW_MonsterBase::PerformAttackTrace()
 
 		if (bDrawDebugTrace)
 		{
+#if WITH_EDITOR
 			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
 			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+#endif
 		}
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
