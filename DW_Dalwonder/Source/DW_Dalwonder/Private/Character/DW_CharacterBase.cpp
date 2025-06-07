@@ -128,6 +128,7 @@ void ADW_CharacterBase::BeginPlay()
 		// 캡처
 		SceneCaptureComponent->CaptureScene();
 	}
+
 }
 
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -391,7 +392,12 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		ToggleLockOn();
+		UE_LOG(LogTemp, Warning, TEXT("ddd;;"));
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ShowResultUI("지네 데몬 처치!");
+		};
+		// ToggleLockOn();
 	}
 }
 

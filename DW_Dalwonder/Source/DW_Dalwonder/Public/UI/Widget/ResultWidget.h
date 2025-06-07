@@ -15,12 +15,23 @@ class DW_DALWONDER_API UResultWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	// UFUNCTION(BlueprintCallable)
-	// void SetLetterSpacing(int32 Spacing);
+	UFUNCTION(BlueprintCallable)
+	void SetLetterSpacing(int32 Spacing);
+	void StartLetterSpacingAnimation();
+	void UpdateLetterSpacing();
 
 	UFUNCTION(BlueprintCallable)
 	void SetResultText(const FString& InText);
 
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* ResultTextAnimation;
+
+	FTimerHandle LetterSpacingTimerHandle;
+
+	int32 InitialSpacing = 0;
+	int32 TargetSpacing = 80;
+	float LerpDuration = 0.5f;
+	float ElapsedTime = 0.f;
 protected:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* ResultTextShadow;
