@@ -48,10 +48,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* BoxAttackNS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	bool bIsRealBoss = false;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraComponent* TrailNS;
 
