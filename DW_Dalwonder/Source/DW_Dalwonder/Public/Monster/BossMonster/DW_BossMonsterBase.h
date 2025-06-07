@@ -31,10 +31,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BGM")
 	UAudioComponent* BGMSoundComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsRealBoss = false;
+
 	virtual int32 GetCurrentPhase() override;
 
 	// C++, Blackboard의 CurrentPhase 값을 바꿈
 	virtual void SetCurrentPhase(int32 NewPhase) override;
 	
-	virtual void SetBGM(USoundBase* NewBGM) override;	
+	virtual void SetBGM(USoundBase* NewBGM) override;
+
+	virtual void Dead() override;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

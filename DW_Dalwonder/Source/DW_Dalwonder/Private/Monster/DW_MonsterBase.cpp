@@ -397,20 +397,6 @@ void ADW_MonsterBase::Dead()
 			}
 		}
 	}
-	if (IsA(ADW_BossMonsterBase::StaticClass()))
-	{
-		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
-		{
-			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
-			{
-				DWPC->HideBossHUD();
-			}
-		}
-		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
-		{
-			GM->ShowResultUI("ENEMY FELLED!");
-		};
-	}
 }
 
 
@@ -419,20 +405,6 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-	if (IsA(ADW_BossMonsterBase::StaticClass())) // 보스일 때만 실행
-	{
-		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
-		{
-			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
-			{
-				if (IsValid(DWPC->CachedBossHUD))
-				{
-					DWPC->CachedBossHUD->UpdateHP(MonsterHP);
-				}
-			}
-		}
-	}
 
 	if (HitNS)
 	{
