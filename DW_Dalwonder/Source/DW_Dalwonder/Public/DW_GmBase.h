@@ -27,8 +27,10 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     UUserWidget* ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UUserWidget* ShowPopupUI_M(TSubclassOf<UUserWidget> WidgetClass);
 
-    UFUNCTION(BlueprintCallable, Category = "UI")
+	UFUNCTION(BlueprintCallable, Category = "UI")
     void ClosePopupUI(UUserWidget* WidgetToRemove);
 
     UFUNCTION(BlueprintCallable, Category = "UI")

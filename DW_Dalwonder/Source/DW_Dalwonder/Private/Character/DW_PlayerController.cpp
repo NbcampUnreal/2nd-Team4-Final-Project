@@ -140,7 +140,7 @@ void ADW_PlayerController::ShowBossHUD(const FString& BossName, float MaxHP)
 
 	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
-		UUserWidget* RawWidget = GM->ShowPopupUI(GM->BossHUDWidgetClass);
+		UUserWidget* RawWidget = GM->ShowPopupUI_M(GM->BossHUDWidgetClass);
 		UBossHUDWidget* BossHUD = Cast<UBossHUDWidget>(RawWidget);
 
 		if (BossHUD)
