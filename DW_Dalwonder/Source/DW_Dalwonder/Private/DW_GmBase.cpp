@@ -10,7 +10,7 @@ ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
     // 자동 Pawn 스폰 막기
-    bStartPlayersAsSpectators = true;
+    // bStartPlayersAsSpectators = true;
 }
 
 void ADW_GmBase::BeginPlay()
@@ -142,8 +142,6 @@ UUserWidget* ADW_GmBase::CloseLastPopupUI_AndReturn()
 void ADW_GmBase::ShowResultUI(const FString& MessageText)
 {
     if (!ResultWidgetClass) return;
-
-    UE_LOG(LogTemp, Warning, TEXT("dd"));
 
     UResultWidget* ResultUI = Cast<UResultWidget>(ShowPopupUI(ResultWidgetClass));
     if (ResultUI)
