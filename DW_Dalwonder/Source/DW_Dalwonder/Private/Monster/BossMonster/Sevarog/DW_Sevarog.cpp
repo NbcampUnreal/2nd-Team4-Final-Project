@@ -12,6 +12,7 @@
 #include "LevelSequenceActor.h"
 #include "Kismet/GameplayStatics.h"
 //#include "Monster/MonsterStatsTable.h"
+
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
 
@@ -40,9 +41,10 @@ ADW_Sevarog::ADW_Sevarog()
 float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
+	if (bIsDead) return 0;
+	
 	if (CurrentPhase == 1 && MonsterHP * 2 <= MonsterMaxHP)
 	{
 		SetCurrentPhase(2);

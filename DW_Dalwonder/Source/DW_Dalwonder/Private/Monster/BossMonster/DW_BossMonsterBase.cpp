@@ -1,5 +1,6 @@
 ﻿#include "Monster/BossMonster/DW_BossMonsterBase.h"
 
+#include <Monster/Dissolve/DissolveComponent.h>
 #include <UI/Widget/BossHUDWidget.h>
 
 #include "Character/DW_PlayerController.h"
@@ -19,6 +20,8 @@ ADW_BossMonsterBase::ADW_BossMonsterBase(): CurrentPhase(1), BGM(nullptr)
 	BGMSoundComponent->bAutoActivate = false;
 
 	Tags.Add(TEXT("BossMonster"));
+	
+	DissolveComp = CreateDefaultSubobject<UDissolveComponent>(TEXT("DissolveComponent"));
 }
 
 void ADW_BossMonsterBase::BeginPlay()
@@ -70,6 +73,8 @@ void ADW_BossMonsterBase::Dead()
 
 	if (bIsRealBoss)
 	{
+		SetActorTickEnabled(false);
+		
 		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 		{
 			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
@@ -102,6 +107,10 @@ float ADW_BossMonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent co
 			}
 		}
 	}
-
 	return 0;
+}
+
+void ADW_BossMonsterBase::DoDissolve(float DissolveTime)
+{
+	DissolveComp->DissolveStart(0, 0, DissolveTime);
 }
