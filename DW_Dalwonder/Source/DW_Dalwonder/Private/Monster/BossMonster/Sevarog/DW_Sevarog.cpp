@@ -104,7 +104,9 @@ void ADW_Sevarog::AirAttack()
 		}
 	}
 
+#if WITH_EDITOR
 	DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+#endif
 
 	if (!AirAttackNS) return;
 
@@ -210,7 +212,9 @@ void ADW_Sevarog::SurroundedAttack()
 
 	if (bDrawDebugTrace)
 	{
+#if WITH_EDITOR
 		DrawDebugSphere(GetWorld(), HammerLocation, Radius, 16, FColor::Red, false, 1.0f);
+#endif
 	}
 
 	if (!SurroundedAttackNS) return;
