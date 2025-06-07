@@ -28,5 +28,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* BossHPBar;
 
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* BossHPText;
+
 	float MaxBossHP = 0.f;
 };
