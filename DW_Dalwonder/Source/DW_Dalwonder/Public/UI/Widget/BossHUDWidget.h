@@ -32,4 +32,13 @@ protected:
 	class UTextBlock* BossHPText;
 
 	float MaxBossHP = 0.f;
+	float CurrentDisplayHP = 0.f;
+
+	FTimerHandle HPBarLerpTimerHandle;
+	float LerpStartHP = 0.f;
+	float LerpTargetHP = 0.f;
+	float LerpElapsedTime = 0.f;
+	float LerpDuration = 0.3f;
+
+	void LerpHPBar();
 };

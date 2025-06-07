@@ -15,6 +15,7 @@
 #include "Character/DW_PlayerController.h"
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "UI/Widget/BossHUDWidget.h"
+#include "DW_GmBase.h"
 #include "Engine/DamageEvents.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
@@ -405,6 +406,10 @@ void ADW_MonsterBase::Dead()
 				DWPC->HideBossHUD();
 			}
 		}
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ShowResultUI("ENEMY FELLED!");
+		};
 	}
 }
 

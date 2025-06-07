@@ -392,10 +392,6 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		// if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
-		// {
-		// 	GM->ShowResultUI("ENEMY FELLED!");
-		// };
 		ToggleLockOn();
 	}
 }
@@ -721,6 +717,10 @@ void ADW_CharacterBase::Dead()
 	{
 		AnimInstance->Montage_Play(DeadMontage);
 	}
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->ShowResultUI("YOU DIED");
+	};
 }
 
 void ADW_CharacterBase::SetIdleState()
