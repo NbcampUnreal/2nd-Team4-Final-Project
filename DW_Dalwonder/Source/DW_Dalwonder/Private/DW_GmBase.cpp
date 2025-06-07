@@ -10,7 +10,7 @@ ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
     // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = true;
+    bStartPlayersAsSpectators = true;
 }
 
 void ADW_GmBase::BeginPlay()
@@ -152,12 +152,13 @@ void ADW_GmBase::ShowResultUI(const FString& MessageText)
         if (ResultUI->ResultTextAnimation)
         {
             ResultUI->PlayAnimation(ResultUI->ResultTextAnimation);
+            ResultUI->PlayAnimation(ResultUI->ResultTextShadowAnimation);
         }
 
         FTimerHandle Handle;
         GetWorld()->GetTimerManager().SetTimer(Handle, [=, this]()
         {
             this->ClosePopupUI(ResultUI);
-        }, 5.f, false);
+        }, 3.f, false);
     }
 }

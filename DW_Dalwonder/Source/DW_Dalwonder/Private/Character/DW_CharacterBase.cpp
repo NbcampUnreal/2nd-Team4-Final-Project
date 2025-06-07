@@ -394,7 +394,7 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 	{
 		// if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 		// {
-		// 	GM->ShowResultUI("rkskekfk akqktk!");
+		// 	GM->ShowResultUI("ENEMY FELLED!");
 		// };
 		ToggleLockOn();
 	}
