@@ -2,9 +2,8 @@
 
 ADW_Warrior::ADW_Warrior()
 {
-	FName WeaponSocketName = FName(TEXT("weapon_rSocket"));
-	
 	Weapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("Weapon"));
+	FName WeaponSocketName = FName(TEXT("weapon_rSocket"));
 	Weapon->SetupAttachment(GetMesh(), WeaponSocketName);
 }
 
@@ -17,6 +16,5 @@ void ADW_Warrior::BeginPlay()
 void ADW_Warrior::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 	
 }

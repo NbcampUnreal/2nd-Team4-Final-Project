@@ -1,16 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WeaponBase.h"
+#include "Item/WorldItemActor.h"
 #include "DW_SwordBase.generated.h"
 
 UCLASS()
-class DW_DALWONDER_API ADW_SwordBase : public AWeaponBase
+class DW_DALWONDER_API ADW_SwordBase : public AWorldItemActor
 {
 	GENERATED_BODY()
 
 public:
 	ADW_SwordBase();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sword")

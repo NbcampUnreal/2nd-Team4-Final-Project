@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
+#include "Item/WorldItemActor.h"
 #include "WeaponBase.generated.h"
 
 USTRUCT(BlueprintType)
@@ -51,13 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
 	UDataTable* EnhancementDataTable;
 
-	// 무기의 루트 컴포넌트
+	// 무기 아이템 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
-	USceneComponent* GrabPoint;
-
-	// 무기의 스태틱 메시 (외형)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
-	UStaticMeshComponent* StaticMesh;
+	AWorldItemActor* ItemActor;
 	
 	// 무기 여부 확인용
 	UFUNCTION(BlueprintCallable, Category = "Weapon Base")

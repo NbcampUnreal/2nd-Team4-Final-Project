@@ -2,30 +2,30 @@
 
 
 #include "UI/Widget/LoadingWidget.h"
-#include "Components/ProgressBar.h"
-#include "Components/TextBlock.h"
-
-void ULoadingWidget::SetLoadingProgress(float InPercent)
-{
-    if (LoadingProgressBar)
-    {
-        LoadingProgressBar->SetPercent(InPercent);
-    }
-
-    if (LoadingText)
-    {
-        FString ProgressText = FString::Printf(TEXT("%.0f%%"), InPercent * 100);
-        LoadingText->SetText(FText::FromString(ProgressText));
-    }
-}
 
 void ULoadingWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    // 초기화 시 로딩바 0%
-    if (LoadingProgressBar)
-    {
-        LoadingProgressBar->SetPercent(0.f);
-    }
+    // 5초마다 랜덤 팁 업데이트
+    GetWorld()->GetTimerManager().SetTimer(
+        TipTimerHandle,
+        this,
+        &ULoadingWidget::UpdateRandomTip,
+        5.0f,
+        true
+    );
+
+    // 처음 한 번 바로 실행
+    UpdateRandomTip();
+}
+
+void ULoadingWidget::UpdateRandomTip()
+{
+    if (TipList.Num() == 0) return;
+
+    int32 Index = FMath::RandRange(0, TipList.Num() - 1);
+    FString SelectedTip = TipList[Index];
+
+    OnTipUpdated(SelectedTip);
 }

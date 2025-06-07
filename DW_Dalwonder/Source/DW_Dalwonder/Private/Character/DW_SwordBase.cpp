@@ -2,10 +2,16 @@
 
 ADW_SwordBase::ADW_SwordBase()
 {
-	StaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	
 	SwordTraceStartPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceStartPoint"));
-	SwordTraceStartPoint->SetupAttachment(StaticMesh);
+	SwordTraceStartPoint->SetupAttachment(MeshComponent);
 	SwordTraceEndPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEndPoint"));
-	SwordTraceEndPoint->SetupAttachment(StaticMesh);
+	SwordTraceEndPoint->SetupAttachment(MeshComponent);
+}
+
+void ADW_SwordBase::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	SwordTraceStartPoint->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	SwordTraceEndPoint->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }

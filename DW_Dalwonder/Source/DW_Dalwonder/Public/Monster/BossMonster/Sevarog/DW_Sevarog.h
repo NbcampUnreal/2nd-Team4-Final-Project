@@ -58,6 +58,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraComponent* Phase2TrailNS;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* DeadNS;
 
 	/////////////////////시퀀스 관련 컴포넌트
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Sequence")
@@ -66,9 +68,6 @@ public:
 	ULevelSequencePlayer* SequencePlayer;
 	UPROPERTY()
 	ALevelSequenceActor* LevelSequenceActor;
-	
-	
-
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -90,13 +89,16 @@ public:
 
 	void SetInvincible(const bool NewState);
 
-	void DoPhase2() const;
+	void DoPhase2();
 	
 	virtual void SetCurrentPhase(int32 NewPhase) override;
 	
 	virtual void Dead() override;
 
-	void ActivateRagdoll() const;
+	void ActivateRagdoll();
+
+	void DestroySelf();
+	
 
 	UFUNCTION()
 	void TriggerPhase2Sequence();

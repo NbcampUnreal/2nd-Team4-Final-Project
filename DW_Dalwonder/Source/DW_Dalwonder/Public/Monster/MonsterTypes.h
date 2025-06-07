@@ -36,4 +36,8 @@ enum class EMonsterName : uint8
 	Orc0 UMETA(DisplayName = "Orc0"),
 	Orc1 UMETA(DisplayName = "Orc1"),
 	Orc2 UMETA(DisplayName = "Orc2"),
+	Cow UMETA(DisplayName = "Cow"),
+	Pig UMETA(DisplayName = "Pig"),
+	Chick UMETA(DisplayName = "Chick"),
+	Elephant UMETA(DisplayName = "Elephant"),
 };

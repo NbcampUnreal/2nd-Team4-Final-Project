@@ -73,12 +73,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				AActor* HitActor = Hit.GetActor();
 				if (!IsValid(HitActor)) continue;
 
-				if (IgnoredActors.Contains(HitActor))
-				{
-					continue;
-				}
-				
-				if (FMath::Abs(Hit.ImpactNormal.Z) >= 0.8f)
+				if (FMath::Abs(Hit.ImpactNormal.Z) >= 0.65f)
 				{
 					continue;
 				}
@@ -138,6 +133,5 @@ void UDW_SwordAttackNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
 	if (IsValid(PlayerCharacter))
 	{
 		PlayerCharacter->AttackingActors.Empty();
-		IgnoredActors.Empty();
 	}
 }
