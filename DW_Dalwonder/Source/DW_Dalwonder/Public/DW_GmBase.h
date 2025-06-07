@@ -46,7 +46,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> ResultWidgetClass;
 
-	UUserWidget* ActiveResultWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> BossHUDWidgetClass;
+	
+	// UUserWidget* ActiveResultWidget;
 
 protected:
     UPROPERTY()

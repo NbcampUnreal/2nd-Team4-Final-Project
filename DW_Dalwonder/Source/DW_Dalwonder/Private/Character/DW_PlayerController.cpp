@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "UI/Widget/BossHUDWidget.h"
 #include "Character/DW_CharacterBase.h"
 
 ADW_PlayerController::ADW_PlayerController()
@@ -133,4 +134,32 @@ void ADW_PlayerController::ToggleESCMenu()
     }
 }
 
+void ADW_PlayerController::ShowBossHUD(const FString& BossName, float MaxHP)
+{
+	if (CachedBossHUD) return;
 
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		UUserWidget* RawWidget = GM->ShowPopupUI(GM->BossHUDWidgetClass);
+		UBossHUDWidget* BossHUD = Cast<UBossHUDWidget>(RawWidget);
+
+		if (BossHUD)
+		{
+			BossHUD->InitBossHUD(BossName, MaxHP);
+			CachedBossHUD = BossHUD;
+		}
+	}
+}
+
+void ADW_PlayerController::HideBossHUD()
+{
+	if (CachedBossHUD)
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ClosePopupUI(CachedBossHUD);
+		}
+
+		CachedBossHUD = nullptr;
+	}
+}

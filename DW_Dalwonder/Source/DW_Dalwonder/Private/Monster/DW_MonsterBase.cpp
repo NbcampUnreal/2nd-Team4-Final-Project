@@ -1,5 +1,4 @@
 ﻿#include "Monster/DW_MonsterBase.h"
-
 #include "AIController.h"
 #include "NavigationInvokerComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -13,6 +12,9 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Character/DW_PlayerController.h"
+#include "Monster/BossMonster/DW_BossMonsterBase.h"
+#include "UI/Widget/BossHUDWidget.h"
 #include "Engine/DamageEvents.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
@@ -390,8 +392,16 @@ void ADW_MonsterBase::Dead()
 					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
-
-			
+		}
+	}
+	if (IsA(ADW_BossMonsterBase::StaticClass()))
+	{
+		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+			{
+				DWPC->HideBossHUD();
+			}
 		}
 	}
 }
@@ -402,6 +412,20 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (IsA(ADW_BossMonsterBase::StaticClass())) // 보스일 때만 실행
+	{
+		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+			{
+				if (IsValid(DWPC->CachedBossHUD))
+				{
+					DWPC->CachedBossHUD->UpdateHP(MonsterHP);
+				}
+			}
+		}
+	}
 
 	if (HitNS)
 	{
