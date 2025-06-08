@@ -35,12 +35,15 @@ void UDissolveComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 		float Alpha = FMath::Clamp(CurrentTime / DissolveDuration, 0.f, 1.f);
 		float Value = FMath::Lerp(StartValue, EndValue, Alpha);
+		float FadeOutValue = FMath::Lerp(0.f, 0.5f, Alpha);
 
 		for (auto& Elem : DynamicMaterialMap)
 		{
 			if (Elem.Value)
 			{
 				Elem.Value->SetScalarParameterValue(DissolveAmountParameterName, Value);
+				Elem.Value->SetScalarParameterValue(FadeOutParameterName, FadeOutValue);
+
 			}
 		}
 
@@ -95,7 +98,7 @@ void UDissolveComponent::DissolveStart(int32 NiagaraIndex, int32 TextureIndex, f
 				DynMat->SetScalarParameterValue(DissolveEdgeParameterName, MaterialEdgeThickness);
 				DynMat->SetScalarParameterValue(EmissiveIntansityParameterName, MaterialEmissiveIntansity);
 				DynMat->SetVectorParameterValue(ColorParameterName, MaterialEdgeColor);
-				
+				DynMat->SetScalarParameterValue(FadeOutParameterName, StartValue);
 			}
 
 			DynamicMaterialMap.Add(i, DynMat);

@@ -70,6 +70,8 @@ private:
 	FName ColorParameterName = "EdgeColor";
 	FName DissolveEdgeParameterName = "EdgeThickness";
 	FName EmissiveIntansityParameterName = "EdgeEmissive";
+	// Paragon 에셋 전용
+	FName FadeOutParameterName = "FadeOut";
 
 	TMap<int32, UMaterialInstanceDynamic*> DynamicMaterialMap;
 
