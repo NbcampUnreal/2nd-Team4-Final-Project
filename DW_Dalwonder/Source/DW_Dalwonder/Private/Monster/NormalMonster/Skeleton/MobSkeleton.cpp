@@ -95,6 +95,11 @@ void AMobSkeleton::PlayAlertMontage()
 
 float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (MonsterHP <= 0)
+	{
+		return 0;
+	}
+
 	if (bHaveEnergeSheild)
 	{
 		DamageAmount /= 2;

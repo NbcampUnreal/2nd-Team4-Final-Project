@@ -32,7 +32,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class UBoxComponent* SpawnCollision;
 
-	// 골렘을 소환하기 위한 기준 체력 백분률입니다. 해당 백분률 이하로 낮아지면 자동으로 우드골렘을 스폰합니다.
+	// 골렘을 소환하기 위한 기준 체력 백분률입니다. 데미지를 입었을 때 해당 체력 이하라면 자동으로 우드골렘을 스폰합니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
 	float SpawnHP;
 

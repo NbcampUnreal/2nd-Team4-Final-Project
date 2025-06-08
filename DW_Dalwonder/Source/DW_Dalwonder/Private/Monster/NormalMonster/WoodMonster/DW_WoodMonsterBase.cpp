@@ -16,6 +16,7 @@ ADW_WoodMonsterBase::ADW_WoodMonsterBase()
 	SpawnCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnBox"));
 	SpawnCollision->SetupAttachment(GetCapsuleComponent());
 	SpawnCollision->SetCollisionProfileName("NoCollision");
+	SpawnCollision->InitBoxExtent(FVector(500.f, 500.f, 10.f));
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
@@ -27,6 +28,11 @@ ADW_WoodMonsterBase::ADW_WoodMonsterBase()
 float ADW_WoodMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (MonsterHP <= 0)
+	{
+		return 0;
+	}
 
 	if (MonsterHP <= SpawnHP && !bIsSpawned)
 	{
