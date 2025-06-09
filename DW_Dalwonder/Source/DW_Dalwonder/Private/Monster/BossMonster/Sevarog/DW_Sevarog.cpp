@@ -428,7 +428,7 @@ void ADW_Sevarog::ActivateRagdoll()
 	// MeshComp->WakeAllRigidBodies();
 	// MeshComp->bBlendPhysics = true;
 
-	const FVector SpawnLocation = GetActorLocation();
+	/*const FVector SpawnLocation = GetActorLocation();
 	const FRotator SpawnRotation = GetActorRotation();
 
 	if (DeadNS)
@@ -442,7 +442,7 @@ void ADW_Sevarog::ActivateRagdoll()
 			true,
 			true
 		);
-	}
+	}*/
 
 	FTimerHandle DestroyHandle;
 	GetWorldTimerManager().SetTimer(DestroyHandle, this, &ADW_Sevarog::DestroySelf, 0.1f, false);
