@@ -1,10 +1,11 @@
 #include "Character/CharacterArmorComponent.h"
-#include "WeaponBase.h"
+#include "Item/ItemBase.h"
+#include "Character/DW_CharacterBase.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
 	: Helmet(nullptr), Armor(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
 {
-	
+	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
 
 void UCharacterArmorComponent::BeginPlay()
@@ -13,67 +14,56 @@ void UCharacterArmorComponent::BeginPlay()
 
 }
 
-bool UCharacterArmorComponent::EquipArmor(AWeaponBase* Item)
+bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
-	// 임시 함수
-	ECharacterArmor WeaponType = ECharacterArmor::Glove;// = Item->WeaponID.ToString()[0]
+	ECharacterArmor ItemType = StaticCast<ECharacterArmor>(Item->ItemCode);
 
-	if (WeaponType == ECharacterArmor::Helmet)
+	if (ItemType == ECharacterArmor::Helmet)
 	{
-		AdjustArmorMesh(Item, ECharacterArmor::Helmet);
+		Helmet = Item;
+		AdjustArmorMesh(ECharacterArmor::Helmet);
 		return true;
 	}
-	if (WeaponType == ECharacterArmor::Armor)
+	if (ItemType == ECharacterArmor::Armor)
 	{
-		AdjustArmorMesh(Item, ECharacterArmor::Armor);
+		Armor = Item;
+		AdjustArmorMesh(ECharacterArmor::Armor);
 		return true;
 	}
-	if (WeaponType == ECharacterArmor::Glove)
+	if (ItemType == ECharacterArmor::Glove)
 	{
-		AdjustArmorMesh(Item, ECharacterArmor::Glove);
+		Glove = Item;
+		AdjustArmorMesh(ECharacterArmor::Glove);
 		return true;
 	}
-	if (WeaponType == ECharacterArmor::Boots)
+	if (ItemType == ECharacterArmor::Boots)
 	{
-		AdjustArmorMesh(Item, ECharacterArmor::Boots);
+		Boots = Item;
+		AdjustArmorMesh(ECharacterArmor::Boots);
 		return true;
 	}
-	if (WeaponType == ECharacterArmor::Weapon)
+	if (ItemType == ECharacterArmor::Weapon)
 	{
-		AdjustArmorMesh(Item, ECharacterArmor::Weapon);
+		Weapon = Item;
+		AdjustArmorMesh(ECharacterArmor::Weapon);
 		return true;
 	}
 
 	return false;
 }
 
-void UCharacterArmorComponent::AdjustArmorMesh(AWeaponBase* Item, ECharacterArmor ArmorType)
+void UCharacterArmorComponent::AdjustArmorMesh(ECharacterArmor ArmorType)
 {
 	if (ArmorType == ECharacterArmor::Weapon)
 	{
-		USceneComponent* SceneRoot = Item->ItemActor->SceneRoot;
-		UStaticMeshComponent* StaticMesh = Item->ItemActor->MeshComponent;
-		Weapon = SceneRoot;
-		StaticMesh->SetupAttachment(Weapon);
+		AActor* WeaponActor = nullptr;// = Item->GetWeaponActor();
+		if (IsValid(Character))
+		{
+			//Character->SetWeapon(WeaponActor);
+		}
 	}
 	else
 	{
-		USkeletalMeshComponent* SkeletalMesh = Cast<USkeletalMeshComponent>(Item->ItemActor->MeshComponent);
-		if (ArmorType == ECharacterArmor::Helmet)
-		{
-			Helmet = SkeletalMesh->GetSkeletalMeshAsset();
-		}
-		else if (ArmorType == ECharacterArmor::Armor)
-		{
-			Armor = SkeletalMesh->GetSkeletalMeshAsset();
-		}
-		else if (ArmorType == ECharacterArmor::Glove)
-		{
-			Glove = SkeletalMesh->GetSkeletalMeshAsset();
-		}
-		else if (ArmorType == ECharacterArmor::Boots)
-		{
-			Boots = SkeletalMesh->GetSkeletalMeshAsset();
-		}
+		//USkeletalMesh* SkeletalMesh = Armor->GetArmorSkeletalMesh();
 	}
 }

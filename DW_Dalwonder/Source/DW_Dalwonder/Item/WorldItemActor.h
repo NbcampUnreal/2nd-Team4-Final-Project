@@ -34,10 +34,6 @@ public:
     // 상호작용 문구 위젯 
     UPROPERTY(VisibleAnywhere)
     UWidgetComponent* InteractionWidget;
-
-    // 루트 컴포넌트
-    UPROPERTY(VisibleAnywhere)
-    USceneComponent* SceneRoot;
     
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)

@@ -14,7 +14,8 @@ enum class ECharacterArmor : uint8
 	Weapon	UMETA(DisplayName = "Weapon")
 };
 
-class AWeaponBase;
+class UItemBase;
+class ADW_CharacterBase;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DW_DALWONDER_API UCharacterArmorComponent : public UActorComponent
@@ -27,23 +28,26 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	bool EquipArmor(AWeaponBase* Item);
+	bool EquipArmor(UItemBase* Item);
 
-	void AdjustArmorMesh(AWeaponBase* Item, ECharacterArmor ArmorType);
+	void AdjustArmorMesh(ECharacterArmor ArmorType);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	USkeletalMesh* Helmet;
+	UItemBase* Helmet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	USkeletalMesh* Armor;
+	UItemBase* Armor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	USkeletalMesh* Glove;
+	UItemBase* Glove;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	USkeletalMesh* Boots;
+	UItemBase* Boots;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	USceneComponent* Weapon;
+	UItemBase* Weapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
+	ADW_CharacterBase* Character;
 };
