@@ -603,6 +603,24 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 		}
 	}
 
+	// 데미지 입을경우 UI 전부 닫기
+	if (ActualDamage > 0.f)
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			while (GM->GetPopupWidgetCount() > 0)
+			{
+				GM->CloseLastPopupUI();
+			}
+		}
+
+		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+		{
+			PC->ESCMenuWidgetInstance = nullptr;
+			PC->bIsESCMenuOpen = false;
+		}
+	}
+
 	// 체력 감소 로직
 	StatComponent->SetHealth(StatComponent->GetHealth() - ActualDamage);
 
