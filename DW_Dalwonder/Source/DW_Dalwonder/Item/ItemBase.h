@@ -18,7 +18,7 @@ public:
     UItemBase();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    int32 ItemCode;
+    int32 ItemCode = 0;
 
     // 아이템 코드 파싱 후 저장될 실제 아이템 정보
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")

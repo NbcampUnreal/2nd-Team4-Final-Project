@@ -50,6 +50,8 @@ void AWorldItemActor::BeginPlay()
             ItemBase->ItemBaseData.ItemID,
             bSuccess);
 
+		ItemBase->LoadItemFromCode(ItemBase->ItemCode);
+
 #if WITH_EDITOR
         if(!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("월드아이템 비상!!!!")));
 #endif
