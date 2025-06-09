@@ -24,6 +24,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	int32 CurrentPhase;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	class UDissolveComponent* DissolveComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BGM")
 	USoundBase* BGM;
@@ -44,4 +47,6 @@ public:
 	virtual void Dead() override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void DoDissolve(float DissolveTime) override;
 };
