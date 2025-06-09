@@ -67,7 +67,7 @@ public:
 
 	void Dead() override;
 
-	void DeadLogic();
+	virtual void DeadLogic();
 	void DestroyDissolve();
 	void DestroyMonster();
 

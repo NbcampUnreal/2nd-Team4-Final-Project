@@ -428,6 +428,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 		}
 	}
 
+	if (bIsDead) return 0;
+
 	if (bIsInvincible)
 	{
 		DamageAmount = 0;
@@ -438,6 +440,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	if (MonsterHP <= 0)
 	{
 		Dead();
+
+		return 0;
 	}
 
 	if (DamageAmount >= MonsterMaxHP * 0.3f)
