@@ -8,9 +8,11 @@
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
-#include "GameFramework/CharacterMovementComponent.h"
+//#include "GameFramework/CharacterMovementComponent.h"
+#include "LevelSequenceActor.h"
 #include "Kismet/GameplayStatics.h"
-#include "Monster/MonsterStatsTable.h"
+//#include "Monster/MonsterStatsTable.h"
+
 #include "Engine/EngineTypes.h"
 #include "Engine/OverlapResult.h"
 
@@ -39,9 +41,10 @@ ADW_Sevarog::ADW_Sevarog()
 float ADW_Sevarog::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
+	if (bIsDead) return 0;
+	
 	if (CurrentPhase == 1 && MonsterHP * 2 <= MonsterMaxHP)
 	{
 		SetCurrentPhase(2);
@@ -98,8 +101,8 @@ void ADW_Sevarog::AirAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
@@ -204,8 +207,8 @@ void ADW_Sevarog::SurroundedAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
@@ -261,9 +264,8 @@ void ADW_Sevarog::BoxAttack()
 			if (HitActor && HitActor->ActorHasTag("Player"))
 			{
 				ADW_CharacterBase* HitCharacter = Cast<ADW_CharacterBase>(HitActor);
-				HitCharacter->KnockBackCharacter();
 				UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, GetController(), this, UDamageType::StaticClass());
-
+				HitCharacter->KnockBackCharacter();
 			}
 		}
 	}
@@ -297,6 +299,7 @@ void ADW_Sevarog::SetInvincible(const bool NewInvincible)
 
 void ADW_Sevarog::DoPhase2()
 {
+	
 	if (AAIController* Ctr = Cast<AAIController>(GetController()))
 	{
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
@@ -315,7 +318,7 @@ void ADW_Sevarog::DoPhase2()
 		}
 	}
 
-	Phase2TrailNS->Activate();
+	
 
 	//위치 변경
 	const UBlackboardComponent* BlackboardComp = nullptr;
@@ -344,6 +347,10 @@ void ADW_Sevarog::DoPhase2()
 			Sevarog->Destroy();
 		}
 	}
+	if (Phase2TrailNS)
+	{
+		Phase2TrailNS->Activate();
+	}
 }
 
 
@@ -351,10 +358,14 @@ void ADW_Sevarog::SetCurrentPhase(int32 NewPhase)
 {
 	Super::SetCurrentPhase(NewPhase);
 
-	switch (CurrentPhase)
+	switch (NewPhase)
 	{
-		case 2: DoPhase2();
+		case 2:
+		TriggerPhase2Sequence();
+		DoPhase2();
 		break;
+		
+		
 		
 		default: 
 #if WITH_EDITOR
@@ -417,7 +428,7 @@ void ADW_Sevarog::ActivateRagdoll()
 	// MeshComp->WakeAllRigidBodies();
 	// MeshComp->bBlendPhysics = true;
 
-	const FVector SpawnLocation = GetActorLocation();
+	/*const FVector SpawnLocation = GetActorLocation();
 	const FRotator SpawnRotation = GetActorRotation();
 
 	if (DeadNS)
@@ -431,7 +442,7 @@ void ADW_Sevarog::ActivateRagdoll()
 			true,
 			true
 		);
-	}
+	}*/
 
 	FTimerHandle DestroyHandle;
 	GetWorldTimerManager().SetTimer(DestroyHandle, this, &ADW_Sevarog::DestroySelf, 0.1f, false);
@@ -441,3 +452,28 @@ void ADW_Sevarog::DestroySelf()
 {
 	Destroy();
 }
+
+void ADW_Sevarog::TriggerPhase2Sequence()
+{
+	
+	
+	FMovieSceneSequencePlaybackSettings Settings;
+	Settings.bAutoPlay = false;
+
+	SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
+		GetWorld(),
+		Sequenceindex,
+		Settings,
+		LevelSequenceActor
+	);
+
+	if (!SequencePlayer)
+	{
+		return;
+	}
+	
+	SequencePlayer->Play();
+}
+
+
+

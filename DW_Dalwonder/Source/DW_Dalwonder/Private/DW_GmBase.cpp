@@ -85,10 +85,7 @@ UUserWidget* ADW_GmBase::ShowPopupUI_M(TSubclassOf<UUserWidget> WidgetClass)
     {
         PC->bShowMouseCursor = false;
 
-        FInputModeGameAndUI InputMode;
-        InputMode.SetWidgetToFocus(NewWidget->TakeWidget());
-        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-        InputMode.SetHideCursorDuringCapture(false);
+        FInputModeGameOnly InputMode;
         PC->SetInputMode(InputMode);
     }
 

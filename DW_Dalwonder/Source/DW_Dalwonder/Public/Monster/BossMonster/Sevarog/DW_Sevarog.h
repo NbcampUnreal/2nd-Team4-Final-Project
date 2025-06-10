@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequencePlayer.h"
 #include "NiagaraSystem.h"
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
@@ -47,7 +48,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* BoxAttackNS;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraComponent* TrailNS;
 
@@ -56,6 +57,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* DeadNS;
+
+	/////////////////////시퀀스 관련 컴포넌트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Sequence")
+	ULevelSequence* Sequenceindex;
+	UPROPERTY()
+	ULevelSequencePlayer* SequencePlayer;
+	UPROPERTY()
+	ALevelSequenceActor* LevelSequenceActor;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -86,4 +95,8 @@ public:
 	void ActivateRagdoll();
 
 	void DestroySelf();
+	
+
+	UFUNCTION()
+	void TriggerPhase2Sequence();
 };

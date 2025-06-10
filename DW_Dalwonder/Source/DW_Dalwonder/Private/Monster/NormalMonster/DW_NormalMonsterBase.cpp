@@ -250,6 +250,12 @@ void ADW_NormalMonsterBase::DestroyMonster()
 
 float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (MonsterHP <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(HitDelayTimer);
+		return 0;
+	}
+
 	if (GetWorld())
 	{
 		UAISense_Damage::ReportDamageEvent(
@@ -281,11 +287,6 @@ float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& 
 
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-	if (MonsterHP <= 0)
-	{
-		GetWorldTimerManager().ClearTimer(HitDelayTimer);
-	}
 
 	return 0.0f;
 }
