@@ -102,8 +102,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimInstance* AnimInstance;
 
-	bool bIsSprinting = false;
-
 	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
 	
 // 전투 관련 시스템 (Combat)
@@ -225,6 +223,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentComboIndex = 0;
+	
+	// 달리기 중 여부
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsSprinting = false;
 
 	// 가드 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
