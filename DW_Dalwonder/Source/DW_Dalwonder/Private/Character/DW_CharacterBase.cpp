@@ -14,7 +14,6 @@
 #include "Item/WorldItemActor.h"
 #include "NiagaraFunctionLibrary.h"
 #include "UI/Widget/HUDWidget.h"
-#include "DW_DamageType.h"
 #include "DW_GmBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
@@ -578,35 +577,12 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	}
 	else
 	{
-		UDW_DamageType* DW_DamageType = Cast<UDW_DamageType>(DamageEvent.DamageTypeClass);
-
-		// 대미지 타입을 커스텀 대미지 타입으로 받았을 때
-		if (IsValid(DW_DamageType))
+		float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
+		if (DamageAmount > KnockBackAmount)
 		{
-			// 넉백이 적용되는 공격을 맞았을 때
-			if (DW_DamageType->bCanKnockdown == true)
-			{
-				KnockBackCharacter();
-			}
-			// 넉백이 적용되지 않는 공격을 맞았을 때
-			else
-			{
-				float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
-				if (DamageAmount > KnockBackAmount)
-				{
-					KnockBackCharacter();
-				}
-				else
-				{
-					SetCombatState(ECharacterCombatState::Hit);
-					int32 HitSectionNum = HitMontage->GetNumSections();
-					int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-					PlayMontage(HitMontage, RandomHitSectionNum);
-				}
-			}
+			KnockBackCharacter();
 		}
-		// 일반 대미지 타입으로 받았을 때
-		else
+		else if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
 		{
 			SetCombatState(ECharacterCombatState::Hit);
 			int32 HitSectionNum = HitMontage->GetNumSections();
@@ -706,7 +682,10 @@ void ADW_CharacterBase::EndGuard()
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
-	SetCombatState(ECharacterCombatState::Hit);
+	if (CurrentCombatState != ECharacterCombatState::Dead)
+	{
+		SetCombatState(ECharacterCombatState::Hit);
+	}
 	
 	const float KnockBackMultiplier = 50.f;
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
@@ -714,7 +693,14 @@ void ADW_CharacterBase::KnockBackCharacter()
 	LaunchCharacter(KnockBackDirection, true, true);
 	if (IsValid(KnockBackMontage) == true)
 	{
-		PlayMontage(KnockBackMontage);
+		if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
+		{
+			PlayMontage(KnockBackMontage, 1);
+		}
+		else
+		{
+			PlayMontage(KnockBackMontage);
+		}
 	}
 }
 
@@ -735,19 +721,20 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 
 void ADW_CharacterBase::Dead()
 {
-	SetCombatState(ECharacterCombatState::Dead);
 	DisableInput(Cast<APlayerController>(GetController()));
+	StatComponent->StopConsumeHealth();
+	StatComponent->StopConsumeStamina();
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		AnimInstance->Montage_Play(DeadMontage);
-		FName SectionName = DeadMontage->GetSectionName(1);
-		AnimInstance->Montage_JumpToSection(SectionName);
+		PlayMontage(DeadMontage, 1);
 	}
 	else
 	{
-		AnimInstance->Montage_Play(DeadMontage);
+		PlayMontage(DeadMontage);
 	}
+
+	SetCombatState(ECharacterCombatState::Dead);
 	
 	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
