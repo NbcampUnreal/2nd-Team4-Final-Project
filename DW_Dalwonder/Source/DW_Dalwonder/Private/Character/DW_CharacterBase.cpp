@@ -30,8 +30,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->TargetArmLength = 300.f;
-	SpringArm->SocketOffset = FVector(0.f, 50.f, 50.f);
+	SpringArm->TargetArmLength = 200.f;
+	SpringArm->SocketOffset = FVector(0.f, 70.f, 60.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -338,7 +338,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	}
 
 	bIsSprinting = bOnSprint;
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
 	
 	if (bIsSprinting)
 	{
