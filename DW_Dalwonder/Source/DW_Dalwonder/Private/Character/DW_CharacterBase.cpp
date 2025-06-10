@@ -328,17 +328,29 @@ void ADW_CharacterBase::Attack(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Sprint(bool bOnSprint)
 {
-	if (bOnSprint)
+	if (bOnSprint == true && StatComponent->GetStamina() <= 5.f)
 	{
-		bIsSprinting = true;
+		return;
+	}
+	
+	if (bIsSprinting == bOnSprint)
+	{
+		return;
+	}
+
+	bIsSprinting = bOnSprint;
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
+	
+	if (bIsSprinting)
+	{
 		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
-		GetCharacterStatComponent()->ConsumeStamina(1.f);
+		GetCharacterStatComponent()->ConsumeStamina(2.f);
 	}
 	else
 	{
-		bIsSprinting = false;
 		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
 		GetCharacterStatComponent()->StopConsumeStamina();
+		GetCharacterStatComponent()->GenStamina();
 	}
 }
 
@@ -661,6 +673,7 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 	else
 	{
 		GetCharacterStatComponent()->StopConsumeStamina();
+		GetCharacterStatComponent()->GenStamina();
 		AnimInstance->Montage_Stop(0.25f, GuardMontage);
 	}
 }
@@ -735,6 +748,7 @@ void ADW_CharacterBase::Dead()
 	{
 		AnimInstance->Montage_Play(DeadMontage);
 	}
+	
 	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
 		GM->ShowResultUI("YOU DIED");
