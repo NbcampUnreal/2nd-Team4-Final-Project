@@ -9,6 +9,9 @@
 #include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
+class UWidgetComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class DW_DALWONDER_API AWorldItemActor : public AActor
 {
@@ -21,7 +24,7 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    UPROPERTY(EditAnywhere, Instanced, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Item")
 	UItemBase* ItemBase;
 
     // 아이템 데이터테이블 
@@ -29,12 +32,12 @@ public:
     UDataTable* ItemDataTable;
 
     // 상호작용 문구 위젯 
-    UPROPERTY(VisibleAnywhere)
-    class UWidgetComponent* InteractionWidget;
-
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
+    UWidgetComponent* InteractionWidget;
+    
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)
-    class UStaticMeshComponent* MeshComponent;
+    UStaticMeshComponent* MeshComponent;
 
     // 감지 범위 
     UPROPERTY(VisibleAnywhere)

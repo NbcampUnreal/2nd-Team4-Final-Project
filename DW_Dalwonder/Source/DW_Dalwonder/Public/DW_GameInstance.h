@@ -4,8 +4,9 @@
 #include "Engine/GameInstance.h"
 #include "DW_GameInstance.generated.h"
 
-class ULoadingScreenWidget;
 class UDW_SaveGame;
+class UDW_LevelLoadSubsystem;
+class ULoadingWidget;
 
 /** GameInstance: OpenLevel + MoviePlayer �ε� ��ũ�� ���� */
 UCLASS()
@@ -16,12 +17,6 @@ class DW_DALWONDER_API UDW_GameInstance : public UGameInstance
 public:
     virtual void Init() override;
     virtual void Shutdown() override;
-
-    UFUNCTION(BlueprintCallable)
-    void LoadLevelWithLoadingScreen();
-
-    UFUNCTION(BlueprintCallable)
-    void LoadLevelWithLoadingScreenByName(FName LevelName);
 
     // 게임 저장
     UFUNCTION(BlueprintCallable, Category = "SaveSystem")
@@ -34,40 +29,34 @@ public:
     UFUNCTION(BlueprintCallable)
     void ApplyLoadedData();  // 로드 완료
 
-public:
+    /** 로딩 스크린을 보여주며 맵을 로드 */
+    UFUNCTION(BlueprintCallable)
+    void LoadLevelWithLoadingScreen(FName LevelName);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
-    FName LevelToLoad;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loading")
-    TSubclassOf<ULoadingScreenWidget> LoadingWidgetClass;
-
-protected:
-    
+    /** 로딩맵에서 호출할 함수 */
+    UFUNCTION(BlueprintCallable)
+    void StartLevelStreaming();
 
 public:
-
-    FTimerHandle DelayTest;
-
-    void StartDelayTest();
-
-    void EndDelayTest();
-
-private:
-    void ShowLoadingScreen();
-    void HideLoadingScreen();
-
-    void BeginLoadingScreen(const FString& MapName);
-    void EndLoadingScreen(UWorld* LoadedWorld);
-
-private:
-
-    UPROPERTY()
-    class ULoadingScreenWidget* LoadingWidget;
 
     UPROPERTY()
     UDW_SaveGame* LoadedSaveGame = nullptr;
 
+    UPROPERTY(BlueprintReadWrite, Category = "Game Start Type")
+    bool bIsNewGame = true; // 기본값은 새 게임
+
+    UPROPERTY()
+    UDW_LevelLoadSubsystem* LevelLoadSubsystem;
+
+    UPROPERTY()
+    FName PendingLevelName;
+
+private:
+
     FString DefaultSaveSlot = TEXT("DW_SaveData");
+
+    // 로딩 위젯 클래스 (블루프린트에서 세팅)
+    UPROPERTY(EditAnywhere, Category = "Loading")
+    TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 
 };

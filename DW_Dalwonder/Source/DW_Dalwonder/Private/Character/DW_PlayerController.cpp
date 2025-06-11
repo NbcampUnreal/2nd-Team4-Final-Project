@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "UI/Widget/BossHUDWidget.h"
 #include "Character/DW_CharacterBase.h"
 
 ADW_PlayerController::ADW_PlayerController()
@@ -16,7 +17,6 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
-	SprintAction(nullptr),
 	GuardAction(nullptr),
 	DodgeAction(nullptr),
 	LockonAction(nullptr),
@@ -39,10 +39,7 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
-	//HUD 보여주기
-	ShowGameHUD();
-    SetInputMode(FInputModeGameOnly());
-    SetShowMouseCursor(false);
+	
 }
 
 void ADW_PlayerController::SetupInputComponent()
@@ -58,12 +55,32 @@ void ADW_PlayerController::SetupInputComponent()
 	}
 }
 
+void ADW_PlayerController::OnPossess(APawn* InPawn)
+{
+    Super::OnPossess(InPawn);
+
+    // Pawn이 유효하고, 캐릭터일 경우만 HUD 생성
+    if (InPawn && HUDWidgetClass && !HUDWidgetInstance)
+    {
+        HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+        if (HUDWidgetInstance)
+        {
+            HUDWidgetInstance->AddToViewport();
+        }
+    }
+    // 입력 모드 설정 및 마우스 숨김
+    SetInputMode(FInputModeGameOnly());
+    SetShowMouseCursor(false);
+}
+
 void ADW_PlayerController::ToggleESCMenu()
 {
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (!GameMode || !ESCMenuWidgetClass)
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("GameMode or ESCMenuWidgetClass is invalid!"));
+#endif
         return;
     }
 
@@ -117,15 +134,32 @@ void ADW_PlayerController::ToggleESCMenu()
     }
 }
 
-void ADW_PlayerController::ShowGameHUD()
+void ADW_PlayerController::ShowBossHUD(const FString& BossName, float MaxHP)
 {
-	if (HUDWidgetClass && !HUDWidgetInstance)
+	if (CachedBossHUD) return;
+
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
-		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-		if (HUDWidgetInstance)
+		UUserWidget* RawWidget = GM->ShowPopupUI_M(GM->BossHUDWidgetClass);
+		UBossHUDWidget* BossHUD = Cast<UBossHUDWidget>(RawWidget);
+
+		if (BossHUD)
 		{
-			HUDWidgetInstance->AddToViewport();
+			BossHUD->InitBossHUD(BossName, MaxHP);
+			CachedBossHUD = BossHUD;
 		}
 	}
 }
 
+void ADW_PlayerController::HideBossHUD()
+{
+	if (CachedBossHUD)
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ClosePopupUI(CachedBossHUD);
+		}
+
+		CachedBossHUD = nullptr;
+	}
+}

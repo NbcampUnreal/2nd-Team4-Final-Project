@@ -9,7 +9,7 @@ class UInputAction;
 class UUserWidget;
 class UInventoryMenuWidgetBase;
 class ADW_CharacterBase;
-
+class UBossHUDWidget;
 
 UCLASS()
 class DW_DALWONDER_API ADW_PlayerController : public APlayerController
@@ -21,6 +21,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	//ESC메뉴
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
@@ -34,6 +35,8 @@ public:
 	// ESC 메뉴 이벤트
 	UFUNCTION()
 	void ToggleESCMenu();
+	void ShowBossHUD(const FString& BossName, float MaxHP);
+	void HideBossHUD();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -58,9 +61,6 @@ public:
 	UInputAction* ESCAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* SprintAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* GuardAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -78,14 +78,13 @@ public:
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
 
+	UPROPERTY()
+	UBossHUDWidget* CachedBossHUD;
 protected:
 	// HUD
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 	TSubclassOf<UUserWidget> HUDWidgetClass;
+	
 
-public:
-	// HUD 표시
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void ShowGameHUD();
 #pragma endregion
 };

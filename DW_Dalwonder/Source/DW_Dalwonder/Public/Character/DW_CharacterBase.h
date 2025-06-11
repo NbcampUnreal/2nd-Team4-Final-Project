@@ -66,8 +66,8 @@ public:
 	UFUNCTION()
 	void Attack(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void Sprint(const FInputActionValue& Value);
+	UFUNCTION(blueprintCallable)
+	void Sprint(bool bOnSprint);
 
 	UFUNCTION()
 	void Dodge(const FInputActionValue& Value);
@@ -102,15 +102,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimInstance* AnimInstance;
 
-	bool bIsSprinting = false;
-
 	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
-
-	// -----------------------------
-	// ⚔️ 전투 관련 시스템 (Combat)
-	// -----------------------------
+	
+// 전투 관련 시스템 (Combat)
 #pragma region Combat
-
 public:
 	// 전투 상태 변경 (예: Idle → Attacking)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -228,6 +223,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentComboIndex = 0;
+	
+	// 달리기 중 여부
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsSprinting = false;
 
 	// 가드 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -308,10 +307,10 @@ public:
 	UUserWidget* LockOnWidgetInstance;
 
 #pragma endregion
-
+	
+// Interaction 관련 시스템
 #pragma region Interact
 public:
-	
 	FTimerHandle ItemScanTimerHandle;
 	
 	UFUNCTION()
@@ -364,14 +363,10 @@ private:
 	AActor* CurrentInteractTarget = nullptr;
 
 #pragma endregion
-
-	// -----------------------------
-	// UI 관련 시스템
-	// -----------------------------
-
+	
+// UI 관련 시스템
 #pragma region UI
 public:
-
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 

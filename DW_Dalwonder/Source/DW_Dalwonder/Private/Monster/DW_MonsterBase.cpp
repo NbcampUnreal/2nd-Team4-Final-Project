@@ -1,5 +1,4 @@
 ﻿#include "Monster/DW_MonsterBase.h"
-
 #include "AIController.h"
 #include "NavigationInvokerComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -13,6 +12,10 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Character/DW_PlayerController.h"
+#include "Monster/BossMonster/DW_BossMonsterBase.h"
+#include "UI/Widget/BossHUDWidget.h"
+#include "DW_GmBase.h"
 #include "Engine/DamageEvents.h"
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
@@ -59,9 +62,6 @@ void ADW_MonsterBase::BeginPlay()
 	}
 
 	CastPlayerCharacter();
-
-	SetStats(DataTable);
-	
 }
 
 void ADW_MonsterBase::Tick(float DeltaTime)
@@ -240,7 +240,9 @@ int32 ADW_MonsterBase::GetRandomMontage()
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("Montage가 없삼"));
+#endif
 		return 0;
 	}
 }
@@ -323,8 +325,10 @@ void ADW_MonsterBase::PerformAttackTrace()
 
 		if (bDrawDebugTrace)
 		{
+#if WITH_EDITOR
 			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
 			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+#endif
 		}
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
@@ -338,7 +342,9 @@ void ADW_MonsterBase::PerformAttackTrace()
 					// 데미지 처리
 					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
 
+#if WITH_EDITOR
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
+#endif
 				}
 			}
 		}
@@ -347,7 +353,9 @@ void ADW_MonsterBase::PerformAttackTrace()
 
 void ADW_MonsterBase::Parried()
 {
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Parry"));
+#endif
 
 	bIsAttacking = false;
 	bCanParried = false;
@@ -387,8 +395,6 @@ void ADW_MonsterBase::Dead()
 					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
-
-			
 		}
 	}
 }
@@ -422,6 +428,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 		}
 	}
 
+	if (bIsDead) return 0;
+
 	if (bIsInvincible)
 	{
 		DamageAmount = 0;
@@ -432,6 +440,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	if (MonsterHP <= 0)
 	{
 		Dead();
+
+		return 0;
 	}
 
 	if (DamageAmount >= MonsterMaxHP * 0.3f)
@@ -480,7 +490,9 @@ float ADW_MonsterBase::GetPlayerDistance()
 {
 	if (!IsValid(PlayerCharacter))
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("GetPlayerDistance: PlayerCharacter 참조 실패, -1.0f 반환"));
+#endif
 		return -1.0f; // 유효하지 않으면 음수 리턴
 	}
 

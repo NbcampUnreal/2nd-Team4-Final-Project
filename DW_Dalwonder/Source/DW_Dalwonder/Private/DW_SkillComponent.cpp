@@ -49,7 +49,9 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
         const FSkillState* PreState = SkillStateMap.Find(SkillData->PrerequisiteSkillID);
         if (!PreState || PreState->CurrentLevel <= 0)
         {
+#if WITH_EDITOR
             UE_LOG(LogTemp, Warning, TEXT("Prerequisite skill not learned"));
+#endif
             return false;
         }
     }
@@ -76,7 +78,9 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 
         ApplySkillEffect(*SkillData, 1);
     }
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("CurrentSP: %d"), CurrentSP);
+#endif
     OnSkillUpdated.Broadcast();
     return true;
 }

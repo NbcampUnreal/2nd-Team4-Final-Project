@@ -58,7 +58,9 @@ void ADW_NormalMonsterAIControllerBase::OnTargetPerceptionUpdated(AActor* Actor,
 {
 	if (!IsValid(Actor))
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("유효한 액터 아님"));
+#endif
 		return;
 	}
 

@@ -7,23 +7,23 @@
 #include "Character/DW_CharacterBase.h"
 
 AWorldItemActor::AWorldItemActor()
-    : Super()
 {
     PrimaryActorTick.bCanEverTick = true;
 
 	ItemDataTable = CreateDefaultSubobject<UDataTable>(TEXT("ItemDataTable"));
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-    RootComponent = MeshComponent;
+    SetRootComponent(MeshComponent);
+    MeshComponent->SetCollisionProfileName(TEXT("NoCollision"));
 
     DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
-    DetectionSphere->SetupAttachment(RootComponent);
+    DetectionSphere->SetupAttachment(MeshComponent);
     DetectionSphere->SetSphereRadius(150.f);
     DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerEnterRadius);
     DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerExitRadius);
 
     InteractionWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidget"));
-    InteractionWidget->SetupAttachment(RootComponent);
+    InteractionWidget->SetupAttachment(MeshComponent);
     InteractionWidget->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
@@ -47,7 +47,11 @@ void AWorldItemActor::BeginPlay()
             ItemBase->ItemBaseData.ItemID,
             bSuccess);
 
+		ItemBase->LoadItemFromCode(ItemBase->ItemCode);
+
+#if WITH_EDITOR
         if(!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("월드아이템 비상!!!!")));
+#endif
 	}
 	
 
@@ -90,6 +94,8 @@ void AWorldItemActor::OnPlayerExitRadius(UPrimitiveComponent* OverlappedComp, AA
 void AWorldItemActor::Interact(ADW_CharacterBase* PlayerCharacter)
 {
     if (!bCanInteract || !PlayerCharacter) return;
+#if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("아이템과 상호작용!"));
+#endif
     Destroy();
 }
