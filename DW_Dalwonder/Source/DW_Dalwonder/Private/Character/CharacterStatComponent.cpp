@@ -25,7 +25,7 @@ void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
 		{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
 		
 			if (FMath::IsNearlyZero(Stamina) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
@@ -66,6 +66,11 @@ void UCharacterStatComponent::GenHealth()
 	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
 	GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
 		{
+			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+			{
+				StopConsumeHealth();
+			}
+		
 			if (FMath::IsNearlyEqual(Health, MaxHealth))
 			{
 				StopConsumeHealth();
@@ -85,7 +90,12 @@ void UCharacterStatComponent::GenStamina()
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
 		{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+
+			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+			{
+				StopConsumeHealth();
+			}
 		
 			if (FMath::IsNearlyEqual(Stamina, MaxStamina))
 			{
