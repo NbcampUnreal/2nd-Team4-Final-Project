@@ -251,7 +251,7 @@ public:
 
 	// 락온 대상
 	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
-	TWeakObjectPtr<AActor> LockOnTarget;
+	AActor* LockOnTarget = nullptr;
 
 	// 락온 여부
 	UPROPERTY(BlueprintReadOnly, Category = "LockOn")
@@ -259,14 +259,7 @@ public:
 	
 	// 전환 함수
 	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void SwitchLockOnTarget(bool bRight);
-
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void SwitchLockOnRight();
-
-	UFUNCTION(BlueprintCallable, Category = "LockOn")
-	void SwitchLockOnLeft();
-	void SyncLockOnIndex();
+	void SwitchLockOnTarget();
 
 	// 락온 토글 함수
 	UFUNCTION(BlueprintCallable, Category = "LockOn")
@@ -281,7 +274,7 @@ public:
 	// 락온 마커 UI 갱신
 	UFUNCTION()
 	void UpdateLockOnMarkerPosition();
-
+	
 	// 회전 처리 함수
 	UFUNCTION()
 	void UpdateLockOnRotation();
@@ -298,7 +291,7 @@ public:
 	UPROPERTY()
 	TArray<AActor*> LockOnCandidates;
 
-	int32 LockOnIndex = -1;
+	int32 LockOnIndex = 0;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LockOn|UI")
 	TSubclassOf<UUserWidget> LockOnWidgetClass;

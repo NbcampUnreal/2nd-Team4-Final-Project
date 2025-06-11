@@ -977,15 +977,14 @@ void ADW_CharacterBase::UpdateHUD()
 
 void ADW_CharacterBase::ToggleLockOn()
 {
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
 	if (bIsLockOn)
 	{
+		// 🔓 락온 해제
 		bIsLockOn = false;
 		LockOnTarget = nullptr;
-		LockOnCandidates.Empty();
-		LockOnIndex = -1;
-
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
-		GetWorldTimerManager().ClearTimer(LockOnMarkerUpdateTimer);
 
 		if (LockOnWidgetInstance)
 		{
@@ -994,32 +993,44 @@ void ADW_CharacterBase::ToggleLockOn()
 	}
 	else
 	{
-		UpdateLockOnCandidates();
-		if (LockOnCandidates.Num() == 0) return;
-
-		bIsLockOn = true;
-		LockOnIndex = 0;
-		LockOnTarget = LockOnCandidates[0];
-
-		if (!LockOnWidgetInstance && IsValid(LockOnWidgetClass))
+		AActor* Target = FindBestLockOnTarget();
+		if (IsValid(Target))
 		{
-			LockOnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), LockOnWidgetClass);
+			bIsLockOn = true;
+			LockOnTarget = Target;
+
+			if (!LockOnWidgetInstance && IsValid(LockOnWidgetClass))
+			{
+				LockOnWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), LockOnWidgetClass);
+				if (LockOnWidgetInstance)
+				{
+					LockOnWidgetInstance->AddToViewport();
+				}
+			}
+
 			if (LockOnWidgetInstance)
 			{
-				LockOnWidgetInstance->AddToViewport();
+				LockOnWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 			}
-		}
 
-		if (LockOnWidgetInstance)
-		{
-			LockOnWidgetInstance->SetVisibility(ESlateVisibility::Visible);
-		}
+			GetWorldTimerManager().SetTimer(
+				LockOnRotationTimer,
+				this,
+				&ADW_CharacterBase::UpdateLockOnRotation,
+				0.01f,
+				true
+			);
 
-		GetWorldTimerManager().SetTimer(LockOnRotationTimer, this, &ADW_CharacterBase::UpdateLockOnRotation, 0.01f, true);
-		GetWorldTimerManager().SetTimer(LockOnMarkerUpdateTimer, this, &ADW_CharacterBase::UpdateLockOnMarkerPosition, 0.01f, true);
+			GetWorldTimerManager().SetTimer(
+				LockOnMarkerUpdateTimer,
+				this,
+				&ADW_CharacterBase::UpdateLockOnMarkerPosition,
+				0.01f,
+				true
+			);
+		}
 	}
 }
-
 
 
 
@@ -1092,7 +1103,7 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 
 void ADW_CharacterBase::UpdateLockOnRotation()
 {
-	if (!bIsLockOn)
+	if (!bIsLockOn || !IsValid(LockOnTarget))
 	{
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
 		bIsLockOn = false;
@@ -1119,11 +1130,11 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 {
 	LockOnCandidates.Empty();
 
-	TArray<AActor*> AllTargets;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_MonsterBase::StaticClass(), AllTargets);
-
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
+
+	TArray<AActor*> AllTargets;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_MonsterBase::StaticClass(), AllTargets);
 
 	FVector2D ViewportSize;
 	GEngine->GameViewport->GetViewportSize(ViewportSize);
@@ -1131,16 +1142,22 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 
 	for (AActor* Target : AllTargets)
 	{
-		if (!IsValid(Target) || Target == this || !PC->LineOfSightTo(Target)) continue;
+		if (!IsValid(Target) || Target == this) continue;
+		if (!PC->LineOfSightTo(Target)) continue;
 
 		FVector2D ScreenPos;
 		if (PC->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
 		{
-			LockOnCandidates.Add(Target);
+			// 오른쪽에 있는 타겟만 선별 (왼쪽 정렬 원하면 반대로)
+			if (ScreenPos.X > ScreenCenter.X)
+			{
+				LockOnCandidates.Add(Target);
+			}
 		}
 	}
 
-	LockOnCandidates.Sort([&](const AActor& A, const AActor& B)
+	// 화면 중심 가까운 순 정렬
+	LockOnCandidates.Sort([&](AActor& A, AActor& B)
 	{
 		FVector2D APos, BPos;
 		PC->ProjectWorldLocationToScreen(A.GetActorLocation(), APos);
@@ -1149,11 +1166,9 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 	});
 }
 
-
-
 void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 {
-	if (!bIsLockOn || !IsValid(LockOnWidgetInstance)) return;
+	if (!bIsLockOn || !IsValid(LockOnTarget) || !IsValid(LockOnWidgetInstance)) return;
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
@@ -1193,52 +1208,17 @@ void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 	}
 }
 
-void ADW_CharacterBase::SwitchLockOnTarget(bool bRight)
+
+void ADW_CharacterBase::SwitchLockOnTarget()
 {
 	if (!bIsLockOn) return;
 
 	UpdateLockOnCandidates();
-	SyncLockOnIndex();
 
-	if (LockOnCandidates.Num() <= 1) return;
+	if (LockOnCandidates.Num() == 0) return;
 
-	const int32 Num = LockOnCandidates.Num();
-	LockOnIndex = (LockOnIndex + (bRight ? 1 : -1) + Num) % Num;
-
+	LockOnIndex = (LockOnIndex + 1) % LockOnCandidates.Num();
 	LockOnTarget = LockOnCandidates[LockOnIndex];
-
-	UE_LOG(LogTemp, Log, TEXT("🎯 타겟 전환됨: %s (인덱스 %d/%d)"), *LockOnTarget->GetName(), LockOnIndex, Num);
-}
-
-
-void ADW_CharacterBase::SwitchLockOnRight()
-{
-	SwitchLockOnTarget(true);
-}
-
-void ADW_CharacterBase::SwitchLockOnLeft()
-{
-	SwitchLockOnTarget(false);
-}
-
-void ADW_CharacterBase::SyncLockOnIndex()
-{
-	LockOnIndex = -1;
-
-	for (int32 i = 0; i < LockOnCandidates.Num(); ++i)
-	{
-		if (LockOnCandidates[i] == LockOnTarget)
-		{
-			LockOnIndex = i;
-			break;
-		}
-	}
-
-	if (LockOnIndex == -1)
-	{
-		UE_LOG(LogTemp, Error, TEXT("❌ 현재 타겟이 후보군에서 누락됨! 전환 실패 방지용으로 0번으로 초기화"));
-		LockOnIndex = 0;
-	}
 }
 
 
