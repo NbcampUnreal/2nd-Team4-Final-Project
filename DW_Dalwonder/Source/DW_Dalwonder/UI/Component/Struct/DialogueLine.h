@@ -18,4 +18,10 @@ struct FDialogueLine
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FText DialogueText;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bIsQuestDialogue = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName QuestID;
 };

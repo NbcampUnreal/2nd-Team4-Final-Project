@@ -7,6 +7,7 @@
 #include "DW_AttributeComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Inventory/InventoryComponent.h"
+#include "UI/Component/Manager/QuestManagerComponent.h"
 #include "DW_CharacterBase.generated.h"
 
 struct FInputActionValue;
@@ -363,6 +364,11 @@ public:
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 
+	// 퀘스트 매니저(퀘스트 저장 및 관리)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest")
+	UQuestManagerComponent* QuestManager;
+
+public:
 	//HUD업데이트함수
 	UFUNCTION()
 	void UpdateHUD();

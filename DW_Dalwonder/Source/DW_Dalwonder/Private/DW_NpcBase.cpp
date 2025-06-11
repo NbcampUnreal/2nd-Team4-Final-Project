@@ -18,7 +18,7 @@ void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
         APlayerController* PC = Cast<APlayerController>(Interactor->GetInstigatorController());
         if (PC)
         {
-            // UI »ı¼º ¹× Ãß°¡
+            // UI êµ¬ì„± ìš”ì†Œ ì¶”ê°€
             DialogueUIInstance = CreateWidget<UUserWidget>(PC, DialogueUIClass);
             if (DialogueUIInstance)
             {
@@ -26,7 +26,7 @@ void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
                 PC->bShowMouseCursor = true;
                 PC->SetInputMode(FInputModeUIOnly());
 
-                // Ä«¸Ş¶ó ÀüÈ¯
+                // ì¹´ë©”ë¼ ì „í™˜
                 FocusCameraOnNPC(Interactor);
             }
         }
@@ -40,8 +40,8 @@ void ADW_NpcBase::FocusCameraOnNPC(AActor* PlayerActor)
     APlayerController* PC = Cast<APlayerController>(PlayerActor->GetInstigatorController());
     if (PC)
     {
-        // ºä Å¸°Ù º¯°æ (°£´ÜÇÑ Ä«¸Ş¶ó ÀüÈ¯)
-        PC->SetViewTargetWithBlend(NPCInteractionCamera, 1.0f); // 1ÃÊ ºí·»µù
+        // ìƒˆ íƒ€ì… ë“±ë¡ (ì‚¬ìš©ì ì¹´ë©”ë¼ ì „í™˜)
+        PC->SetViewTargetWithBlend(NPCInteractionCamera, 1.0f); // 1ì°¨ í…ŒìŠ¤íŠ¸
     }
 }
 

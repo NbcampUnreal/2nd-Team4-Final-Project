@@ -9,6 +9,14 @@ void UDW_GameInstance::Init()
 {
     Super::Init();
 
+    if (QuestDatabase && QuestDatabase->QuestDataTable)
+    {
+        UE_LOG(LogTemp, Log, TEXT("퀘스트 데이터베이스가 블루프린트에서 정상 설정되었습니다."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("QuestDatabase 또는 QuestDataTable이 블루프린트에서 설정되지 않았습니다."));
+    }
 }
 
 void UDW_GameInstance::Shutdown()

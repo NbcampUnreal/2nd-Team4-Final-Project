@@ -19,19 +19,19 @@ public:
 protected:
     virtual void Interact_Implementation(AActor* Interactor) override;
 
-    // UI Å¬·¡½º (ºí·çÇÁ¸°Æ®¿¡¼­ ÁöÁ¤)
+    // UI í´ë˜ìŠ¤ (ì¸í„°í˜ì´ìŠ¤ì—ì„œ ì‚¬ìš©)
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UUserWidget> DialogueUIClass;
 
-    // ÇöÀç UI ÀÎ½ºÅÏ½º
+    // ì „ì—­ UI ì¸ìŠ¤í„´ìŠ¤
     UPROPERTY()
     UUserWidget* DialogueUIInstance;
 
-    // Ä«¸Ş¶ó ÀüÈ¯¿ë (½ÃÄö¼­ or Á÷Á¢ Á¦¾î¿ë)
+    // ì¹´ë©”ë¼ ì „í™˜ìš© (ìë™í™” or ìˆ˜ë™ ì„¤ì •)
     UPROPERTY(EditAnywhere, Category = "Camera")
     ACameraActor* NPCInteractionCamera;
 
-    // Ä«¸Ş¶ó ¿¬Ãâ ÇÔ¼ö
+    // ì¹´ë©”ë¼ ì œì–´ í•¨ìˆ˜
     void FocusCameraOnNPC(AActor* PlayerActor);
 };
 
