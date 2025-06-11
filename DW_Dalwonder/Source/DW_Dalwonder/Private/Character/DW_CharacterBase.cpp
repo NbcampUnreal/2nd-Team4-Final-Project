@@ -1104,7 +1104,7 @@ void ADW_CharacterBase::UpdateLockOnRotation()
 	!GetController()->LineOfSightTo(LockOnTarget) ||
 	(MonsterTarget && MonsterTarget->bIsDead))
 	{
-		AActor* NewTarget = FindClosestTarget(50.f);
+		AActor* NewTarget = FindClosestTarget(800.f);
 		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
 		{
 			LockOnTarget = NewTarget;
