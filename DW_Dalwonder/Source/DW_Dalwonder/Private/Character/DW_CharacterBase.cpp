@@ -31,12 +31,15 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 200.f;
-	SpringArm->SocketOffset = FVector(0.f, 70.f, 60.f);
+	SpringArm->SetRelativeRotation(FRotator(0.f, 20.f, 0.f));
+	SpringArm->SocketOffset = FVector(0.f, 60.f, 70.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+	Camera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
 	Camera->bUsePawnControlRotation = false;
+	Camera->FieldOfView = 105.f;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
