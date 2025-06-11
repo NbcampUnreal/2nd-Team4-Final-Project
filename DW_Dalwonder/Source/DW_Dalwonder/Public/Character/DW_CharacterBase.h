@@ -286,7 +286,7 @@ public:
 
 	AActor* FindBestLockOnTarget();
 	
-	AActor* FindClosestTarget(float MaxDistance = 1500.f);
+	AActor* FindClosestTarget(float MaxDistance = 800.f);
 	
 	UPROPERTY()
 	TArray<AActor*> LockOnCandidates;

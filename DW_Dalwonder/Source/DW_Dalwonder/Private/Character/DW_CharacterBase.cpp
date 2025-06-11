@@ -14,7 +14,6 @@
 #include "Item/WorldItemActor.h"
 #include "NiagaraFunctionLibrary.h"
 #include "UI/Widget/HUDWidget.h"
-#include "DW_DamageType.h"
 #include "DW_GmBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
@@ -31,8 +30,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->TargetArmLength = 300.f;
-	SpringArm->SocketOffset = FVector(0.f, 50.f, 50.f);
+	SpringArm->TargetArmLength = 200.f;
+	SpringArm->SocketOffset = FVector(0.f, 70.f, 60.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -339,7 +338,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	}
 
 	bIsSprinting = bOnSprint;
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
 	
 	if (bIsSprinting)
 	{
@@ -578,35 +577,12 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	}
 	else
 	{
-		UDW_DamageType* DW_DamageType = Cast<UDW_DamageType>(DamageEvent.DamageTypeClass);
-
-		// 대미지 타입을 커스텀 대미지 타입으로 받았을 때
-		if (IsValid(DW_DamageType))
+		float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
+		if (DamageAmount > KnockBackAmount)
 		{
-			// 넉백이 적용되는 공격을 맞았을 때
-			if (DW_DamageType->bCanKnockdown == true)
-			{
-				KnockBackCharacter();
-			}
-			// 넉백이 적용되지 않는 공격을 맞았을 때
-			else
-			{
-				float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
-				if (DamageAmount > KnockBackAmount)
-				{
-					KnockBackCharacter();
-				}
-				else
-				{
-					SetCombatState(ECharacterCombatState::Hit);
-					int32 HitSectionNum = HitMontage->GetNumSections();
-					int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-					PlayMontage(HitMontage, RandomHitSectionNum);
-				}
-			}
+			KnockBackCharacter();
 		}
-		// 일반 대미지 타입으로 받았을 때
-		else
+		else if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
 		{
 			SetCombatState(ECharacterCombatState::Hit);
 			int32 HitSectionNum = HitMontage->GetNumSections();
@@ -628,6 +604,9 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 
 		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
 		{
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+			this->EnableInput(PC);
 			PC->ESCMenuWidgetInstance = nullptr;
 			PC->bIsESCMenuOpen = false;
 		}
@@ -706,7 +685,10 @@ void ADW_CharacterBase::EndGuard()
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
-	SetCombatState(ECharacterCombatState::Hit);
+	if (CurrentCombatState != ECharacterCombatState::Dead)
+	{
+		SetCombatState(ECharacterCombatState::Hit);
+	}
 	
 	const float KnockBackMultiplier = 50.f;
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
@@ -714,7 +696,14 @@ void ADW_CharacterBase::KnockBackCharacter()
 	LaunchCharacter(KnockBackDirection, true, true);
 	if (IsValid(KnockBackMontage) == true)
 	{
-		PlayMontage(KnockBackMontage);
+		if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
+		{
+			PlayMontage(KnockBackMontage, 1);
+		}
+		else
+		{
+			PlayMontage(KnockBackMontage);
+		}
 	}
 }
 
@@ -735,19 +724,20 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 
 void ADW_CharacterBase::Dead()
 {
-	SetCombatState(ECharacterCombatState::Dead);
 	DisableInput(Cast<APlayerController>(GetController()));
+	StatComponent->StopConsumeHealth();
+	StatComponent->StopConsumeStamina();
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		AnimInstance->Montage_Play(DeadMontage);
-		FName SectionName = DeadMontage->GetSectionName(1);
-		AnimInstance->Montage_JumpToSection(SectionName);
+		PlayMontage(DeadMontage, 1);
 	}
 	else
 	{
-		AnimInstance->Montage_Play(DeadMontage);
+		PlayMontage(DeadMontage);
 	}
+
+	SetCombatState(ECharacterCombatState::Dead);
 	
 	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
@@ -1054,7 +1044,6 @@ AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
 		const float Distance = FVector::Dist(MyLocation, Monster->GetActorLocation());
 		if (Distance > ClosestDistance) continue;
 
-		// 🔍 LineOfSight 검사 (시야 안에 있는지)
 		if (IsValid(PC) && !PC->LineOfSightTo(Monster)) continue;
 
 		ClosestDistance = Distance;
@@ -1103,26 +1092,49 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 
 void ADW_CharacterBase::UpdateLockOnRotation()
 {
-	if (!bIsLockOn || !IsValid(LockOnTarget))
+	if (!bIsLockOn)
 	{
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
-		bIsLockOn = false;
 		LockOnTarget = nullptr;
 		return;
 	}
+	
+	ADW_MonsterBase* MonsterTarget = Cast<ADW_MonsterBase>(LockOnTarget);
+	if (!IsValid(LockOnTarget) ||
+	!GetController()->LineOfSightTo(LockOnTarget) ||
+	(MonsterTarget && MonsterTarget->bIsDead))
+	{
+		AActor* NewTarget = FindClosestTarget(800.f);
+		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
+		{
+			LockOnTarget = NewTarget;
+		}
+		else
+		{
+			ToggleLockOn();
+			return;
+		}
+	}
 
+	// 회전 처리
 	FVector ToTarget = LockOnTarget->GetActorLocation() - GetActorLocation();
 	FRotator DesiredRotation = ToTarget.Rotation();
-	DesiredRotation.Pitch = 0.f;
+
+	float HeightDiff = ToTarget.Z;
+	float MaxHeightEffect = 200.f;     // 200 이상 높이차는 최대 효과
+	float TargetPitch = FMath::Clamp(HeightDiff / MaxHeightEffect, -1.f, 1.f) * 30.f;
+	// -30도 ~ +30도 범위에서 자연스러운 Pitch 설정
+
+	DesiredRotation.Pitch = TargetPitch;
 	DesiredRotation.Roll = 0.f;
 
-	// 🔁 Controller 회전 → 캐릭터 & 카메라 모두 회전
 	FRotator InterpRot = FMath::RInterpTo(
 		GetControlRotation(),
 		DesiredRotation,
 		GetWorld()->GetDeltaSeconds(),
 		10.f
 	);
+
 	GetController()->SetControlRotation(InterpRot);
 }
 
