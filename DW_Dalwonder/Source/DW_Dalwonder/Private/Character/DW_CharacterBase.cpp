@@ -604,6 +604,9 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 
 		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
 		{
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+			this->EnableInput(PC);
 			PC->ESCMenuWidgetInstance = nullptr;
 			PC->bIsESCMenuOpen = false;
 		}
