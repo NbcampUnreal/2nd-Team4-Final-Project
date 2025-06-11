@@ -11,6 +11,8 @@ ADW_SwordBase::ADW_SwordBase()
 	
 	SwordTraceStartPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceStartPoint"));
 	SwordTraceStartPoint->SetupAttachment(StaticMesh);
+	SwordTraceCancelPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceCancelPoint"));
+	SwordTraceCancelPoint->SetupAttachment(StaticMesh);
 	SwordTraceEndPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEndPoint"));
 	SwordTraceEndPoint->SetupAttachment(StaticMesh);
 

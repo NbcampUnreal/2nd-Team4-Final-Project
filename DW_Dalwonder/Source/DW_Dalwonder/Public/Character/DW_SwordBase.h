@@ -24,14 +24,11 @@ public:
 	USceneComponent* SwordTraceStartPoint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sword")
+	USceneComponent* SwordTraceCancelPoint;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sword")
 	USceneComponent* SwordTraceEndPoint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
 	UItemBase* ItemBase;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trace")
-	float CapsuleTraceRadius = 10.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trace")
-	float CapsuleTraceHalfHeight = 30.f;
 };
