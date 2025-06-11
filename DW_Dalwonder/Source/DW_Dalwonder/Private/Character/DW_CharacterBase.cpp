@@ -1054,7 +1054,6 @@ AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
 		const float Distance = FVector::Dist(MyLocation, Monster->GetActorLocation());
 		if (Distance > ClosestDistance) continue;
 
-		// 🔍 LineOfSight 검사 (시야 안에 있는지)
 		if (IsValid(PC) && !PC->LineOfSightTo(Monster)) continue;
 
 		ClosestDistance = Distance;
@@ -1103,26 +1102,49 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 
 void ADW_CharacterBase::UpdateLockOnRotation()
 {
-	if (!bIsLockOn || !IsValid(LockOnTarget))
+	if (!bIsLockOn)
 	{
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
-		bIsLockOn = false;
 		LockOnTarget = nullptr;
 		return;
 	}
+	
+	ADW_MonsterBase* MonsterTarget = Cast<ADW_MonsterBase>(LockOnTarget);
+	if (!IsValid(LockOnTarget) ||
+	!GetController()->LineOfSightTo(LockOnTarget) ||
+	(MonsterTarget && MonsterTarget->bIsDead))
+	{
+		AActor* NewTarget = FindClosestTarget(50.f);
+		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
+		{
+			LockOnTarget = NewTarget;
+		}
+		else
+		{
+			ToggleLockOn();
+			return;
+		}
+	}
 
+	// 회전 처리
 	FVector ToTarget = LockOnTarget->GetActorLocation() - GetActorLocation();
 	FRotator DesiredRotation = ToTarget.Rotation();
-	DesiredRotation.Pitch = 0.f;
+
+	float HeightDiff = ToTarget.Z;
+	float MaxHeightEffect = 200.f;     // 200 이상 높이차는 최대 효과
+	float TargetPitch = FMath::Clamp(HeightDiff / MaxHeightEffect, -1.f, 1.f) * 30.f;
+	// -30도 ~ +30도 범위에서 자연스러운 Pitch 설정
+
+	DesiredRotation.Pitch = TargetPitch;
 	DesiredRotation.Roll = 0.f;
 
-	// 🔁 Controller 회전 → 캐릭터 & 카메라 모두 회전
 	FRotator InterpRot = FMath::RInterpTo(
 		GetControlRotation(),
 		DesiredRotation,
 		GetWorld()->GetDeltaSeconds(),
 		10.f
 	);
+
 	GetController()->SetControlRotation(InterpRot);
 }
 
