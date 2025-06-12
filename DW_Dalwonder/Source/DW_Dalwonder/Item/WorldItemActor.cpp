@@ -4,30 +4,36 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "ItemTranslator.h"
+#include "Interactionprompt.h"
 #include "Character/DW_CharacterBase.h"
 
 AWorldItemActor::AWorldItemActor()
 {
     PrimaryActorTick.bCanEverTick = true;
 
+    USceneComponent* RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+    SetRootComponent(RootSceneComponent);
+
 	ItemDataTable = CreateDefaultSubobject<UDataTable>(TEXT("ItemDataTable"));
 
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-    SetRootComponent(MeshComponent);
+    MeshComponent->SetupAttachment(RootSceneComponent);
     MeshComponent->SetCollisionProfileName(TEXT("NoCollision"));
 
     DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
-    DetectionSphere->SetupAttachment(MeshComponent);
+    DetectionSphere->SetupAttachment(RootSceneComponent);
     DetectionSphere->SetSphereRadius(150.f);
     DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerEnterRadius);
     DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerExitRadius);
 
     InteractionWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidget"));
-    InteractionWidget->SetupAttachment(MeshComponent);
+    InteractionWidget->SetupAttachment(RootSceneComponent);
     InteractionWidget->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));
     InteractionWidget->SetVisibility(false);
+
+    InteractionWidget->SetWidgetClass(InteractionWidgetClass);
 
 	ItemBase = CreateDefaultSubobject<UItemBase>(TEXT("ItemBase"));
 }
@@ -148,12 +154,33 @@ void AWorldItemActor::SetItemCode(int NewItemCode)
             {
                 ItemBase->ItemBaseData = *FoundData;
                 // 메시 설정 등 아이템 데이터에 따른 추가 설정
-                if (MeshComponent && FoundData->ItemMesh)
+                if (FoundData->ItemMesh.Get())
                 {
-                    MeshComponent->SetStaticMesh(FoundData->ItemMesh.Get());
+                    if (MeshComponent)
+                    {
+                        MeshComponent->SetStaticMesh(FoundData->ItemMesh.Get());
+                    }
+                }
+                else // 로드되어 있지 않다면 비동기 로드
+                {
+                    FoundData->ItemMesh.LoadSynchronous(); // BeginPlay에서는 동기 로드가 편리할 수 있습니다.
+                    // 게임 도중 스폰되는 아이템이라면 비동기 로드를 고려하세요.
+                    if (MeshComponent && FoundData->ItemMesh.Get())
+                    {
+                        MeshComponent->SetStaticMesh(FoundData->ItemMesh.Get());
+                    }
                 }
             }
         }
+
+        
+
+        if (UInteractionprompt* PromptWidget = Cast<UInteractionprompt>(InteractionWidget->GetUserWidgetObject()))
+        {
+            PromptWidget->OwningWorldItemActor = this;
+            PromptWidget->InitializeData();
+        }
+
     }
 }
 
