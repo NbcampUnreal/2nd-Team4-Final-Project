@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "UI/Component/QuestDatabase.h"
 #include "DW_GameInstance.generated.h"
 
 class UDW_SaveGame;
@@ -50,6 +51,9 @@ public:
 
     UPROPERTY()
     FName PendingLevelName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest")
+    UQuestDatabase* QuestDatabase;
 
 private:
 
