@@ -17,6 +17,9 @@
 #include "UI/Widget/BossHUDWidget.h"
 #include "DW_GmBase.h"
 #include "Engine/DamageEvents.h"
+#include "Monster/MonsterDropTable.h"
+
+struct FDropItemData;
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
@@ -111,7 +114,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
 
 		const FString ContextString(TEXT("Monster Stat Lookup"));
-		FMonsterStatsTable* StatRow = DataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
+		FMonsterStatsTable* StatRow = NewDataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
 
 		if (StatRow)
 		{
@@ -377,6 +380,8 @@ void ADW_MonsterBase::Dead()
 	if (bIsDead) return;
 	
 	bIsDead = true;
+
+	DropItem(DropTable);
 	
 	if (IsValid(DeadMontage))
 	{
@@ -502,4 +507,34 @@ float ADW_MonsterBase::GetPlayerDistance()
 bool ADW_MonsterBase::CanBeCut_Implementation(const FHitResult& Hit)
 {
 	return true;
+}
+
+void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
+{
+	if (!IsValid(NewDataTable)) return;
+
+	FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+	const FString ContextString(TEXT("Monster Stat Lookup"));
+
+	FMonsterDropTable* DropData = NewDataTable->FindRow<FMonsterDropTable>(RowName, ContextString);
+	if (!DropData) return;
+
+	for (const FDropItemData& ItemData : DropData->DropItems)
+	{
+		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
+		{
+			FVector SpawnLocation = GetActorLocation();
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = GetInstigator();
+
+			GetWorld()->SpawnActor<AWorldItemActor>(
+				ItemData.DropItem,
+				SpawnLocation,
+				FRotator::ZeroRotator,
+				SpawnParams
+			);
+		}
+	}
 }

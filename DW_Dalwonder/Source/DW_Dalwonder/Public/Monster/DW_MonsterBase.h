@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	UDataTable* DropTable;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* AttackSoundComponent;
 
@@ -244,4 +247,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
 	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
+
+	virtual void DropItem(UDataTable* NewDataTable) override;
 };
