@@ -24,6 +24,7 @@ struct FWeaponEnhancementData : public FTableRowBase
 	float AttackSpeed;
 };
 
+class ADW_InteractItemBase;
 
 UCLASS(Blueprintable)
 class DW_DALWONDER_API AWeaponBase : public AActor
@@ -54,7 +55,7 @@ public:
 
 	// 무기 아이템 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
-	AWorldItemActor* ItemActor;
+	ADW_InteractItemBase* ItemActor;
 	
 	// 무기 여부 확인용
 	UFUNCTION(BlueprintCallable, Category = "Weapon Base")

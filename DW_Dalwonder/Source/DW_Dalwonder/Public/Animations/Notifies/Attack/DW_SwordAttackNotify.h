@@ -34,12 +34,9 @@ public:
 	UPROPERTY()
 	ADW_SwordBase* CharacterWeapon;
 
-	// 데미지 간격(초) - 필요에 따라 조정
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
-	float DamageInterval = 0.1f;
-
 private:
 	FVector PrevTraceStart;
+	FVector PrevTraceCancel;
 	FVector PrevTraceEnd;
 	bool bHasPrevTrace = false;
 };

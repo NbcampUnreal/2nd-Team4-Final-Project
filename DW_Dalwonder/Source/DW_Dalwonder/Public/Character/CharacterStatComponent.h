@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "CharacterStatComponent.generated.h"
 
+class ADW_CharacterBase;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DW_DALWONDER_API UCharacterStatComponent : public UActorComponent
 {
@@ -20,7 +22,9 @@ public:
 
 	void StopConsumeStamina();
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GenHealth();
+
+	void GenStamina();
 
 #pragma region GetterSetter
 	float GetHealth() const
@@ -28,21 +32,15 @@ public:
 		return Health;
 	}
 
-	void SetHealth(const float Value)
-	{
-		Health = FMath::Clamp(Value, 0.0f, MaxHealth);
-	}
-
+	void SetHealth(const float Value);
+	
 	float GetMaxHealth() const
 	{
 		return MaxHealth;
 	}
 
-	void SetMaxHealth(const float Value)
-	{
-		MaxHealth = Value;
-	}
-
+	void SetMaxHealth(const float Value);
+	
 	float GetHealthGenRate() const
 	{
 		return HealthGenRate;
@@ -58,20 +56,14 @@ public:
 		return Stamina;
 	}
 
-	void SetStamina(const float Value)
-	{
-		Stamina = FMath::Clamp(Value, 0.0f, MaxStamina);
-	}
+	void SetStamina(const float Value);
 
 	float GetMaxStamina() const
 	{
 		return MaxStamina;
 	}
 
-	void SetMaxStamina(const float Value)
-	{
-		MaxStamina = Value;
-	}
+	void SetMaxStamina(const float Value);
 
 	float GetStaminaGenRate() const
 	{
@@ -123,14 +115,14 @@ public:
 		MaxWeight = Value;
 	}
 
-	float GetStaminaConsumption() const
+	float GetAttackSpeed() const
 	{
-		return StaminaConsumption;
+		return AttackSpeed;
 	}
 
-	void SetStaminaConsumption(const float Value)
+	void SetAttackSpeed(const float Value)
 	{
-		StaminaConsumption = Value;
+		AttackSpeed = Value;
 	}
 
 	float GetWalkSpeed() const
@@ -167,10 +159,7 @@ protected:
 	float MaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float HealthGenRate = 0.2f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bEnableHealthGen = true;
+	float HealthGenRate = 0.5f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Stamina = 100.f;
@@ -179,10 +168,7 @@ protected:
 	float MaxStamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaGenRate = 0.2f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bEnableStaminaGen = true;
+	float StaminaGenRate = 0.5f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Attack = 10.f;
@@ -197,7 +183,7 @@ protected:
 	float MaxWeight = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaConsumption = 10.f;
+	float AttackSpeed = 1.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float WalkSpeed = 300.f;
@@ -210,4 +196,7 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle StaminaTimer;
+
+	UPROPERTY()
+	ADW_CharacterBase* Character;
 };

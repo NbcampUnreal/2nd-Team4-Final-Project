@@ -3,6 +3,7 @@
 
 #include "Monster/NormalMonster/Skeleton/MobSkeleton.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NavigationSystem.h"
@@ -24,7 +25,6 @@ AMobSkeleton::AMobSkeleton()
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
-
 
 	bIsStrafe = false;
 }
@@ -66,6 +66,7 @@ void AMobSkeleton::Tick(float DeltaTime)
 		Location.Z = CurrentZ + ZOffset;
 		SetActorLocation(Location);
 	}
+
 }
 
 void AMobSkeleton::SpawnTickEnd()
@@ -95,15 +96,39 @@ void AMobSkeleton::PlayAlertMontage()
 
 float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (MonsterHP <= 0)
-	{
-		return 0;
-	}
 
 	if (bHaveEnergeSheild)
 	{
 		DamageAmount /= 2;
 	}
+
+	if (DamageCauser)
+	{
+		if(bIsShieldUse)
+		{
+			FVector MyLocation = GetActorLocation();
+			FVector MyForward = GetActorForwardVector();
+
+			FVector CauserLocation = DamageCauser->GetActorLocation();
+
+			FVector DirectionFromCauser = (MyLocation - CauserLocation).GetSafeNormal();
+
+			float Dot = FVector::DotProduct(MyForward, DirectionFromCauser);
+
+			if (Dot < 0.5f)
+			{
+				bIsGuard = true;
+
+				DamageAmount *= 0;
+			}
+			else
+			{
+				bIsGuard = false;
+			}
+		}
+	}
+
+	//bIsShieldUse = false;
 
 	/*if (DamageAmount >= MonsterMaxHP * 0.3f)
 	{
@@ -252,6 +277,16 @@ void AMobSkeleton::UseSecondSkill()
 			GetMesh()->GetAnimInstance()->Montage_Play(SecondSkill);
 		}
 	}
+}
+
+void AMobSkeleton::ShieldOn()
+{
+	bIsShieldUse = true;
+}
+
+void AMobSkeleton::ShieldOff()
+{
+	bIsShieldUse = false;
 }
 
 void AMobSkeleton::SetMovementWalk()

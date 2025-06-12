@@ -62,11 +62,7 @@ void ADW_WoodMonsterBase::SpawnToWoodGolem()
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-			AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawningClass, SpawnLocation, SpawnParams);
-			if (SpawnedActor)
-			{
-				UE_LOG(LogTemp, Error, TEXT("스폰 실패! 위치: %s"), *SpawnLocation.GetLocation().ToString());
-			}
+			GetWorld()->SpawnActor<AActor>(SpawningClass, SpawnLocation, SpawnParams);
 		}
 	}
 }
