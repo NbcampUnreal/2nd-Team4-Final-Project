@@ -15,6 +15,23 @@ AMob_WoodGolem::AMob_WoodGolem()
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
 }
 
+void AMob_WoodGolem::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	/*if (bSpawnTick)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
+
+		float JumpOffset = AnimInstance->GetCurveValue(FName("JumpOffset"));
+
+		FVector Location = GetActorLocation();
+		Location.Z = CurrentZ + JumpOffset;
+		SetActorLocation(Location);
+	}*/
+}
+
 void AMob_WoodGolem::UseFirstSkill()
 {
 	if (IsValid(FirstSkill))

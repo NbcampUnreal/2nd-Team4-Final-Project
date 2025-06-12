@@ -31,12 +31,15 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 200.f;
-	SpringArm->SocketOffset = FVector(0.f, 70.f, 60.f);
+	SpringArm->SetRelativeRotation(FRotator(0.f, 20.f, 0.f));
+	SpringArm->SocketOffset = FVector(0.f, 60.f, 70.f);
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+	Camera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
 	Camera->bUsePawnControlRotation = false;
+	Camera->FieldOfView = 105.f;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
@@ -425,7 +428,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			FName SectionName = Montage->GetSectionName(SectionIndex);
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_JumpToSection(SectionName);
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
@@ -434,7 +444,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 		{
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
 		}
@@ -486,8 +503,8 @@ void ADW_CharacterBase::StartAttack()
 		if (CurrentCombatState == ECharacterCombatState::Idle)
 		{
 			CurrentComboIndex = 0;
-			PlayMontage(AttackMontage);
 			SetCombatState(ECharacterCombatState::ComboWindow);
+			PlayMontage(AttackMontage);
 		}
 		else if (CurrentCombatState == ECharacterCombatState::ComboWindow && bCanCombo)
 		{

@@ -115,14 +115,14 @@ public:
 		MaxWeight = Value;
 	}
 
-	float GetStaminaConsumption() const
+	float GetAttackSpeed() const
 	{
-		return StaminaConsumption;
+		return AttackSpeed;
 	}
 
-	void SetStaminaConsumption(const float Value)
+	void SetAttackSpeed(const float Value)
 	{
-		StaminaConsumption = Value;
+		AttackSpeed = Value;
 	}
 
 	float GetWalkSpeed() const
@@ -183,7 +183,7 @@ protected:
 	float MaxWeight = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaConsumption = 10.f;
+	float AttackSpeed = 1.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float WalkSpeed = 300.f;
