@@ -43,6 +43,8 @@ public:
     UPROPERTY(VisibleAnywhere)
     class USphereComponent* DetectionSphere;
 
+    void SetItemCode(int NewItemCode);
+
     // 플레이어 감지 
     UFUNCTION()
     void OnPlayerEnterRadius(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

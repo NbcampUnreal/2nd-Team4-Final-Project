@@ -558,12 +558,14 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			SpawnParams.Owner = this;
 			SpawnParams.Instigator = GetInstigator();
 
-			GetWorld()->SpawnActor<AWorldItemActor>(
+			AWorldItemActor* ItemActor = GetWorld()->SpawnActor<AWorldItemActor>(
 				ItemData.DropItem,
 				SpawnLocation,
 				FRotator::ZeroRotator,
 				SpawnParams
 			);
+
+			ItemActor->SetItemCode(ItemData.ItemCode);
 		}
 	}
 }
