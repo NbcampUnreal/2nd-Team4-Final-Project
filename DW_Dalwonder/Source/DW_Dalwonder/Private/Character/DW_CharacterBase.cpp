@@ -428,7 +428,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			FName SectionName = Montage->GetSectionName(SectionIndex);
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_JumpToSection(SectionName);
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
@@ -437,7 +444,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 		{
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
 		}
@@ -489,8 +503,8 @@ void ADW_CharacterBase::StartAttack()
 		if (CurrentCombatState == ECharacterCombatState::Idle)
 		{
 			CurrentComboIndex = 0;
-			PlayMontage(AttackMontage);
 			SetCombatState(ECharacterCombatState::ComboWindow);
+			PlayMontage(AttackMontage);
 		}
 		else if (CurrentCombatState == ECharacterCombatState::ComboWindow && bCanCombo)
 		{
