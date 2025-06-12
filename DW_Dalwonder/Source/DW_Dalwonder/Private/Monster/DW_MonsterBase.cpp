@@ -553,9 +553,11 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 	{
 		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
 		{
-			FVector SpawnLocation = GetActorLocation();
+			FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
+			FVector SpawnLocation = GetActorLocation() + RandOffset;
 
 			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 			SpawnParams.Owner = this;
 			SpawnParams.Instigator = GetInstigator();
 
