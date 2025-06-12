@@ -31,9 +31,13 @@ public:
     UPROPERTY(EditAnywhere, Category = "Item")
     UDataTable* ItemDataTable;
 
-    // 상호작용 문구 위젯 
+    // 상호작용 문구 위젯 (이 UWidgetComponent는 이제 UInteractionprompt 타입의 위젯을 생성할 겁니다)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
     UWidgetComponent* InteractionWidget;
+
+    // **새로 추가된 부분**: 에디터에서 설정할 Blueprint 위젯 클래스
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
+    TSubclassOf<UUserWidget> InteractionWidgetClass; // 여기에 UInteractionprompt의 Blueprint 클래스를 지정합니다.
     
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)
