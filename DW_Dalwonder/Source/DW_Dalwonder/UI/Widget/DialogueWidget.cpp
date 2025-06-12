@@ -25,37 +25,12 @@ void UDialogueWidget::NativeConstruct()
     }
 }
 
-void UDialogueWidget::SetDialogueText(const FText& InText)
+void UDialogueWidget::SetDialogueText(const TArray<FDialogueLine>& InDialogueLines)
 {
-    if (CurrentDialogueIndex < DialogueLines.Num())
-    {
-        const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex];
-        SetSpeakerName(Line.SpeakerName);
-        SetDialogueText(Line.DialogueText);
+    DialogueLines = InDialogueLines;
+    CurrentDialogueIndex = 0;
 
-        if (Line.bIsQuestDialogue)
-        {
-            // 퀘스트 관련 대사라면 버튼 표시
-            if (AcceptQuestButton)
-            {
-                AcceptQuestButton->SetVisibility(ESlateVisibility::Visible);
-            }
-        }
-        else
-        {
-            if (AcceptQuestButton)
-            {
-                AcceptQuestButton->SetVisibility(ESlateVisibility::Collapsed);
-            }
-        }
-
-        CurrentDialogueIndex++;
-    }
-    else
-    {
-        // 대사 끝났을 때 처리
-        RemoveFromParent(); // 혹은 UI 숨기기
-    }
+    ShowNextDialogueLine(); // 첫 줄 바로 출력
 }
 
 void UDialogueWidget::SetSpeakerName(const FText& InName)
@@ -72,37 +47,51 @@ void UDialogueWidget::ShowNextDialogueLine()
     {
         const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex];
 
-        // 텍스트 및 화자 설정
-        if (SpeakerNameText) SpeakerNameText->SetText(Line.SpeakerName);
         if (DialogueText) DialogueText->SetText(Line.DialogueText);
+        if (SpeakerNameText)  SpeakerNameText->SetText(Line.SpeakerName);
 
-        // 이 대사가 퀘스트 안내용이라면
+        // 마지막 줄이고 퀘스트 있음 → 버튼 이름 바꾸기
         if (Line.bIsQuestDialogue)
         {
             bHasQuest = true;
             QuestID = Line.QuestID;
 
-            // 퀘스트 수락 버튼/안내 표시
-            if (DialogueText)
-            {
-                DialogueText->SetText(FText::FromString("퀘스트를 수락하시겠습니까?"));
-                DialogueText->SetVisibility(ESlateVisibility::Visible);
-            }
+            // 안내 텍스트 및 수락 버튼 표시
+            AcceptQuestButton->SetVisibility(ESlateVisibility::Visible);
+            QuestQuestionText->SetText(FText::FromString(TEXT("수락")));
+            QuestQuestionText->SetVisibility(ESlateVisibility::Visible);
 
-            if (AcceptQuestButton)
+            // Next 버튼을 "거절" 역할로 전환
+            if (NexiDialogueText)
             {
-                AcceptQuestButton->SetVisibility(ESlateVisibility::Visible);
+                NexiDialogueText->SetText(FText::FromString(TEXT("거절")));
             }
+            ++CurrentDialogueIndex;
+            // 여기서 대사 진행을 멈추고 버튼 클릭을 기다리기.
+            return;
         }
 
         ++CurrentDialogueIndex;
+
+        // 텍스트 복원 (혹시 이전에 "거절"로 바꿨던 것)
+        if (NexiDialogueText)
+        {
+            NexiDialogueText->SetText(FText::FromString(TEXT("다음")));
+        }
     }
     else
     {
-        // 대사 끝났고 퀘스트 수락도 없다면 종료
+        // 마지막 줄 끝났고, 퀘스트도 없음 → 창 닫기
         if (!bHasQuest)
         {
             RemoveFromParent();
+
+            APlayerController* PC = GetWorld()->GetFirstPlayerController();
+            if (PC)
+            {
+                PC->SetInputMode(FInputModeGameOnly());
+                PC->bShowMouseCursor = false;
+            }
         }
     }
 }
@@ -115,6 +104,22 @@ void UDialogueWidget::InitQuest(FName InQuestID)
 
 void UDialogueWidget::OnNextButtonClicked()
 {
+    // 퀘스트가 있는 상태에서 마지막 대사인 경우 → "거절" 역할 수행
+    if (bHasQuest && CurrentDialogueIndex >= DialogueLines.Num())
+    {
+        // 거절 처리
+        RemoveFromParent();
+
+        APlayerController* PC = GetWorld()->GetFirstPlayerController();
+        if (PC)
+        {
+            PC->SetInputMode(FInputModeGameOnly());
+            PC->bShowMouseCursor = false;
+        }
+
+        return;
+    }
+
     ShowNextDialogueLine();
 }
 
@@ -145,7 +150,13 @@ void UDialogueWidget::OnAcceptQuestClicked()
 
                         // UI 처리
                         AcceptQuestButton->SetVisibility(ESlateVisibility::Collapsed);
-                        RemoveFromParent();
+                        // 입력 모드 원래대로 복원
+                        if (PC)
+                        {
+                            PC->SetInputMode(FInputModeGameOnly());
+                            PC->bShowMouseCursor = false;
+                            RemoveFromParent();
+                        }
 
                         UE_LOG(LogTemp, Log, TEXT("퀘스트 [%s] 수락 완료"), *Quest.Title.ToString());
                     }

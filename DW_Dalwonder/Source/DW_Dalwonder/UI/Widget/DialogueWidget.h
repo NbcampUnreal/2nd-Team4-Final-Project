@@ -23,7 +23,7 @@ public:
 
     /** 텍스트 세팅 함수 */
     UFUNCTION(BlueprintCallable)
-    void SetDialogueText(const FText& InText);
+    void SetDialogueText(const TArray<FDialogueLine>& InDialogueLines);
 
     /** 대화 상대 이름 업데이트 함수 */
     UFUNCTION(BlueprintCallable)
@@ -50,7 +50,13 @@ protected:
     UTextBlock* DialogueText;
 
     UPROPERTY(meta = (BindWidget))
+    UTextBlock* QuestQuestionText;
+
+    UPROPERTY(meta = (BindWidget))
     UTextBlock* SpeakerNameText;
+
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* NexiDialogueText;
 
     UPROPERTY(meta = (BindWidget))
     UButton* NextDialogueButton;

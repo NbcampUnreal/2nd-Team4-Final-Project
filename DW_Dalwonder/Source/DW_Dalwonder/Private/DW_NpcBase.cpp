@@ -1,4 +1,6 @@
 #include "DW_NpcBase.h"
+#include "Character/DW_CharacterBase.h"
+#include "UI/Widget/DialogueWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
@@ -18,17 +20,37 @@ void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
         APlayerController* PC = Cast<APlayerController>(Interactor->GetInstigatorController());
         if (PC)
         {
-            // UI 구성 요소 추가
-            DialogueUIInstance = CreateWidget<UUserWidget>(PC, DialogueUIClass);
-            if (DialogueUIInstance)
+            UDialogueWidget* DialogueWidget = CreateWidget<UDialogueWidget>(PC, DialogueUIClass);
+            if (DialogueWidget)
             {
-                DialogueUIInstance->AddToViewport();
+                // 대사 설정
+                DialogueWidget->SetDialogueText(DialogueLines);
+
+                // 퀘스트 설정
+                if (bGivesQuest)
+                {
+                    DialogueWidget->InitQuest(QuestID);
+                }
+
+                DialogueWidget->AddToViewport();
+
                 PC->bShowMouseCursor = true;
                 PC->SetInputMode(FInputModeUIOnly());
 
-                // 카메라 전환
                 FocusCameraOnNPC(Interactor);
             }
+
+            // UI 구성 요소 추가
+            //DialogueUIInstance = CreateWidget<UUserWidget>(PC, DialogueUIClass);
+            //if (DialogueUIInstance)
+            //{
+            //    DialogueUIInstance->AddToViewport();
+            //    PC->bShowMouseCursor = true;
+            //    PC->SetInputMode(FInputModeUIOnly());
+
+            //    // 카메라 전환
+            //    FocusCameraOnNPC(Interactor);
+            //}
         }
     }
 }
