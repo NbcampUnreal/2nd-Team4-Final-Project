@@ -405,26 +405,53 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-	if (HitNS)
+	
+	if (bIsGuard)
 	{
-		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		if (GuardHitNS)
 		{
-			const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
-			const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+			if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+			{
+				const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+				const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
 
-			const FVector SpawnLocation = HitLocation;
-			const FRotator SpawnRotation = GetActorRotation();
-			
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				HitNS,
-				SpawnLocation,
-				SpawnRotation,
-				FVector(1.f),
-				true,
-				true
-			);
+				const FVector SpawnLocation = HitLocation;
+				const FRotator SpawnRotation = GetActorRotation();
+
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					GuardHitNS,
+					SpawnLocation,
+					SpawnRotation,
+					FVector(1.f),
+					true,
+					true
+				);
+			}
+		}
+	}
+	else
+	{
+		if (HitNS)
+		{
+			if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+			{
+				const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+				const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+
+				const FVector SpawnLocation = HitLocation;
+				const FRotator SpawnRotation = GetActorRotation();
+
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					HitNS,
+					SpawnLocation,
+					SpawnRotation,
+					FVector(1.f),
+					true,
+					true
+				);
+			}
 		}
 	}
 
@@ -436,6 +463,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	}
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
+
+	bIsGuard = false;
 
 	if (MonsterHP <= 0)
 	{

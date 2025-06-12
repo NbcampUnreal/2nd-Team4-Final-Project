@@ -62,8 +62,12 @@ public:
 	// ---------- -------------------- ----------
 
 	// ----------  Function ----------
-	// 
-	
+	// Shield On
+	UFUNCTION(BlueprintCallable)
+	void ShieldOn();
+	// Shield Off
+	UFUNCTION(BlueprintCallable)
+	void ShieldOff();
 	// ---------- -------------------- ----------
 
 	// ---------- Stat & Data Function ----------
@@ -120,6 +124,8 @@ public:
 	FTimerHandle EnhancedTimer;
 
 	int32 ScaleUpCount = 0;
+
+	bool bIsShieldUse = false;
 
 	bool bHaveEnergeSheild = false;
 	bool bHaveEnhanced = false;
