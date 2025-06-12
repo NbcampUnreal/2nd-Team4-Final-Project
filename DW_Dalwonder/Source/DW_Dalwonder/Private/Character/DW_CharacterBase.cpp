@@ -1088,10 +1088,15 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 	AActor* BestTarget = nullptr;
 	float ClosestDistSquared = FLT_MAX;
 
+	const float MaxLockOnDistance = 5000.f;
+
 	for (AActor* Candidate : Candidates)
 	{
 		if (!IsValid(Candidate) || Candidate == this) continue;
 		if (!PC->LineOfSightTo(Candidate)) continue;
+
+		float Distance = FVector::Dist(GetActorLocation(), Candidate->GetActorLocation());
+		if (Distance > MaxLockOnDistance) continue;
 
 		FVector2D ScreenPos;
 		bool bOnScreen = PC->ProjectWorldLocationToScreen(Candidate->GetActorLocation(), ScreenPos);
