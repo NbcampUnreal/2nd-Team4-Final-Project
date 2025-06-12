@@ -125,7 +125,7 @@ public:
 	float DebugDrawTime = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
-	bool bDrawDebugTrace = false;
+	bool bDrawDebugTrace = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack|Debug")
 	bool bUseOtherHand = false;
