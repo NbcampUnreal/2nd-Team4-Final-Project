@@ -1,4 +1,6 @@
 #include "DW_NpcBase.h"
+#include "Character/DW_CharacterBase.h"
+#include "UI/Widget/DialogueWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
@@ -18,17 +20,37 @@ void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
         APlayerController* PC = Cast<APlayerController>(Interactor->GetInstigatorController());
         if (PC)
         {
-            // UI »ı¼º ¹× Ãß°¡
-            DialogueUIInstance = CreateWidget<UUserWidget>(PC, DialogueUIClass);
-            if (DialogueUIInstance)
+            UDialogueWidget* DialogueWidget = CreateWidget<UDialogueWidget>(PC, DialogueUIClass);
+            if (DialogueWidget)
             {
-                DialogueUIInstance->AddToViewport();
+                // ëŒ€ì‚¬ ì„¤ì •
+                DialogueWidget->SetDialogueText(DialogueLines);
+
+                // í€˜ìŠ¤íŠ¸ ì„¤ì •
+                if (bGivesQuest)
+                {
+                    DialogueWidget->InitQuest(QuestID);
+                }
+
+                DialogueWidget->AddToViewport();
+
                 PC->bShowMouseCursor = true;
                 PC->SetInputMode(FInputModeUIOnly());
 
-                // Ä«¸Ş¶ó ÀüÈ¯
                 FocusCameraOnNPC(Interactor);
             }
+
+            // UI êµ¬ì„± ìš”ì†Œ ì¶”ê°€
+            //DialogueUIInstance = CreateWidget<UUserWidget>(PC, DialogueUIClass);
+            //if (DialogueUIInstance)
+            //{
+            //    DialogueUIInstance->AddToViewport();
+            //    PC->bShowMouseCursor = true;
+            //    PC->SetInputMode(FInputModeUIOnly());
+
+            //    // ì¹´ë©”ë¼ ì „í™˜
+            //    FocusCameraOnNPC(Interactor);
+            //}
         }
     }
 }
@@ -40,8 +62,8 @@ void ADW_NpcBase::FocusCameraOnNPC(AActor* PlayerActor)
     APlayerController* PC = Cast<APlayerController>(PlayerActor->GetInstigatorController());
     if (PC)
     {
-        // ºä Å¸°Ù º¯°æ (°£´ÜÇÑ Ä«¸Ş¶ó ÀüÈ¯)
-        PC->SetViewTargetWithBlend(NPCInteractionCamera, 1.0f); // 1ÃÊ ºí·»µù
+        // ìƒˆ íƒ€ì… ë“±ë¡ (ì‚¬ìš©ì ì¹´ë©”ë¼ ì „í™˜)
+        PC->SetViewTargetWithBlend(NPCInteractionCamera, 1.0f); // 1ì°¨ í…ŒìŠ¤íŠ¸
     }
 }
 

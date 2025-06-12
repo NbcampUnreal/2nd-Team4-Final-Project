@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "DW_InteractItemBase.h"
+#include "UI/Component/Struct/DialogueLine.h"
 #include "DW_NpcBase.generated.h"
 
 class UUserWidget;
@@ -16,22 +17,36 @@ class DW_DALWONDER_API ADW_NpcBase : public ADW_InteractItemBase
 public:
     ADW_NpcBase();
 
+public:
+    // ëŒ€ì‚¬ ì •ë³´
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
+    TArray<FDialogueLine> DialogueLines;
+
+    // í€˜ìŠ¤íŠ¸ ID (ì´ NPCê°€ ì£¼ëŠ” í€˜ìŠ¤íŠ¸)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+    FName QuestID;
+
+    // í€˜ìŠ¤íŠ¸ ëŒ€ì‚¬ í¬í•¨ ì—¬ë¶€
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+    bool bGivesQuest = false;
+
 protected:
     virtual void Interact_Implementation(AActor* Interactor) override;
 
-    // UI Å¬·¡½º (ºí·çÇÁ¸°Æ®¿¡¼­ ÁöÁ¤)
+    // ì¹´ë©”ë¼ ì œì–´ í•¨ìˆ˜
+    void FocusCameraOnNPC(AActor* PlayerActor);
+
+protected:
+    // UI í´ë˜ìŠ¤ (ì¸í„°í˜ì´ìŠ¤ì—ì„œ ì‚¬ìš©)
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UUserWidget> DialogueUIClass;
 
-    // ÇöÀç UI ÀÎ½ºÅÏ½º
+    // ì „ì—­ UI ì¸ìŠ¤í„´ìŠ¤
     UPROPERTY()
     UUserWidget* DialogueUIInstance;
 
-    // Ä«¸Ş¶ó ÀüÈ¯¿ë (½ÃÄö¼­ or Á÷Á¢ Á¦¾î¿ë)
+    // ì¹´ë©”ë¼ ì „í™˜ìš© (ìë™í™” or ìˆ˜ë™ ì„¤ì •)
     UPROPERTY(EditAnywhere, Category = "Camera")
     ACameraActor* NPCInteractionCamera;
-
-    // Ä«¸Ş¶ó ¿¬Ãâ ÇÔ¼ö
-    void FocusCameraOnNPC(AActor* PlayerActor);
 };
 
