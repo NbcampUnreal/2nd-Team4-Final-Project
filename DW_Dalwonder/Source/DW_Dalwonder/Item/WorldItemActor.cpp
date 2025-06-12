@@ -12,21 +12,18 @@ AWorldItemActor::AWorldItemActor()
 
 	ItemDataTable = CreateDefaultSubobject<UDataTable>(TEXT("ItemDataTable"));
 
-    SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-    SetRootComponent(SceneRoot);
-
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-    MeshComponent->SetupAttachment(SceneRoot);
+    SetRootComponent(MeshComponent);
     MeshComponent->SetCollisionProfileName(TEXT("NoCollision"));
 
     DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
-    DetectionSphere->SetupAttachment(SceneRoot);
+    DetectionSphere->SetupAttachment(MeshComponent);
     DetectionSphere->SetSphereRadius(150.f);
     DetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerEnterRadius);
     DetectionSphere->OnComponentEndOverlap.AddDynamic(this, &AWorldItemActor::OnPlayerExitRadius);
 
     InteractionWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionWidget"));
-    InteractionWidget->SetupAttachment(SceneRoot);
+    InteractionWidget->SetupAttachment(MeshComponent);
     InteractionWidget->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
     InteractionWidget->SetWidgetSpace(EWidgetSpace::World);
     InteractionWidget->SetDrawSize(FVector2D(200.f, 50.f));

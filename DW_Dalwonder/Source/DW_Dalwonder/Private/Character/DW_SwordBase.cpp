@@ -2,18 +2,19 @@
 
 ADW_SwordBase::ADW_SwordBase()
 {
+	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+	SetRootComponent(SceneRoot);
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMesh->SetupAttachment(SceneRoot);
+	StaticMesh->SetCollisionProfileName(TEXT("NoCollision"));
+	
 	SwordTraceStartPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceStartPoint"));
-	SwordTraceStartPoint->SetupAttachment(MeshComponent);
+	SwordTraceStartPoint->SetupAttachment(StaticMesh);
+	SwordTraceCancelPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceCancelPoint"));
+	SwordTraceCancelPoint->SetupAttachment(StaticMesh);
 	SwordTraceEndPoint = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEndPoint"));
-	SwordTraceEndPoint->SetupAttachment(MeshComponent);
+	SwordTraceEndPoint->SetupAttachment(StaticMesh);
 
 	Tags.Add("Weapon");
-}
-
-void ADW_SwordBase::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-
-	SwordTraceStartPoint->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	SwordTraceEndPoint->AttachToComponent(MeshComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
