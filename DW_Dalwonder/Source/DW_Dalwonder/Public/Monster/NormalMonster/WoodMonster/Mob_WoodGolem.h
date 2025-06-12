@@ -16,14 +16,23 @@ class DW_DALWONDER_API AMob_WoodGolem : public ADW_NormalMonsterBase
 	
 	AMob_WoodGolem();
 
-public:
+	virtual void Tick(float DeltaTime) override;
 
+public:
 	UFUNCTION(BlueprintCallable)
 	void UseFirstSkill();
 
 	UFUNCTION(BlueprintCallable)
 	void BackToNature();
 
+	/*UFUNCTION(BlueprintCallable)
+	void JumpOn();
+
+	UFUNCTION(BlueprintCallable)
+	void JumpOff();*/
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* FirstSkill;
+
+	//bool bIsJumping = false;
 };
