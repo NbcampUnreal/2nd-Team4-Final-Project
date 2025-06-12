@@ -67,6 +67,9 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SceneCaptureComponent->bCaptureEveryFrame = false;
 	SceneCaptureComponent->bCaptureOnMovement = false;
 	SceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
+	// 퀘스트 매니저
+	QuestManager = CreateDefaultSubobject<UQuestManagerComponent>(TEXT("QuestManager"));
 }
 
 void ADW_CharacterBase::BeginPlay()
