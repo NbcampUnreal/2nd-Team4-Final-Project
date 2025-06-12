@@ -1105,6 +1105,7 @@ void ADW_CharacterBase::UpdateLockOnRotation()
 	(MonsterTarget && MonsterTarget->bIsDead))
 	{
 		AActor* NewTarget = FindClosestTarget(800.f);
+
 		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
 		{
 			LockOnTarget = NewTarget;
@@ -1121,9 +1122,8 @@ void ADW_CharacterBase::UpdateLockOnRotation()
 	FRotator DesiredRotation = ToTarget.Rotation();
 
 	float HeightDiff = ToTarget.Z;
-	float MaxHeightEffect = 200.f;     // 200 이상 높이차는 최대 효과
+	float MaxHeightEffect = 200.f;
 	float TargetPitch = FMath::Clamp(HeightDiff / MaxHeightEffect, -1.f, 1.f) * 30.f;
-	// -30도 ~ +30도 범위에서 자연스러운 Pitch 설정
 
 	DesiredRotation.Pitch = TargetPitch;
 	DesiredRotation.Roll = 0.f;
@@ -1160,7 +1160,6 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		FVector2D ScreenPos;
 		if (PC->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
 		{
-			// 오른쪽에 있는 타겟만 선별 (왼쪽 정렬 원하면 반대로)
 			if (ScreenPos.X > ScreenCenter.X)
 			{
 				LockOnCandidates.Add(Target);
