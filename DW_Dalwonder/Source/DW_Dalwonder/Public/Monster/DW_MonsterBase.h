@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	UDataTable* DropTable;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* AttackSoundComponent;
 
@@ -75,6 +78,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	class UNiagaraSystem* HitNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	class UNiagaraSystem* GuardHitNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
@@ -102,6 +108,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	bool bIsInvincible = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	bool bIsGuard = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
@@ -244,4 +253,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
 	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
+
+	virtual void DropItem(UDataTable* NewDataTable) override;
 };

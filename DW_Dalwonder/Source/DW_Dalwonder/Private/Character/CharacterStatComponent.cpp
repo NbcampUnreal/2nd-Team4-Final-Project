@@ -1,18 +1,17 @@
 #include "Character/CharacterStatComponent.h"
+#include "Character/DW_CharacterBase.h"
 
 UCharacterStatComponent::UCharacterStatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
+	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
 
 void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
 {
-	bEnableHealthGen = false;
-	
+	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
 	GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
 		{
-			if (FMath::IsNearlyZero(Health))
+			if (FMath::IsNearlyZero(Health) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeHealth();
 			}
@@ -23,11 +22,12 @@ void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
 
 void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 {
-	bEnableStaminaGen = false;
-	
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
 		{
-			if (FMath::IsNearlyZero(Stamina))
+		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+		
+			if (FMath::IsNearlyZero(Stamina) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeStamina();
 			}
@@ -39,13 +39,111 @@ void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 void UCharacterStatComponent::StopConsumeHealth()
 {
 	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
-	bEnableHealthGen = true;
 }
 
 void UCharacterStatComponent::StopConsumeStamina()
 {
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-	bEnableStaminaGen = true;
+
+	if (Character->bIsGuarding)
+	{
+		Character->SetGuarding(false);
+	}
+
+	if (Character->bIsSprinting)
+	{
+		Character->Sprint(false);
+	}
+}
+
+void UCharacterStatComponent::GenHealth()
+{
+	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+	{
+		return;
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
+	GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
+		{
+			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+			{
+				StopConsumeHealth();
+			}
+		
+			if (FMath::IsNearlyEqual(Health, MaxHealth))
+			{
+				StopConsumeHealth();
+			}
+		
+			Health = FMath::Clamp(Health + HealthGenRate, 0.f, MaxHealth);
+		}), 0.5f, true);
+}
+
+void UCharacterStatComponent::GenStamina()
+{
+	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+	{
+		return;
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
+		{
+		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+
+			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
+			{
+				StopConsumeHealth();
+			}
+		
+			if (FMath::IsNearlyEqual(Stamina, MaxStamina))
+			{
+				StopConsumeStamina();
+			}
+		
+			Stamina = FMath::Clamp(Stamina + StaminaGenRate, 0.f, MaxStamina);
+		}), 0.5f, true);
+}
+
+void UCharacterStatComponent::SetHealth(const float Value)
+{
+	Health = FMath::Clamp(Value, 0.0f, MaxHealth);
+
+	if (Health < MaxHealth)
+	{
+		GenHealth();
+	}
+}
+
+void UCharacterStatComponent::SetMaxHealth(const float Value)
+{
+	MaxHealth = Value;
+
+	if (Health < MaxHealth)
+	{
+		GenHealth();
+	}
+}
+
+void UCharacterStatComponent::SetStamina(const float Value)
+{
+	Stamina = FMath::Clamp(Value, 0.0f, MaxStamina);
+
+	if (Stamina < MaxStamina)
+	{
+		GenStamina();
+	}
+}
+
+void UCharacterStatComponent::SetMaxStamina(const float Value)
+{
+	MaxStamina = Value;
+
+	if (Stamina < MaxStamina)
+	{
+		GenStamina();
+	}
 }
 
 void UCharacterStatComponent::BeginPlay()
@@ -63,19 +161,3 @@ void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	HealthTimer.Invalidate();
 	StaminaTimer.Invalidate();
 }
-
-void UCharacterStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (Health < MaxHealth && bEnableHealthGen)
-	{
-		SetHealth(Health + HealthGenRate);
-	}
-
-	if (Stamina < MaxStamina && bEnableStaminaGen)
-	{
-		SetStamina(Stamina + StaminaGenRate);
-	}
-}
-

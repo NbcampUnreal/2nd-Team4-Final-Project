@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AISense_Damage.h"
 #include "Monster/Dissolve/DissolveComponent.h"
+#include "Components/CapsuleComponent.h"
 
 ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
                                                 AlertMontage(nullptr), AlertDelay(1.f)
@@ -215,6 +216,15 @@ void ADW_NormalMonsterBase::PlayAlertMontage()
 
 void ADW_NormalMonsterBase::Dead()
 {
+	GetWorldTimerManager().ClearTimer(HitDelayTimer);
+
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		AICon->UnPossess();
+	}
+
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+
 	Super::Dead();
 
 	FTimerHandle DeadLogicTime;
@@ -308,6 +318,16 @@ void ADW_NormalMonsterBase::BehaviorOn()
 			BBC->SetValueAsBool(FName("bCanBehavior"), true);
 		}
 	}
+}
+
+void ADW_NormalMonsterBase::PlayerIgnoreOn()
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+}
+
+void ADW_NormalMonsterBase::PlayerIgnoreOff()
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 }
 
 void ADW_NormalMonsterBase::RotateToPlayer()

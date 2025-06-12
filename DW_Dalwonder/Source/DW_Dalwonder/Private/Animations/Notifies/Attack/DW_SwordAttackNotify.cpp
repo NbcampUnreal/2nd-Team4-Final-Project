@@ -42,11 +42,13 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	if (!IsValid(World)) return;
 
 	const FVector CurrStart = CharacterWeapon->SwordTraceStartPoint->GetComponentLocation();
-	const FVector CurrEnd   = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
+	const FVector CurrCancelEnd = CharacterWeapon->SwordTraceCancelPoint->GetComponentLocation();
+	const FVector CurrEnd = CharacterWeapon->SwordTraceEndPoint->GetComponentLocation();
 
 	if (!bHasPrevTrace)
 	{
 		PrevTraceStart = CurrStart;
+		PrevTraceCancel = CurrCancelEnd;
 		PrevTraceEnd = CurrEnd;
 		bHasPrevTrace = true;
 	}
@@ -59,16 +61,17 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 	Params.AddIgnoredActor(PlayerCharacter);
 	Params.AddIgnoredActor(CharacterWeapon);
 
+	// Cancel용 영역 검사 (칼 중간까지만)
 	for (int32 i = 0; i < NumSteps; ++i)
 	{
 		const float Alpha = static_cast<float>(i) / (NumSteps - 1);
-		const FVector Start = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
-		const FVector End   = FMath::Lerp(CurrStart, CurrEnd, Alpha);
-
-		TArray<FHitResult> HitResults;
-		if (World->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_SwordTrace, SweepShape, Params))
+		const FVector Start = FMath::Lerp(PrevTraceStart, PrevTraceCancel, Alpha);
+		const FVector End = FMath::Lerp(CurrStart, CurrCancelEnd, Alpha);
+	
+		TArray<FHitResult> CancelHits;
+		if (World->SweepMultiByChannel(CancelHits, Start, End, FQuat::Identity, ECC_SwordTrace, SweepShape, Params))
 		{
-			for (const FHitResult& Hit : HitResults)
+			for (const FHitResult& Hit : CancelHits)
 			{
 				AActor* HitActor = Hit.GetActor();
 				if (!IsValid(HitActor)) continue;
@@ -85,42 +88,51 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 						PlayerCharacter->CancelAttack();
 						return;
 					}
-				}
-				else
-				{
-					UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-
-					if (RootPrimitive && RootPrimitive->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
-					{
-						// NoCollision이면 공격 유지
-					}
-					else
-					{
-						PlayerCharacter->CancelAttack();
-						return;
-					}
+					continue;
 				}
 
-				// 데미지 적용 (중복 방지)
-				if (!PlayerCharacter->AttackingActors.Contains(HitActor))
+				if (Hit.bBlockingHit)
 				{
-					PlayerCharacter->AttackingActors.Add(HitActor);
-					
-					UGameplayStatics::ApplyPointDamage(
-						HitActor,
-						AttackDamage,
-						(Hit.TraceEnd - Hit.TraceStart).GetSafeNormal(),
-						Hit,
-						PlayerCharacter->GetController(),
-						PlayerCharacter,
-						UDamageType::StaticClass()
-					);
+					PlayerCharacter->CancelAttack();
+					return;
 				}
+			}
+		}
+	}
+	
+	// 데미지 영역 검사 (칼 전체)
+	for (int32 i = 0; i < NumSteps; ++i)
+	{
+		const float Alpha = static_cast<float>(i) / (NumSteps - 1);
+		const FVector Start = FMath::Lerp(PrevTraceStart, PrevTraceEnd, Alpha);
+		const FVector End = FMath::Lerp(CurrStart, CurrEnd, Alpha);
+
+		TArray<FHitResult> HitResults;
+		if (World->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_SwordTrace, SweepShape, Params))
+		{
+			for (const FHitResult& Hit : HitResults)
+			{
+				AActor* HitActor = Hit.GetActor();
+				if (!IsValid(HitActor)) continue;
+
+				if (PlayerCharacter->AttackingActors.Contains(HitActor)) continue;
+				PlayerCharacter->AttackingActors.Add(HitActor);
+
+				UGameplayStatics::ApplyPointDamage(
+					HitActor,
+					AttackDamage,
+					(Hit.TraceEnd - Hit.TraceStart).GetSafeNormal(),
+					Hit,
+					PlayerCharacter->GetController(),
+					PlayerCharacter,
+					UDamageType::StaticClass()
+				);
 			}
 		}
 	}
 
 	PrevTraceStart = CurrStart;
+	PrevTraceCancel = CurrCancelEnd;
 	PrevTraceEnd = CurrEnd;
 }
 

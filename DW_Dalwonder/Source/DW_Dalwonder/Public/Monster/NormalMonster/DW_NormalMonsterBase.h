@@ -67,7 +67,7 @@ public:
 
 	void Dead() override;
 
-	void DeadLogic();
+	virtual void DeadLogic();
 	void DestroyDissolve();
 	void DestroyMonster();
 
@@ -83,6 +83,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void BehaviorOn();
+
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void PlayerIgnoreOn();
+	UFUNCTION(BlueprintCallable, Category = "Monster")
+	void PlayerIgnoreOff();
 
 	UFUNCTION()
 	void RotateToPlayer();
