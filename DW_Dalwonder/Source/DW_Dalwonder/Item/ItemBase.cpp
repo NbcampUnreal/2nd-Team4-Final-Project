@@ -10,10 +10,8 @@ UItemBase::UItemBase()
     }
     else
     {
-#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("Failed to find ItemDataTable in UItem constructor. Path might be incorrect or asset not found."));
-#endif
-	}
+    }
 }
 
 void UItemBase::LoadItemFromCode(int32 InItemCode)
@@ -30,7 +28,6 @@ void UItemBase::LoadItemFromCode(int32 InItemCode)
 
     if (bSuccess)
     {
-        ItemGrade = ParsedGrade;
         EnchantLevel = ParsedEnchantLevel;
 
         // 데이터 테이블이 유효한지 확인하고 로드
@@ -46,30 +43,22 @@ void UItemBase::LoadItemFromCode(int32 InItemCode)
             {
                 ItemBaseData = *FoundData; // 찾은 데이터를 UItem의 ItemBaseData에 복사
                 // 필요시 추가 로직: 아이템 타입/등급 Enum 재확인 등
-#if WITH_EDITOR
                 UE_LOG(LogTemp, Log, TEXT("Item %s (Code: %d) loaded successfully from Data Table. Enchant: %d"), *ItemBaseData.ItemName.ToString(), ItemCode, EnchantLevel);
-#endif
-			}
+            }
             else
             {
-#if WITH_EDITOR
                 UE_LOG(LogTemp, Warning, TEXT("UItem::LoadItemFromCode: Could not find row '%s' in ItemDataTable for code %d."), *RowName.ToString(), ItemCode);
-#endif
-				// 기본값 또는 에러 아이템 설정
+                // 기본값 또는 에러 아이템 설정
             }
         }
         else
         {
-#if WITH_EDITOR
             UE_LOG(LogTemp, Error, TEXT("UItem::LoadItemFromCode: ItemDataTable is invalid or not set for code %d."), ItemCode);
-#endif
-		}
+        }
     }
     else
     {
-#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("UItem::LoadItemFromCode: Failed to parse ItemCode %d."), InItemCode);
-#endif
-		// 파싱 실패 시 기본값 또는 에러 처리
+        // 파싱 실패 시 기본값 또는 에러 처리
     }
 }

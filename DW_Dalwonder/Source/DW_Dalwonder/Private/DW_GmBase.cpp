@@ -2,25 +2,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
-#include "DW_GameInstance.h"
-#include "UI/Widget/ResultWidget.h"
-#include "DW_SaveGame.h"
 
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
-    // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = true;
 }
 
 void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-    {
-        GI->ApplyLoadedData();
-    }
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
@@ -62,30 +53,6 @@ UUserWidget* ADW_GmBase::ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass)
         InputMode.SetWidgetToFocus(NewWidget->TakeWidget());
         InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
         InputMode.SetHideCursorDuringCapture(false);
-        PC->SetInputMode(InputMode);
-    }
-
-    return NewWidget;   // 반환
-}
-
-UUserWidget* ADW_GmBase::ShowPopupUI_M(TSubclassOf<UUserWidget> WidgetClass)
-{
-    if (!WidgetClass) return nullptr;
-
-    // 위젯 생성
-    UUserWidget* NewWidget = CreateWidget<UUserWidget>(GetWorld(), WidgetClass);
-    if (!NewWidget) return nullptr;
-
-    // 화면에 추가
-    NewWidget->AddToViewport(10);
-    PopupWidgets.Add(NewWidget);
-
-    // 입력‧마우스 세팅
-    if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-    {
-        PC->bShowMouseCursor = false;
-
-        FInputModeGameOnly InputMode;
         PC->SetInputMode(InputMode);
     }
 
@@ -161,28 +128,4 @@ UUserWidget* ADW_GmBase::CloseLastPopupUI_AndReturn()
     }
 
     return LastWidget;
-}
-
-void ADW_GmBase::ShowResultUI(const FString& MessageText)
-{
-    if (!ResultWidgetClass) return;
-
-    UResultWidget* ResultUI = Cast<UResultWidget>(ShowPopupUI_M(ResultWidgetClass));
-    if (ResultUI)
-    {
-        ResultUI->SetResultText(MessageText);
-        ResultUI->StartLetterSpacingAnimation();
-
-        if (ResultUI->ResultTextAnimation)
-        {
-            ResultUI->PlayAnimation(ResultUI->ResultTextAnimation);
-            ResultUI->PlayAnimation(ResultUI->ResultTextShadowAnimation);
-        }
-
-        FTimerHandle Handle;
-        GetWorld()->GetTimerManager().SetTimer(Handle, [=, this]()
-        {
-            this->ClosePopupUI(ResultUI);
-        }, 3.f, false);
-    }
 }

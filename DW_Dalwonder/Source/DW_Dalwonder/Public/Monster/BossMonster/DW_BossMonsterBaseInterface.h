@@ -30,6 +30,4 @@ public:
 	// virtual void SetPhaseBlackboardValues(int32 NewPhase) = 0;
 
 	virtual void SetBGM(USoundBase* NewBGM) = 0;
-
-	virtual void DoDissolve(float DissolveTime) = 0;
 };

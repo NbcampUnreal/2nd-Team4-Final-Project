@@ -116,6 +116,4 @@ public:
 
 	// 플레이어와의 거리 반환
 	virtual float GetPlayerDistance() = 0;
-
-	virtual void DropItem(UDataTable* NewDataTable) = 0;
 };

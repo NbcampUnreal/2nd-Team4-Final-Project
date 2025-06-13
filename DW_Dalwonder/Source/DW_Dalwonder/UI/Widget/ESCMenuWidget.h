@@ -29,9 +29,6 @@ public:
     void OnInventoryClicked();
 
     UFUNCTION()
-    void OnSaveClicked();
-
-    UFUNCTION()
     void OnOptionClicked();
 
     UFUNCTION()
@@ -50,9 +47,6 @@ protected:
     class UCustomButtonWidget* InventoryButton;
 
     UPROPERTY(meta = (BindWidget))
-    class UCustomButtonWidget* SaveButton;
-
-    UPROPERTY(meta = (BindWidget))
     class UCustomButtonWidget* OptionButton;
 
     UPROPERTY(meta = (BindWidget))
@@ -69,7 +63,4 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> OptionMenuWidgetClass;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-    TSubclassOf<UUserWidget> SavedGameWidgetClass;
 };

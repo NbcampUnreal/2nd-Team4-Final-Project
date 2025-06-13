@@ -22,9 +22,6 @@ struct FItemData : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
     EItemType ItemType = EItemType::None;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
-    TSoftObjectPtr<UStaticMesh> ItemMesh;
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
     TSoftObjectPtr<UTexture2D> Icon;
 

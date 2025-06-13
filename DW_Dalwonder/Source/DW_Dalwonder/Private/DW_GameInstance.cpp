@@ -1,22 +1,20 @@
 ﻿#include "DW_GameInstance.h"
+#include "LoadingScreenWidget.h"
+#include "Runtime/MoviePlayer/Public/MoviePlayer.h"
+#include "Engine/World.h"
+#include "Misc/CoreDelegates.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
-#include "DW_SaveGame.h"
-#include "Character/DW_CharacterBase.h"
-#include "DW_LevelLoadSubsystem.h"
-#include "UI/Widget/LoadingWidget.h"
+#include "TimerManager.h"
+#include "Item/ItemDataManager.h"
 
 void UDW_GameInstance::Init()
 {
     Super::Init();
 
-    if (QuestDatabase && QuestDatabase->QuestDataTable)
-    {
-        UE_LOG(LogTemp, Log, TEXT("퀘스트 데이터베이스가 블루프린트에서 정상 설정되었습니다."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("QuestDatabase 또는 QuestDataTable이 블루프린트에서 설정되지 않았습니다."));
-    }
+    FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UDW_GameInstance::BeginLoadingScreen);
+    FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UDW_GameInstance::EndLoadingScreen);
+
 }
 
 void UDW_GameInstance::Shutdown()
@@ -24,104 +22,71 @@ void UDW_GameInstance::Shutdown()
     Super::Shutdown();
 }
 
-void UDW_GameInstance::SaveGameData()
+
+void UDW_GameInstance::LoadLevelWithLoadingScreen()
 {
-    UDW_SaveGame* SaveGameInstance = Cast<UDW_SaveGame>(
-        UGameplayStatics::CreateSaveGameObject(UDW_SaveGame::StaticClass())
-    );
-    if (!SaveGameInstance) return;
-
-    ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    if (!PlayerCharacter) return;
-
-    // 1. 위치 저장
-    SaveGameInstance->SavedPlayerLocation = PlayerCharacter->GetActorLocation();
-
-    // 2. 회전값 저장
-    SaveGameInstance->SavedPlayerRotation = PlayerCharacter->GetActorRotation();
-
-    // 3. 스탯 저장
-    if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
+    if (LevelToLoad.IsNone())
     {
-        AttrComp->SaveData(SaveGameInstance->SavedAttributes);
+        UE_LOG(LogTemp, Warning, TEXT("LevelToLoad is not set!"));
+        return;
     }
 
-    // 4. 스킬 트리 저장
-    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
-    {
-        SaveGameInstance->SavedSkillStates = SkillComp->SkillStateMap;
-    }
+    ShowLoadingScreen();
 
-    UGameplayStatics::SaveGameToSlot(SaveGameInstance, DefaultSaveSlot, 0);
+    GetWorld()->GetTimerManager().SetTimerForNextTick(
+        FTimerDelegate::CreateLambda([this]()
+            {
+                UGameplayStatics::OpenLevel(this, LevelToLoad);
+            }));
 }
 
-void UDW_GameInstance::LoadGameData()
+void UDW_GameInstance::LoadLevelWithLoadingScreenByName(FName LevelName)
 {
-    if (!UGameplayStatics::DoesSaveGameExist(DefaultSaveSlot, 0)) return;
-
-    LoadedSaveGame = Cast<UDW_SaveGame>(UGameplayStatics::LoadGameFromSlot(DefaultSaveSlot, 0));
-    if (!LoadedSaveGame) return;
-
-    UGameplayStatics::OpenLevel(GetWorld(), TEXT("TestLoadingMap"));
+    LevelToLoad = LevelName;
+    LoadLevelWithLoadingScreen();
 }
 
-void UDW_GameInstance::ApplyLoadedData()
+void UDW_GameInstance::ShowLoadingScreen()
 {
-    if (!LoadedSaveGame) return;
+    if (LoadingWidget) { return; } // 이미 있으면 무시
 
-    ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    if (!PlayerCharacter) return;
+    if (!LoadingWidgetClass) { return; } // 설정 안 된 경우
 
-    // 1. 위치 적용
-    PlayerCharacter->SetActorLocation(LoadedSaveGame->SavedPlayerLocation);
+    LoadingWidget = CreateWidget<ULoadingScreenWidget>(this, LoadingWidgetClass);
+    if (!LoadingWidget) { return; }
 
-    // 2. 회전값 적용
-    PlayerCharacter->SetActorRotation(LoadedSaveGame->SavedPlayerRotation);
-
-    // 3. Attribute 적용
-    UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>();
-    if (AttrComp)
-    {
-        AttrComp->LoadData(LoadedSaveGame->SavedAttributes);
-    }
-
-    // 4. Skill 복원 + 보너스 적용
-    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
-    {
-        SkillComp->SkillStateMap = LoadedSaveGame->SavedSkillStates;
-        if (AttrComp)
-        {
-            SkillComp->ApplyAllSkillBonuses(AttrComp);
-        }
-    }
-
-    LoadedSaveGame = nullptr; // 일회성 데이터로 초기화
+    LoadingWidget->AddToViewport(100);
+    LoadingWidget->SetVisibility(ESlateVisibility::Visible);
 }
 
-void UDW_GameInstance::LoadLevelWithLoadingScreen(FName LevelName)
+void UDW_GameInstance::HideLoadingScreen()
 {
-    // 서브시스템 가져오기
-    UDW_LevelLoadSubsystem* LoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
-    if (!LoadSubsystem) return;
-    
-    if (!LoadingWidgetClass) return;
+    if (!LoadingWidget) { return; }
 
-    // 로딩 위젯 넘겨주고 맵 비동기 로드 시작
-    LoadSubsystem->SetLoadingWidgetClass(LoadingWidgetClass);
-    LoadSubsystem->StreamLevelAsync(LevelName);
-}
-
-void UDW_GameInstance::StartLevelStreaming()
-{
-    if (!LevelLoadSubsystem)
-    {
-        LevelLoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
-    }
-
-    // 서브시스템로드실패 및 맵이름 없을때
-    if (!LevelLoadSubsystem || PendingLevelName.IsNone()) return;
-
-    LevelLoadSubsystem->StreamLevelAsync(PendingLevelName);
+    LoadingWidget->RemoveFromParent();
+    LoadingWidget = nullptr;
 }
 
 
+void UDW_GameInstance::BeginLoadingScreen(const FString& /*MapName*/)
+{
+    // UMG 위젯이 없다면 생성 (콘솔에서 "open Map" 등으로 갈 때도 대비)
+    if (!LoadingWidget) { ShowLoadingScreen(); }
+
+    if (!LoadingWidget) { return; }
+
+    // UMG → Slate 변환
+    TSharedPtr<SWidget> LoadingSlate = LoadingWidget->TakeWidget();
+
+    FLoadingScreenAttributes Attr;
+    Attr.bAutoCompleteWhenLoadingCompletes = false;         // 레벨 완료 후 수동 제거
+    Attr.MinimumLoadingScreenDisplayTime = 10.0f;           // 최소 2초 노출
+    Attr.WidgetLoadingScreen = LoadingSlate;
+
+    GetMoviePlayer()->SetupLoadingScreen(Attr);
+}
+
+void UDW_GameInstance::EndLoadingScreen(UWorld* /*LoadedWorld*/)
+{
+    GetWorld()->GetTimerManager().SetTimer(DelayTest, this, &UDW_GameInstance::HideLoadingScreen, 3.0f, false);
+}
