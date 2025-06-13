@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_InteractInterface.h"
+#include "DW_InteractItemBase.h"
 #include "GameFramework/Actor.h"
 #include "DW_Chest.generated.h"
 
 UCLASS()
-class DW_DALWONDER_API ADW_Chest : public AActor, public IDW_InteractInterface
+class DW_DALWONDER_API ADW_Chest :public ADW_InteractItemBase
 {
 	GENERATED_BODY()
 
