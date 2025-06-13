@@ -49,9 +49,10 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 
 	Tags.Add(TEXT("Monster"));
 	
-	bUseControllerRotationYaw = true;
+	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 30.f, 0.f); // 회전 속도 조절
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
 	
 }
 
@@ -552,9 +553,11 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 	{
 		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
 		{
-			FVector SpawnLocation = GetActorLocation();
+			FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
+			FVector SpawnLocation = GetActorLocation() + RandOffset;
 
 			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 			SpawnParams.Owner = this;
 			SpawnParams.Instigator = GetInstigator();
 

@@ -41,4 +41,6 @@ enum class EMonsterName : uint8
 	Chick UMETA(DisplayName = "Chick"),
 	Elephant UMETA(DisplayName = "Elephant"),
 	Spider UMETA(DisplayName = "Spider"),
+	GrandMa UMETA(DisplayName = "GrandMa"),
+	Camel UMETA(DisplayName = "Camel"),
 };
