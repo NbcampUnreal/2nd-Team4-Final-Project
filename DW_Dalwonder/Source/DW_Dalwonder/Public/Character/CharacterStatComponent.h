@@ -34,21 +34,38 @@ public:
 
 	void SetHealth(const float Value);
 	
-	float GetMaxHealth() const
+	float GetBaseMaxHealth() const
 	{
-		return MaxHealth;
+		return BaseMaxHealth;
 	}
 
-	void SetMaxHealth(const float Value);
+	void SetBaseMaxHealth(const float Value);
+
+	float GetBonusMaxHealth() const
+	{
+		return BonusMaxHealth;
+	}
+
+	void SetBonusMaxHealth(const float Value);
 	
-	float GetHealthGenRate() const
+	float GetBaseHealthGenRate() const
 	{
-		return HealthGenRate;
+		return BaseHealthGenRate;
 	}
 
-	void SetHealthGenRate(const float Value)
+	void SetBaseHealthGenRate(const float Value)
 	{
-		HealthGenRate = Value;
+		BaseHealthGenRate = Value;
+	}
+
+	float GetBonusHealthGenRate() const
+	{
+		return BonusHealthGenRate;
+	}
+
+	void SetBonusHealthGenRate(const float Value)
+	{
+		BonusHealthGenRate = Value;
 	}
 
 	float GetStamina() const
@@ -58,41 +75,78 @@ public:
 
 	void SetStamina(const float Value);
 
-	float GetMaxStamina() const
+	float GetBaseMaxStamina() const
 	{
-		return MaxStamina;
+		return BaseMaxStamina;
 	}
 
-	void SetMaxStamina(const float Value);
+	void SetBaseMaxStamina(const float Value);
 
-	float GetStaminaGenRate() const
+	float GetBonusMaxStamina() const
 	{
-		return StaminaGenRate;
+		return BonusMaxStamina;
 	}
 
-	void SetStaminaGenRate(const float Value)
+	void SetBonusMaxStamina(const float Value);
+
+	float GetBaseStaminaGenRate() const
 	{
-		StaminaGenRate = Value;
+		return BaseStaminaGenRate;
 	}
 
-	float GetAttack() const
+	void SetBaseStaminaGenRate(const float Value)
 	{
-		return Attack;
+		BaseStaminaGenRate = Value;
 	}
 
-	void SetAttack(const float Value)
+	float GetBonusStaminaGenRate() const
 	{
-		Attack = Value;
+		return BonusStaminaGenRate;
 	}
 
-	float GetDefense() const
+	void SetBonusStaminaGenRate(const float Value)
 	{
-		return Defense;
+		BonusStaminaGenRate = Value;
 	}
 
-	void SetDefense(const float Value)
+	float GetBaseAttack() const
 	{
-		Defense = Value;
+		return BaseAttack;
+	}
+
+	void SetBaseAttack(const float Value)
+	{
+		BaseAttack = Value;
+	}
+
+	float GetBonusAttack() const
+	{
+		return BonusAttack;
+	}
+
+	void SetBonusAttack(const float Value)
+	{
+		BonusAttack = Value;
+	}
+
+	float GetBaseDefense() const
+	{
+		return BaseDefense;
+	}
+
+	void SetBaseDefense(const float Value)
+	{
+		BaseDefense = Value;
+	}
+
+	float GetBonusDefense() const
+	{
+		return BonusDefense;
+	}
+
+	void SetBonusDefense(const float Value)
+	{
+		BonusDefense = Value;
 	}
 	
 	float GetWeight() const
@@ -102,47 +156,72 @@ public:
 
 	void SetWeight(const float Value)
 	{
-		Weight = FMath::Clamp(Value, 0.f, MaxWeight);
+		Weight = FMath::Clamp(Value, 0.f, BaseMaxWeight + BonusMaxWeight);
 	}
 
-	float GetMaxWeight() const
+	float GetBaseMaxWeight() const
 	{
-		return MaxWeight;
+		return BaseMaxWeight;
 	}
 
-	void SetMaxWeight(const float Value)
+	void SetBaseMaxWeight(const float Value)
 	{
-		MaxWeight = Value;
+		BaseMaxWeight = Value;
 	}
 
-	float GetAttackSpeed() const
+	float GetBonusMaxWeight() const
 	{
-		return AttackSpeed;
+		return BonusMaxWeight;
 	}
 
-	void SetAttackSpeed(const float Value)
+	void SetBonusMaxWeight(const float Value)
 	{
-		AttackSpeed = Value;
+		BonusMaxWeight = Value;
 	}
 
-	float GetWalkSpeed() const
+	float GetBaseAttackSpeed() const
 	{
-		return WalkSpeed;
+		return BaseAttackSpeed;
 	}
 
-	void SetWalkSpeed(const float Value)
+	void SetBaseAttackSpeed(const float Value)
 	{
-		WalkSpeed = Value;
+		BaseAttackSpeed = Value;
+	}
+
+	float GetBonusAttackSpeed() const
+	{
+		return BonusAttackSpeed;
+	}
+
+	void SetBonusAttackSpeed(const float Value)
+	{
+		BonusAttackSpeed = Value;
+	}
+
+	float GetBaseWalkSpeed() const
+	{
+		return BaseWalkSpeed;
+	}
+
+	void SetBaseWalkSpeed(const float Value)
+	{
+		BaseWalkSpeed = Value;
+	}
+
+	float GetBonusWalkSpeed() const
+	{
+		return BonusWalkSpeed;
+	}
+
+	void SetBonusWalkSpeed(const float Value)
+	{
+		BonusWalkSpeed = Value;
 	}
 
 	float GetSprintSpeed() const
 	{
 		return SprintSpeed;
-	}
-
-	void SetSprintSpeed(const float Value)
-	{
-		SprintSpeed = Value;
 	}
 #pragma endregion
 	
@@ -156,40 +235,67 @@ protected:
 	float Health = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxHealth = 100.f;
+	float BaseMaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float HealthGenRate = 0.5f;
+	float BonusMaxHealth = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseHealthGenRate = 0.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusHealthGenRate = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Stamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxStamina = 100.f;
+	float BaseMaxStamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaGenRate = 0.5f;
+	float BonusMaxStamina = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float Attack = 10.f;
+	float BaseStaminaGenRate = 0.5f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float Defense = 10.f;
+	float BonusStaminaGenRate = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseAttack = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusAttack = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseDefense = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusDefense = 0.f;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Weight = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxWeight = 100.f;
+	float BaseMaxWeight = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float AttackSpeed = 1.f;
+	float BonusMaxWeight = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float WalkSpeed = 300.f;
+	float BaseAttackSpeed = 1.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float SprintSpeed = 600.f;
+	float BonusAttackSpeed = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseWalkSpeed = 300.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusWalkSpeed = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float SprintSpeed = 2 * (BaseWalkSpeed + BonusWalkSpeed);
 
 	UPROPERTY()
 	FTimerHandle HealthTimer;
