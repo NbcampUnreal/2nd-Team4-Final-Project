@@ -25,9 +25,22 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Quest")
     void UpdateObjectiveProgress(FName TargetID, int32 Amount = 1);
 
+    /** 퀘스트 완료 확인 */
+    UFUNCTION(BlueprintCallable, Category = "Quest")
+    bool IsQuestCompleted(const FQuestData& Quest);
+
+    /** 퀘스트 완료 처리 */
+    UFUNCTION(BlueprintCallable, Category = "Quest")
+    void CompleteQuest(FName QuestID);
+
+    const TMap<FName, FQuestData>& GetActiveQuests() { return AcceptedQuests; }
+    const TMap<FName, FQuestData>& GetCompletedQuests() { return CompletedQuests; }
+
     /** 현재 수락된 퀘스트 목록 */
     UPROPERTY()
     TMap<FName, FQuestData> AcceptedQuests;
 
-		
+    /** 완료한 퀘스트 목록 */
+    UPROPERTY()
+    TMap<FName, FQuestData> CompletedQuests;
 };
