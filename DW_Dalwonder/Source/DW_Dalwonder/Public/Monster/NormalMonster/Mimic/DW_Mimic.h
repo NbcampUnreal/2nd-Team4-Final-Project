@@ -8,16 +8,25 @@
 #include "DW_Mimic.generated.h"
 
 UCLASS()
-class DW_DALWONDER_API ADW_Mimic : public ADW_NormalMonsterBase, public IDW_InteractInterface
+class DW_DALWONDER_API ADW_Mimic : public ADW_NormalMonsterBase
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
 	ADW_Mimic();
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	bool bIsClosed = true;
 	
-	virtual void Interact_Implementation(AActor* Interactor) override;
+	// virtual void Interact_Implementation(AActor* Interactor) override;
+	//
+	// virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual void BeginPlay() override;
+
+	void MimicAttack();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* AttackNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* BeginPlayNS;
 };
