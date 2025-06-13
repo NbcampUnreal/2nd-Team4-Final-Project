@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Monster/NormalMonster/DW_NormalMonsterBase.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h" 
+#include "NiagaraComponent.h"
 #include "MobSkeleton.generated.h"
 
 /**
@@ -19,6 +22,10 @@ private:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
+	void SpawnTickEnd();
+
 public:
 	virtual void PlayAlertMontage() override;
 
@@ -28,6 +35,22 @@ public:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 	) override;
+
+	void Dead() override;
+
+	UFUNCTION()
+	void AffectToEnergeShield(); 
+	void EnergeShieldDeactive();
+
+	UFUNCTION()
+	void AffectToEnhance();
+	void ScaleUp();
+	void ScaleDown();
+	void EnhanceDeactive();
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UNiagaraComponent* NiagaraComponent;
 
 	// ---------- Animation Function ----------
 	// Use first skill anim montage.
@@ -39,8 +62,12 @@ public:
 	// ---------- -------------------- ----------
 
 	// ----------  Function ----------
-	// 
-	
+	// Shield On
+	UFUNCTION(BlueprintCallable)
+	void ShieldOn();
+	// Shield Off
+	UFUNCTION(BlueprintCallable)
+	void ShieldOff();
 	// ---------- -------------------- ----------
 
 	// ---------- Stat & Data Function ----------
@@ -78,12 +105,30 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bIsStrafe;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	float HitDelay;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	float HitDelay;*/
+
+	float DefaultHP;
+	float DefaultDamage;
+
+	float CurrentZ;
 
 	FVector SpawnLocation;
 	FVector RandomLocation1;
 	FVector RandomLocation2;
 
-	FTimerHandle HitDelayTimer;
+	//FTimerHandle HitDelayTimer;
+	FTimerHandle EnergeShieldTimer;
+	FTimerHandle ScaleUpTimer;
+	FTimerHandle ScaleDownTimer;
+	FTimerHandle EnhancedTimer;
+
+	int32 ScaleUpCount = 0;
+
+	bool bIsShieldUse = false;
+
+	bool bHaveEnergeSheild = false;
+	bool bHaveEnhanced = false;
+
+	bool bSpawnTick = true;
 };

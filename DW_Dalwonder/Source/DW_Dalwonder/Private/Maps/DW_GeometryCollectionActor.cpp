@@ -24,7 +24,6 @@ ADW_GeometryCollectionActor::ADW_GeometryCollectionActor()
 void ADW_GeometryCollectionActor::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void ADW_GeometryCollectionActor::DestructActor()

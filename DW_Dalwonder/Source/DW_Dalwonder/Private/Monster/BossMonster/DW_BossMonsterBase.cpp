@@ -1,6 +1,12 @@
 ﻿#include "Monster/BossMonster/DW_BossMonsterBase.h"
 
+#include <Monster/Dissolve/DissolveComponent.h>
+#include <UI/Widget/BossHUDWidget.h>
+
+#include "Character/DW_PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "AIController.h"
+#include "DW_GmBase.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/AudioComponent.h"
@@ -14,6 +20,8 @@ ADW_BossMonsterBase::ADW_BossMonsterBase(): CurrentPhase(1), BGM(nullptr)
 	BGMSoundComponent->bAutoActivate = false;
 
 	Tags.Add(TEXT("BossMonster"));
+	
+	DissolveComp = CreateDefaultSubobject<UDissolveComponent>(TEXT("DissolveComponent"));
 }
 
 void ADW_BossMonsterBase::BeginPlay()
@@ -25,6 +33,13 @@ void ADW_BossMonsterBase::BeginPlay()
 		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
 		{
 			BBC->SetValueAsObject(FName("TargetActor"), PlayerCharacter);
+		}
+	}
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+		{
+			DWPC->ShowBossHUD(TEXT("Sevarog"), MonsterMaxHP);
 		}
 	}
 }
@@ -44,10 +59,58 @@ void ADW_BossMonsterBase::SetCurrentPhase(int32 NewPhase)
 		{
 			BBC->SetValueAsInt(FName("CurrentPhase"), NewPhase);
 		}
-	}
+	}	
 }
 
 void ADW_BossMonsterBase::SetBGM(USoundBase* NewBGM)
 {
 	//BGM 변경로직
+}
+
+void ADW_BossMonsterBase::Dead()
+{
+	Super::Dead();
+
+	if (bIsRealBoss)
+	{
+		SetActorTickEnabled(false);
+		
+		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+			{
+				DWPC->HideBossHUD();
+			}
+		}
+			if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+			{
+				GM->ShowResultUI("ENEMY FELLED!");
+			};
+	}
+}
+
+float ADW_BossMonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (bIsRealBoss)
+	{
+		if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+			{
+				if (IsValid(DWPC->CachedBossHUD))
+				{
+					DWPC->CachedBossHUD->UpdateHP(MonsterHP);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+void ADW_BossMonsterBase::DoDissolve(float DissolveTime)
+{
+	DissolveComp->DissolveStart(0, 0, DissolveTime);
 }

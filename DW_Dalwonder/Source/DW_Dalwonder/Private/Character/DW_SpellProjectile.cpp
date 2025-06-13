@@ -70,7 +70,9 @@ void ADW_SpellProjectile::OnProjectileBeginOverlap(UPrimitiveComponent* Overlapp
 	{
 		if (IsValid(HitResult.GetActor()) == true)
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("Hit!"));
+#endif
 		}
 	}
 }

@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "DW_AttributeComponent.generated.h"
 
+struct FAttributeSaveData;
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DW_DALWONDER_API UDW_AttributeComponent : public UActorComponent
 {
@@ -46,6 +48,10 @@ public:
     UFUNCTION(BlueprintCallable) float GetDefense()         const { return BaseDefense + BonusDefense; }
 
     void ClearAllBonuses();
+
+    //Save and Load
+    void SaveData(struct FAttributeSaveData& OutData) const;
+    void LoadData(const struct FAttributeSaveData& InData);
 
 protected:
     virtual void BeginPlay() override;

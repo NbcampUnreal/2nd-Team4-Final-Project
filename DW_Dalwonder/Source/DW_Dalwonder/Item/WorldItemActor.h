@@ -9,6 +9,9 @@
 #include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
+class UWidgetComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class DW_DALWONDER_API AWorldItemActor : public AActor
 {
@@ -21,24 +24,30 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    UPROPERTY(EditAnywhere, Instanced, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Item")
 	UItemBase* ItemBase;
 
     // 아이템 데이터테이블 
     UPROPERTY(EditAnywhere, Category = "Item")
     UDataTable* ItemDataTable;
 
-    // 상호작용 문구 위젯 
-    UPROPERTY(VisibleAnywhere)
-    class UWidgetComponent* InteractionWidget;
+    // 상호작용 문구 위젯 (이 UWidgetComponent는 이제 UInteractionprompt 타입의 위젯을 생성할 겁니다)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
+    UWidgetComponent* InteractionWidget;
 
+    // **새로 추가된 부분**: 에디터에서 설정할 Blueprint 위젯 클래스
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
+    TSubclassOf<UUserWidget> InteractionWidgetClass; // 여기에 UInteractionprompt의 Blueprint 클래스를 지정합니다.
+    
     // 아이템 시각적 표시 
     UPROPERTY(VisibleAnywhere)
-    class UStaticMeshComponent* MeshComponent;
+    UStaticMeshComponent* MeshComponent;
 
     // 감지 범위 
     UPROPERTY(VisibleAnywhere)
     class USphereComponent* DetectionSphere;
+
+    void SetItemCode(int NewItemCode);
 
     // 플레이어 감지 
     UFUNCTION()

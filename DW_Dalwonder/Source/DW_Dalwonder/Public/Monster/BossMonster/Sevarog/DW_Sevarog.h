@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequencePlayer.h"
 #include "NiagaraSystem.h"
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_Sevarog.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossDead);
 
 UCLASS()
 class DW_DALWONDER_API ADW_Sevarog : public ADW_BossMonsterBase
@@ -16,6 +19,9 @@ public:
 	// Sets default values for this character's properties
 	ADW_Sevarog();
 
+	UPROPERTY(BlueprintAssignable, Category="Boss")
+	FOnBossDead OnBossDead;
+
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 	USceneComponent* Hammer;
 	
@@ -24,6 +30,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* RangedTeleportMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
+	UAnimMontage* InitPhase2Montage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* AirAttackNS;
@@ -39,13 +48,23 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* BoxAttackNS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	bool bIsRealBoss = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Particle")
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraComponent* TrailNS;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraComponent* Phase2TrailNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* DeadNS;
+
+	/////////////////////시퀀스 관련 컴포넌트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Sequence")
+	ULevelSequence* Sequenceindex;
+	UPROPERTY()
+	ULevelSequencePlayer* SequencePlayer;
+	UPROPERTY()
+	ALevelSequenceActor* LevelSequenceActor;
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -65,5 +84,19 @@ public:
 
 	void BoxAttack();
 
+	void SetInvincible(const bool NewState);
+
+	void DoPhase2();
+	
+	virtual void SetCurrentPhase(int32 NewPhase) override;
+	
 	virtual void Dead() override;
+
+	void ActivateRagdoll();
+
+	void DestroySelf();
+	
+
+	UFUNCTION()
+	void TriggerPhase2Sequence();
 };

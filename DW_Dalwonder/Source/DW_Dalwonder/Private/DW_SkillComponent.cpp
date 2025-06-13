@@ -7,6 +7,28 @@ UDW_SkillComponent::UDW_SkillComponent()
     PrimaryComponentTick.bCanEverTick = false;
 }
 
+/* ------------------------------ 저장데이터 불러오기 ------------------------------ */
+void UDW_SkillComponent::ApplyAllSkillBonuses(UDW_AttributeComponent* AttributeComponent)
+{
+    if (!AttributeComponent || !SkillDataTable) return;
+
+    for (const auto& Elem : SkillStateMap)
+    {
+        const FName& SkillID = Elem.Key;
+        const FSkillState& SkillState = Elem.Value;
+
+        // 레벨이 0 이하인 경우 보너스 없음
+        if (SkillState.CurrentLevel <= 0) continue;
+
+        // SkillDataTable에서 해당 스킬 데이터 조회
+        const FSkillData* SkillData = SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("Skill Bonus Apply"));
+        if (!SkillData) continue;
+
+        // Skill 레벨만큼 보너스 효과 적용
+        ApplySkillEffect(*SkillData, SkillState.CurrentLevel);
+    }
+}
+
 /* ------------------------------ 스킬 상태 ------------------------------ */
 FSkillState* UDW_SkillComponent::FindSkillState(FName SkillID)
 {
@@ -27,7 +49,9 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
         const FSkillState* PreState = SkillStateMap.Find(SkillData->PrerequisiteSkillID);
         if (!PreState || PreState->CurrentLevel <= 0)
         {
+#if WITH_EDITOR
             UE_LOG(LogTemp, Warning, TEXT("Prerequisite skill not learned"));
+#endif
             return false;
         }
     }
@@ -54,7 +78,9 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 
         ApplySkillEffect(*SkillData, 1);
     }
+#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("CurrentSP: %d"), CurrentSP);
+#endif
     OnSkillUpdated.Broadcast();
     return true;
 }

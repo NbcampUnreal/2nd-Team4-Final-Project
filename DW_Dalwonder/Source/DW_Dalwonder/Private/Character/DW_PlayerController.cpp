@@ -5,6 +5,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Inventory/InventoryMenuWidgetBase.h"
 #include "EnhancedInputComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "UI/Widget/BossHUDWidget.h"
 #include "Character/DW_CharacterBase.h"
 
 ADW_PlayerController::ADW_PlayerController()
@@ -14,13 +17,11 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
-	SprintAction(nullptr),
 	GuardAction(nullptr),
 	DodgeAction(nullptr),
 	LockonAction(nullptr),
 	ESCAction(nullptr)
 {
-	bIsInventoryOpen = false;
 }
 
 void ADW_PlayerController::BeginPlay()
@@ -38,21 +39,7 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
-	//HUD 보여주기
-	ShowGameHUD();
-  
-	if (InventoryWidgetClass)
-	{
-		InventoryWidgetInstance = CreateWidget<UInventoryMenuWidgetBase>(this, InventoryWidgetClass);
-		if (InventoryWidgetInstance)
-		{
-			InventoryWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
-			InventoryWidgetInstance->AddToViewport();
-		}
-	}
-
-    SetInputMode(FInputModeGameOnly());
-    SetShowMouseCursor(false);
+	
 }
 
 void ADW_PlayerController::SetupInputComponent()
@@ -61,71 +48,118 @@ void ADW_PlayerController::SetupInputComponent()
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
-		if (InventoryInputAction)
+		if (ESCAction)
 		{
-			EnhancedInputComponent->BindAction(InventoryInputAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleInventoryUI);
+			EnhancedInputComponent->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
 		}
 	}
 }
 
-ADW_CharacterBase* ADW_PlayerController::GetControlledCharacter() const
+void ADW_PlayerController::OnPossess(APawn* InPawn)
 {
-    // 현재 빙의된 Pawn을 가져와서 MyCharacter로 캐스팅
-    return Cast<ADW_CharacterBase>(GetPawn());
-}
+    Super::OnPossess(InPawn);
 
-void ADW_PlayerController::RequestInventoryUIUpdate()
-{
-    ADW_CharacterBase* CurrentCharacter = GetControlledCharacter();
-    if (InventoryWidgetInstance && CurrentCharacter)
+    // Pawn이 유효하고, 캐릭터일 경우만 HUD 생성
+    if (InPawn && HUDWidgetClass && !HUDWidgetInstance)
     {
-        UInventoryComponent* CharacterInventory = CurrentCharacter->GetInventoryComponent();
-        if (CharacterInventory)
+        HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+        if (HUDWidgetInstance)
         {
-            InventoryWidgetInstance->UpdateInventoryUI(CharacterInventory);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("C++: RequestInventoryUIUpdate - Character has no InventoryComponent!"));
+            HUDWidgetInstance->AddToViewport();
         }
     }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("C++: RequestInventoryUIUpdate - InventoryWidgetInstance or Character is null!"));
-    }
+    // 입력 모드 설정 및 마우스 숨김
+    SetInputMode(FInputModeGameOnly());
+    SetShowMouseCursor(false);
 }
 
-void ADW_PlayerController::ToggleInventoryUI()
+void ADW_PlayerController::ToggleESCMenu()
 {
-    if (!InventoryWidgetInstance) return;
-
-    if (bIsInventoryOpen)
+    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (!GameMode || !ESCMenuWidgetClass)
     {
-        InventoryWidgetInstance->SetVisibility(ESlateVisibility::Hidden);
-        SetInputMode(FInputModeGameOnly()); 
-        SetShowMouseCursor(false);
-        bIsInventoryOpen = false;
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("GameMode or ESCMenuWidgetClass is invalid!"));
+#endif
+        return;
     }
-    else 
+
+    // 팝업된 UI가 있다면 (다른 UI 또는 이미 열린 ESC 메뉴)
+    if (GameMode->GetPopupWidgetCount() > 0)
     {
-        
-        RequestInventoryUIUpdate(); 
-        InventoryWidgetInstance->SetVisibility(ESlateVisibility::Visible);
-        SetInputMode(FInputModeGameAndUI()); 
+        // 마지막 팝업 UI를 닫습니다.
+        UUserWidget* ClosedWidget = GameMode->CloseLastPopupUI_AndReturn();
+
+        // 닫힌 위젯이 ESC 메뉴 위젯 인스턴스와 같다면 ESC 메뉴가 닫힌 것으로 간주합니다.
+        if (ClosedWidget == ESCMenuWidgetInstance)
+        {
+            ESCMenuWidgetInstance = nullptr;
+            bIsESCMenuOpen = false;
+
+            // --- ESC 메뉴가 닫혔으니 캐릭터 입력 활성화 ---
+            if (APawn* MyPawn = GetPawn())
+            {
+                if (ACharacter* MyCharacter = Cast<ACharacter>(MyPawn))
+                {
+                    if (MyCharacter->GetCharacterMovement())
+                    {
+                        MyCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Walking); // 또는 다른 기본 이동 모드
+                    }
+                    MyCharacter->EnableInput(this); // 이 PlayerController에 대한 입력 활성화
+                }
+            }
+        }
+        return; // 다른 UI가 닫혔거나 ESC 메뉴가 닫혔으므로 여기서 함수 종료
+    }
+
+    if (!ESCMenuWidgetInstance)
+    {
+        ESCMenuWidgetInstance = GameMode->ShowPopupUI(ESCMenuWidgetClass);
+        bIsESCMenuOpen = true;
+
         SetShowMouseCursor(true);
-        bIsInventoryOpen = true;
+
+        if (APawn* MyPawn = GetPawn())
+        {
+            if (ACharacter* MyCharacter = Cast<ACharacter>(MyPawn))
+            {
+                if (MyCharacter->GetCharacterMovement())
+                {
+                    MyCharacter->GetCharacterMovement()->StopMovementImmediately(); // 즉시 이동 멈춤
+                    MyCharacter->GetCharacterMovement()->DisableMovement(); // 이동 비활성화
+                }
+                MyCharacter->DisableInput(this); // 이 PlayerController에 대한 입력 비활성화
+            }
+        }
     }
 }
 
-void ADW_PlayerController::ShowGameHUD()
+void ADW_PlayerController::ShowBossHUD(const FString& BossName, float MaxHP)
 {
-	if (HUDWidgetClass && !HUDWidgetInstance)
+	if (CachedBossHUD) return;
+
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
-		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-		if (HUDWidgetInstance)
+		UUserWidget* RawWidget = GM->ShowPopupUI_M(GM->BossHUDWidgetClass);
+		UBossHUDWidget* BossHUD = Cast<UBossHUDWidget>(RawWidget);
+
+		if (BossHUD)
 		{
-			HUDWidgetInstance->AddToViewport();
+			BossHUD->InitBossHUD(BossName, MaxHP);
+			CachedBossHUD = BossHUD;
 		}
 	}
 }
 
+void ADW_PlayerController::HideBossHUD()
+{
+	if (CachedBossHUD)
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			GM->ClosePopupUI(CachedBossHUD);
+		}
+
+		CachedBossHUD = nullptr;
+	}
+}

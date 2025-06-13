@@ -27,8 +27,10 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     UUserWidget* ShowPopupUI(TSubclassOf<UUserWidget> WidgetClass);
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UUserWidget* ShowPopupUI_M(TSubclassOf<UUserWidget> WidgetClass);
 
-    UFUNCTION(BlueprintCallable, Category = "UI")
+	UFUNCTION(BlueprintCallable, Category = "UI")
     void ClosePopupUI(UUserWidget* WidgetToRemove);
 
     UFUNCTION(BlueprintCallable, Category = "UI")
@@ -39,6 +41,17 @@ public:
 
     // 열려있는 UI 반환
     int32 GetPopupWidgetCount() const { return PopupWidgets.Num(); }
+
+	UFUNCTION(BlueprintCallable)
+	void ShowResultUI(const FString& MessageText);
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ResultWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> BossHUDWidgetClass;
+	
+	// UUserWidget* ActiveResultWidget;
 
 protected:
     UPROPERTY()

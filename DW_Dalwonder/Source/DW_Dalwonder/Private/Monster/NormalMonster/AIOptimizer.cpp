@@ -177,7 +177,7 @@ void UAIOptimizer::LayerCheckLoop()
 		break;
 
 	default:
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not valid Layer."));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not valid Layer."));
 		break;
 	}
 }
@@ -192,39 +192,41 @@ int32 UAIOptimizer::DistanceLayer()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not"));
 		return -1;
 	}
 
 	float ClosetPlayerDistanceSquared = FLT_MAX;
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	FVector PlayerLocation = PlayerCharacter->GetActorLocation();
-
-	float CurrentPlayerDistanceSquared = UKismetMathLibrary::Vector_DistanceSquared(AILotation, PlayerLocation);
-
-	if (CurrentPlayerDistanceSquared < ClosetPlayerDistanceSquared)
+	if (ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
 	{
-		ClosetPlayerDistanceSquared = CurrentPlayerDistanceSquared;
-	}
+		FVector PlayerLocation = PlayerCharacter->GetActorLocation();
 
-	if (ClosetPlayerDistanceSquared < LayerMax * LayerMax)
-	{
-		if (ClosetPlayerDistanceSquared < LayerLong * LayerLong)
+		float CurrentPlayerDistanceSquared = UKismetMathLibrary::Vector_DistanceSquared(AILotation, PlayerLocation);
+
+		if (CurrentPlayerDistanceSquared < ClosetPlayerDistanceSquared)
 		{
-			if (ClosetPlayerDistanceSquared < LayerMiddle * LayerMiddle)
+			ClosetPlayerDistanceSquared = CurrentPlayerDistanceSquared;
+		}
+
+		if (ClosetPlayerDistanceSquared < LayerMax * LayerMax)
+		{
+			if (ClosetPlayerDistanceSquared < LayerLong * LayerLong)
 			{
-				if (ClosetPlayerDistanceSquared < LayerShort * LayerShort)
+				if (ClosetPlayerDistanceSquared < LayerMiddle * LayerMiddle)
 				{
-					return 3;
+					if (ClosetPlayerDistanceSquared < LayerShort * LayerShort)
+					{
+						return 3;
+					}
+
+					return 2;
 				}
 
-				return 2;
+				return 1;
 			}
-
-			return 1;
+			return 0;
 		}
-		return 0;
 	}
 
 	return -1;

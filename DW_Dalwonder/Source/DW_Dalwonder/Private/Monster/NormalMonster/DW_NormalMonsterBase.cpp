@@ -7,11 +7,15 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AISense_Damage.h"
+#include "Monster/Dissolve/DissolveComponent.h"
+#include "Components/CapsuleComponent.h"
 
 ADW_NormalMonsterBase::ADW_NormalMonsterBase(): bIsAlerted(false), bIsFirstResponder(true), MonsterAlertDistance(0),
                                                 AlertMontage(nullptr), AlertDelay(1.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	DissolveComp = CreateDefaultSubobject<UDissolveComponent>(TEXT("DissolveComponent"));
 
 	Tags.Add(TEXT("NormalMonster"));
 }
@@ -212,6 +216,15 @@ void ADW_NormalMonsterBase::PlayAlertMontage()
 
 void ADW_NormalMonsterBase::Dead()
 {
+	GetWorldTimerManager().ClearTimer(HitDelayTimer);
+
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		AICon->UnPossess();
+	}
+
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+
 	Super::Dead();
 
 	FTimerHandle DeadLogicTime;
@@ -228,8 +241,16 @@ void ADW_NormalMonsterBase::DeadLogic()
 	GetMesh()->SetSimulatePhysics(true);
 
 	FTimerHandle DestroyDelayTimer;
-	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyMonster, DestroyTime, false);
+	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyDissolve, DestroyTime, false);
 
+}
+
+void ADW_NormalMonsterBase::DestroyDissolve()
+{
+	DissolveComp->DissolveStart(0, 0, 5.f);
+
+	FTimerHandle DestroyDelayTimer;
+	GetWorldTimerManager().SetTimer(DestroyDelayTimer, this, &ADW_NormalMonsterBase::DestroyMonster, 8.f, false);
 }
 
 void ADW_NormalMonsterBase::DestroyMonster()
@@ -239,6 +260,12 @@ void ADW_NormalMonsterBase::DestroyMonster()
 
 float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (MonsterHP <= 0)
+	{
+		GetWorldTimerManager().ClearTimer(HitDelayTimer);
+		return 0;
+	}
+
 	if (GetWorld())
 	{
 		UAISense_Damage::ReportDamageEvent(
@@ -252,6 +279,22 @@ float ADW_NormalMonsterBase::TakeDamage(float DamageAmount, FDamageEvent const& 
 	}
 
 	bIsAlerted = true;
+
+	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	{
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BBC = AICon->GetBlackboardComponent())
+			{
+				BBC->SetValueAsBool(FName("bCanBehavior"), false);
+
+				PlayHitMontage();
+
+				GetWorldTimerManager().SetTimer(HitDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, HitDelay, false);
+			}
+		}
+	}
+
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
@@ -275,6 +318,16 @@ void ADW_NormalMonsterBase::BehaviorOn()
 			BBC->SetValueAsBool(FName("bCanBehavior"), true);
 		}
 	}
+}
+
+void ADW_NormalMonsterBase::PlayerIgnoreOn()
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+}
+
+void ADW_NormalMonsterBase::PlayerIgnoreOff()
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 }
 
 void ADW_NormalMonsterBase::RotateToPlayer()
