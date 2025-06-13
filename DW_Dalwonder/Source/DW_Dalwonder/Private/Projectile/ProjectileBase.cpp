@@ -33,12 +33,13 @@ AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), Col
 
 void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!OtherActor->ActorHasTag("Projectile") && !OtherActor->ActorHasTag("Monster") && !OtherActor->ActorHasTag("Weapon"))
+	if (!OtherActor->ActorHasTag("Projectile") || !OtherActor->ActorHasTag("Monster"))
 	{
 		CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		if (OtherActor->ActorHasTag("Player"))
 		{
+			// Launch 이외 정의
 			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
 			HitEffectSpawnLogic(Hit);
 			Destroy();
@@ -61,10 +62,6 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 				GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileBase::DestroyToDelay, DestroyDelay, false);
 			}
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *OtherActor->GetName());
 	}
 }
 

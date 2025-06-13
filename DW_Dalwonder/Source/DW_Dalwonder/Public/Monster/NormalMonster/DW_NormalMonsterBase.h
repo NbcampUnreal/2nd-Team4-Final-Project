@@ -45,10 +45,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	float DeadMontageTime;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	float DestroyTime = 5.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UDissolveComponent* DissolveComp;
+	float DestroyTime;
 
 	// SpawnMontage 중에 AlertMontage 재생을 막기 위한 재정의
 	virtual void InitialSpawn() override;
@@ -67,8 +64,7 @@ public:
 
 	void Dead() override;
 
-	virtual void DeadLogic();
-	void DestroyDissolve();
+	void DeadLogic();
 	void DestroyMonster();
 
 	virtual float TakeDamage(
@@ -84,20 +80,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Monster")
 	void BehaviorOn();
 
-	UFUNCTION(BlueprintCallable, Category = "Monster")
-	void PlayerIgnoreOn();
-	UFUNCTION(BlueprintCallable, Category = "Monster")
-	void PlayerIgnoreOff();
-
 	UFUNCTION()
 	void RotateToPlayer();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	float HitDelay;
-
 private:
 	FTimerHandle AlertDelayTimer;
-	FTimerHandle HitDelayTimer;
 
 	// SpawnMontage가 재생중인지 확인하는 변수
 	bool bIsPlayingSpawnMontage = false;

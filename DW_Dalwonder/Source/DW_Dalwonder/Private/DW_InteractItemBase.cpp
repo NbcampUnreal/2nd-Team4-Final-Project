@@ -32,10 +32,8 @@ void ADW_InteractItemBase::ShowInteractionWidget_Implementation()
     }
     else
     {
-#if WITH_EDITOR
         UE_LOG(LogTemp, Error, TEXT("InteractionWidget 또는 InteractionWidgetClass가 null입니다."));
-#endif
-	}
+    }
 }
 
 void ADW_InteractItemBase::HideInteractionWidget_Implementation()
@@ -50,14 +48,10 @@ void ADW_InteractItemBase::Interact_Implementation(AActor* Interactor)
 {
     if (Interactor)
     {
-#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("상호작용이 발생했습니다! Interactor: %s"), *Interactor->GetName());
-#endif
-	}
+    }
     else
     {
-#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("상호작용이 발생했지만, Interactor가 유효하지 않습니다."));
-#endif
-	}
+    }
 }

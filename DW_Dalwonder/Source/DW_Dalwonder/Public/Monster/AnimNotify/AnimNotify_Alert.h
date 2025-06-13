@@ -19,5 +19,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Alert")
 	int32 AlertRange = 0;
 
+	//이 Notify는 NormalMonster에서만 실행되어야 함
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

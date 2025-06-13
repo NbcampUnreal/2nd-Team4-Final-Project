@@ -55,9 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	class UDataTable* DataTable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	UDataTable* DropTable;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* AttackSoundComponent;
 
@@ -78,9 +75,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	class UNiagaraSystem* HitNS;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
-	class UNiagaraSystem* GuardHitNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class ADW_CharacterBase* PlayerCharacter;
@@ -105,21 +99,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MonsterDamageMultiplier;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	bool bIsInvincible = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	bool bIsGuard = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bCanParried;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	bool bIsDead;
 
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
 	float DebugDrawTime = 1.0f;
@@ -134,7 +119,7 @@ public:
 	FVector PrevTraceStartVector;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
-	
+
 	UPROPERTY()
 	class UNavigationInvokerComponent* NavInvokerComp;
 
@@ -246,13 +231,10 @@ public:
 	virtual void CastPlayerCharacter() override;
 
 	// 플레이어 캐릭터 참조 반환
-	UFUNCTION(BlueprintCallable)
 	virtual class ADW_CharacterBase* GetPlayerCharacter() override;
 
 	// 플레이어와의 거리 반환
 	UFUNCTION(BlueprintCallable)
 	virtual float GetPlayerDistance() override;
 	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
-
-	virtual void DropItem(UDataTable* NewDataTable) override;
 };

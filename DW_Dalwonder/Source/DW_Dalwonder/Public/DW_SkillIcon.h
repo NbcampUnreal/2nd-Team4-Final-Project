@@ -15,6 +15,7 @@ class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
     GENERATED_BODY()
 
 public:
+    UDW_SkillIcon(const FObjectInitializer& ObjectInitializer);
 
     virtual void NativeConstruct() override;
 
@@ -24,7 +25,7 @@ public:
     UPROPERTY(BlueprintReadWrite)
     UDW_SkillComponent* SkillComponent;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
+    UPROPERTY()
     UMaterialInterface* DotMaterial;
 
     UFUNCTION()

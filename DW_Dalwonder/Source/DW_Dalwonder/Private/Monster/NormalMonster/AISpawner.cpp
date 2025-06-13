@@ -20,10 +20,8 @@ AAISpawner::AAISpawner()
 	SetRootComponent(SceneComponent);
 	SpawnCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
 	SpawnCollision->SetupAttachment(SceneComponent);
-	SpawnCollision->SetCollisionProfileName("NoCollision");
 	DetectCollision = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	DetectCollision->SetupAttachment(SceneComponent);
-	DetectCollision->SetCollisionProfileName("NoCollision");
 
 	SpawnDataTable = nullptr;
 	SpawnHeight = 100.f;
@@ -79,10 +77,10 @@ bool AAISpawner::bIsPlayerInRadius()
 
 	if (DetectRadius * DetectRadius >= ClosetPlayerDistanceSquared)
 	{
-		/*if (GEngine)
+		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Monster Spawner : Player Detected!"));
-		}*/
+		}
 
 		return true;
 	}

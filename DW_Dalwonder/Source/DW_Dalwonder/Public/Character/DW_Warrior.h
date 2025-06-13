@@ -12,7 +12,7 @@ class DW_DALWONDER_API ADW_Warrior : public ADW_CharacterBase
 public:
 	ADW_Warrior();
 
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 	virtual void BeginPlay() override;

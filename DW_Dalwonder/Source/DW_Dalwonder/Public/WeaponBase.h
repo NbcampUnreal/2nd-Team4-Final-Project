@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
-#include "Item/WorldItemActor.h"
 #include "WeaponBase.generated.h"
 
 USTRUCT(BlueprintType)
@@ -24,7 +23,6 @@ struct FWeaponEnhancementData : public FTableRowBase
 	float AttackSpeed;
 };
 
-class ADW_InteractItemBase;
 
 UCLASS(Blueprintable)
 class DW_DALWONDER_API AWeaponBase : public AActor
@@ -53,9 +51,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
 	UDataTable* EnhancementDataTable;
 
-	// 무기 아이템 액터
+	// 무기의 스태틱 메시 (외형)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Base")
-	ADW_InteractItemBase* ItemActor;
+	UStaticMeshComponent* StaticMesh;
 	
 	// 무기 여부 확인용
 	UFUNCTION(BlueprintCallable, Category = "Weapon Base")

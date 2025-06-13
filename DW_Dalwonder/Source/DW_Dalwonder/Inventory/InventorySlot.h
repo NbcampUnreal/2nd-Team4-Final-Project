@@ -11,7 +11,7 @@ struct FInventorySlot
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UItemBase* ItemBase = nullptr;
+    UItemBase* ItemBase;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Quantity = 1;

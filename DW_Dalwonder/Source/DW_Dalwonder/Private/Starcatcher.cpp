@@ -77,10 +77,8 @@ void UStarcatcher::FinishGame()
     // 성공 횟수 로그 출력
     if (GEngine)
     {
-#if WITH_EDITOR
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow,
             FString::Printf(TEXT("Final Success Count: %d"), FinalSuccessCount));
-#endif
     }
 
     OnStarCatcherFinished.Broadcast(SuccessCount);
@@ -176,9 +174,7 @@ void UStarcatcher::RestartGame()
     if (StarImage)
         StarImage->SetVisibility(ESlateVisibility::Visible);
 
-#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("게임 재시작! 다음 라운드 번호 = %d"), CurrentGame + 1);
-#endif
 }
 
 void UStarcatcher::EndRound(bool bDelayRestart)
@@ -186,9 +182,7 @@ void UStarcatcher::EndRound(bool bDelayRestart)
     GetWorld()->GetTimerManager().ClearTimer(RestartTimerHandle);
 
     ++CurrentGame;
-#if WITH_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("라운드 종료 ➜ 현재 게임 번호: %d"), CurrentGame);
-#endif
 
     if (CurrentGame >= MaxGame)
     {
