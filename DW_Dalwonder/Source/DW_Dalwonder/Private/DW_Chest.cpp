@@ -18,6 +18,8 @@ ADW_Chest::ADW_Chest()
 
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>("SkeletalMesh");
 	SkeletalMeshComp->SetupAttachment(SceneComp);
+
+	InteractionWidget->SetupAttachment(RootComponent);
 }
 
 void ADW_Chest::Interact_Implementation(AActor* Interactor)
@@ -25,6 +27,9 @@ void ADW_Chest::Interact_Implementation(AActor* Interactor)
 	if (bHasOpened) return;
 
 	bHasOpened = true;
+
+	InteractionWidgetClass = nullptr;
+	InteractionWidget->SetVisibility(false);
 
 	if (bIsChest)
 	{
