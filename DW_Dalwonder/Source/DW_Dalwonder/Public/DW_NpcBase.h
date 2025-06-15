@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "DW_InteractItemBase.h"
 #include "UI/Component/Struct/DialogueLine.h"
+#include "UI/Component/Struct/QuestData.h"
 #include "DW_NpcBase.generated.h"
 
 class UUserWidget;
@@ -18,23 +19,24 @@ public:
     ADW_NpcBase();
 
 public:
-    // 대사 정보
+    /** 대화 데이터 테이블 (NPC마다 할당) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
-    TArray<FDialogueLine> DialogueLines;
+    UDataTable* DialogueDataTable;
 
-    // 퀘스트 ID (이 NPC가 주는 퀘스트)
+    /** 퀘스트 ID (이 NPC가 주는 퀘스트) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
     FName QuestID;
 
-    // 퀘스트 대사 포함 여부
+    /** 퀘스트 대사 포함 여부 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
     bool bGivesQuest = false;
 
 protected:
     virtual void Interact_Implementation(AActor* Interactor) override;
-
-    // 카메라 제어 함수
     void FocusCameraOnNPC(AActor* PlayerActor);
+
+    /** 퀘스트 진행 상태에 맞는 대사 필터링 */
+    TArray<FDialogueLine> GetDialogueForQuestState(class UQuestManagerComponent* QuestManager) const;
 
 protected:
     // UI 클래스 (인터페이스에서 사용)

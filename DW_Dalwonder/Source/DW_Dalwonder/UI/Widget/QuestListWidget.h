@@ -12,6 +12,7 @@ class UVerticalBox;
 class UQuestManagerComponent;
 class UQuestEntryWidget;
 class UQuestDetailPanel;
+class UObjectiveEntryWidget;
 
 /**
  * 
@@ -52,6 +53,10 @@ protected:
     /** 퀘스트 엔트리 위젯 클래스 */
     UPROPERTY(EditDefaultsOnly, Category = "Quest")
     TSubclassOf<UQuestEntryWidget> QuestEntryClass;
+
+    /** 퀘스트 목표 진행도 위젯 클래스 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+    TSubclassOf<UObjectiveEntryWidget> ObjectiveEntryWidgetClass;
 
     /** 퀘스트 매니저 참조 */
     UPROPERTY()

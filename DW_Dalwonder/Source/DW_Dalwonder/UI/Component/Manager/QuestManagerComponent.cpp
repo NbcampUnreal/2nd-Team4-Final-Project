@@ -54,16 +54,31 @@ void UQuestManagerComponent::UpdateObjectiveProgress(FName TargetID, int32 Amoun
     }
 }
 
+bool UQuestManagerComponent::IsQuestAccepted(const FQuestData& Quest) const
+{
+    return AcceptedQuests.Contains(Quest.QuestID);
+}
+
 bool UQuestManagerComponent::IsQuestCompleted(const FQuestData& Quest)
 {
-    for (const FQuestObjective& Obj : Quest.Objectives)
+    if (const FQuestData* Completed = CompletedQuests.Find(Quest.QuestID))
     {
-        if (Obj.CurrentCount < Obj.RequiredCount)
-        {
-            return false;
-        }
+        return true;
     }
-    return true;
+
+    if (const FQuestData* Accepted = AcceptedQuests.Find(Quest.QuestID))
+    {
+        for (const FQuestObjective& Obj : Accepted->Objectives)
+        {
+            if (Obj.CurrentCount < Obj.RequiredCount)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false; // 목록에 없다면 아직 시작하지 않은 퀘스트
 }
 
 void UQuestManagerComponent::CompleteQuest(FName QuestID)

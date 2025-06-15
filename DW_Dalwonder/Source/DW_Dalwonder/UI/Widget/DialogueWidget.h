@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/Component/Struct/DialogueLine.h"
+#include "UI/Component/Struct/QuestData.h"
 #include "DialogueWidget.generated.h"
 
 class UTextBlock;
@@ -71,6 +72,7 @@ protected:
     TArray<FDialogueLine> DialogueLines;
 
     int32 CurrentDialogueIndex = 0;
+    FQuestData CachedQuestData;
 
     // 수락할 퀘스트의 ID
     UPROPERTY(BlueprintReadOnly, Category = "Quest")

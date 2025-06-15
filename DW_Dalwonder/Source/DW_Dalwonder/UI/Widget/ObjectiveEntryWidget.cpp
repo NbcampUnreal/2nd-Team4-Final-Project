@@ -34,6 +34,6 @@ void UObjectiveEntryWidget::InitWithObjective(const FQuestObjective& QuestObject
         QuestObjective.CurrentCount,
         QuestObjective.RequiredCount
     );
-
+    UE_LOG(LogTemp, Log, TEXT("목표 [%s]: %d / %d"), *QuestObjective.TargetID.ToString(), QuestObjective.CurrentCount, QuestObjective.RequiredCount);
     ObjectiveText->SetText(FText::FromString(Display));
 }

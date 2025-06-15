@@ -25,6 +25,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Quest")
     void UpdateObjectiveProgress(FName TargetID, int32 Amount = 1);
 
+    /** 퀘스트 수락 확인 */
+    UFUNCTION(BlueprintCallable, Category = "Quest")
+    bool IsQuestAccepted(const FQuestData& Quest) const;
+
     /** 퀘스트 완료 확인 */
     UFUNCTION(BlueprintCallable, Category = "Quest")
     bool IsQuestCompleted(const FQuestData& Quest);

@@ -33,7 +33,7 @@ protected:
 
     UPROPERTY(meta = (BindWidget))
     UScrollBox* ObjectiveList;
-
+public:
     /** 목표 항목을 생성할 위젯 클래스 */
     UPROPERTY(EditDefaultsOnly, Category = "Quest")
     TSubclassOf<UObjectiveEntryWidget> ObjectiveEntryClass;

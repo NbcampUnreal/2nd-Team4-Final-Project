@@ -3,6 +3,7 @@
 
 #include "UI/Widget/QuestListWidget.h"
 #include "UI/Widget/QuestEntryWidget.h"
+#include "UI/Widget/ObjectiveEntryWidget.h"
 #include "UI/Component/QuestDetailPanel.h"
 #include "UI/Component/Manager/QuestManagerComponent.h"
 #include "Components/Button.h"
@@ -51,6 +52,8 @@ void UQuestListWidget::OnQuestSelected(const FQuestData& QuestData)
 {
     if (QuestDetailPanel)
     {
+        //여기서 지정해주기 안해주면 오류남(Null처리당함)
+        QuestDetailPanel->ObjectiveEntryClass = ObjectiveEntryWidgetClass;
         QuestDetailPanel->SetQuestInfo(QuestData);
     }
 }
