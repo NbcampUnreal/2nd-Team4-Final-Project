@@ -54,11 +54,6 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
 	
-	GetCharacterMovement()->bUseRVOAvoidance = true;
-	GetCharacterMovement()->AvoidanceWeight = 0.f;
-	GetCharacterMovement()->SetAvoidanceGroup(1);
-	GetCharacterMovement()->SetGroupsToAvoid(1);
-	
 }
 
 void ADW_MonsterBase::BeginPlay()
