@@ -23,6 +23,7 @@
 #include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Tracks/MovieSceneMaterialTrack.h"
 
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -686,7 +687,7 @@ void ADW_CharacterBase::CheckBlockingActors()
 			if (HitActor && HitActor != this)
 			{
 				CurrentBlockingActors.Add(HitActor);
-				MakeActorTranslucent(HitActor);
+				MakeActorTranslucent(HitActor, true);
 			}
 		}
 	}
@@ -695,14 +696,14 @@ void ADW_CharacterBase::CheckBlockingActors()
 	{
 		if (!CurrentBlockingActors.Contains(Actor))
 		{
-			MakeActorOriginalMaterial(Actor);
+			MakeActorTranslucent(Actor, false);
 		}
 	}
 
 	BlockingActors = CurrentBlockingActors;
 }
 
-void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor)
+void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor, bool bIsBlocking)
 {
 	TArray<UMeshComponent*> MeshComponents;
 	Actor->GetComponents<UMeshComponent>(MeshComponents);
@@ -711,40 +712,13 @@ void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor)
 	{
 		if (IsValid(MeshComp))
 		{
-			int32 NumMaterials = MeshComp->GetNumMaterials();
-			for (int32 i = 0; i < NumMaterials; i++)
+			if (bIsBlocking)
 			{
-				UMaterialInterface* OriginalMaterial = MeshComp->GetMaterial(i);
-				if (IsValid(OriginalMaterial))
-				{
-					UMaterialInstanceDynamic* DynamicMaterial = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
-					if (DynamicMaterial)
-					{
-						DynamicMaterial->SetScalarParameterValue("Opacity", 0.3f);
-					}
-				}
+				MeshComp->SetOverlayMaterial(OverlayMaterial);
 			}
-		}
-	}
-}
-
-void ADW_CharacterBase::MakeActorOriginalMaterial(AActor* Actor)
-{
-	TArray<UMeshComponent*> MeshComponents;
-	Actor->GetComponents<UMeshComponent>(MeshComponents);
-
-	for (UMeshComponent* MeshComp : MeshComponents)
-	{
-		if (IsValid(MeshComp))
-		{
-			int32 NumMaterials = MeshComp->GetNumMaterials();
-			for (int32 i = 0; i < NumMaterials; i++)
+			else
 			{
-				UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(MeshComp->GetMaterial(i));
-				if (DynamicMaterial)
-				{
-					DynamicMaterial->SetScalarParameterValue("Opacity", 1.0f);
-				}
+				MeshComp->SetOverlayMaterial(nullptr);
 			}
 		}
 	}

@@ -89,42 +89,51 @@ public:
 
 	void CheckBlockingActors();
 
-	void MakeActorTranslucent(AActor* Actor);
-
-	void MakeActorOriginalMaterial(AActor* Actor);
+	void MakeActorTranslucent(AActor* Actor, bool bIsBlocking);
 
 	// -----------------------------
 	// 📌 카메라 및 무기 관련 컴포넌트
 	// -----------------------------
 protected:
+	// 카메라 붐(캐릭터 뒤에 부착)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArm;                        // 카메라 붐(캐릭터 뒤에 부착)
+	USpringArmComponent* SpringArm;
 
+	// 실제 시점 카메라
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* Camera;                              // 실제 시점 카메라
+	UCameraComponent* Camera;
 
+	// 캐릭터를 가리는 액터 목록
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TSet<AActor*> BlockingActors;						   // 캐릭터를 가리는 액터 목록
+	TSet<AActor*> BlockingActors;
 
+	// 오버레이 머티리얼
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	UMaterialInstance* OverlayMaterial;
+
+	// 캐릭터의 무기 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UChildActorComponent* Weapon;                          // 캐릭터의 무기 액터
+	UChildActorComponent* Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 WeaponType = 0;
 
+	// 캐릭터의 장비 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Armor")
-	UCharacterArmorComponent* ArmorComponent;			   // 캐릭터의 장비 컴포넌트
+	UCharacterArmorComponent* ArmorComponent;
 
+	// 캐릭터의 스탯 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	UCharacterStatComponent* StatComponent;				   // 캐릭터의 스탯 컴포넌트
+	UCharacterStatComponent* StatComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	TArray<UAnimInstance*> AnimInstanceArray;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	UPROPERTY()
 	UAnimInstance* AnimInstance;
 
-	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
+	// 캐릭터 조작 가능 여부
+	bool bCanControl = true;
 
 	UPROPERTY()
 	FTimerHandle BlockActorsTimer;
