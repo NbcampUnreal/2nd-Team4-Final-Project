@@ -19,6 +19,7 @@
 #include "Item/ItemDataManager.h"
 #include "DW_InteractInterface.h"
 #include "KismetAnimationLibrary.h"
+#include "Character/CharacterArmorComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -33,6 +34,7 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SpringArm->TargetArmLength = 200.f;
 	SpringArm->SetRelativeRotation(FRotator(0.f, 20.f, 0.f));
 	SpringArm->SocketOffset = FVector(0.f, 60.f, 70.f);
+	SpringArm->bDoCollisionTest = false;
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -44,6 +46,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+
+	ArmorComponent = CreateDefaultSubobject<UCharacterArmorComponent>(TEXT("ArmorComponent"));
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -75,6 +79,15 @@ ADW_CharacterBase::ADW_CharacterBase()
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetWorld()->GetTimerManager().SetTimer
+	(
+		BlockActorsTimer,
+		this,
+		&ADW_CharacterBase::CheckBlockingActors,
+		0.1f,
+		true
+	);
 
 	GetWorld()->GetTimerManager().SetTimer  //아이템 업그레이드 타이머
 	(
@@ -139,7 +152,9 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	
+
+	GetWorldTimerManager().ClearTimer(BlockActorsTimer);
+	BlockActorsTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(BlockTimer);
 	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(DodgeTimer);
@@ -461,6 +476,13 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 	}
 }
 
+void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
+{
+	WeaponType = NewWeaponType;
+	AnimInstance = AnimInstanceArray[WeaponType];
+	GetMesh()->SetAnimInstanceClass(AnimInstance->GetClass());
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
@@ -483,38 +505,38 @@ void ADW_CharacterBase::StartAttack()
 
 	if (GetMovementComponent()->IsFalling())
 	{
-		check(IsValid(FallingAttackMontage));
+		check(IsValid(FallingAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(FallingAttackMontage);
+		PlayMontage(FallingAttackMontage[WeaponType]);
 	}
 	else if (bIsGuarding)
 	{
-		check(IsValid(GuardAttackMontage));
+		check(IsValid(GuardAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(GuardAttackMontage);
+		PlayMontage(GuardAttackMontage[WeaponType]);
 	}
 	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetBaseWalkSpeed() + GetCharacterStatComponent()->GetBonusWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
 	{
-		check(IsValid(SprintAttackMontage));
+		check(IsValid(SprintAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(SprintAttackMontage);
+		PlayMontage(SprintAttackMontage[WeaponType]);
 	}
 	else
 	{
-		check(IsValid(AttackMontage));
+		check(IsValid(AttackMontage[WeaponType]));
 
 		if (CurrentCombatState == ECharacterCombatState::Idle)
 		{
 			CurrentComboIndex = 0;
 			SetCombatState(ECharacterCombatState::ComboWindow);
-			PlayMontage(AttackMontage);
+			PlayMontage(AttackMontage[WeaponType]);
 		}
 		else if (CurrentCombatState == ECharacterCombatState::ComboWindow && bCanCombo)
 		{
 			CurrentComboIndex++;
-			if (CurrentComboIndex < AttackMontage->GetNumSections())
+			if (CurrentComboIndex < AttackMontage[WeaponType]->GetNumSections())
 			{
-				PlayMontage(AttackMontage, CurrentComboIndex);
+				PlayMontage(AttackMontage[WeaponType], CurrentComboIndex);
 				bCanCombo = false;
 			}
 		}
@@ -527,9 +549,9 @@ void ADW_CharacterBase::CancelAttack()
 	AnimInstance->Montage_Stop(0.2f);
 	
 	// 튕김 애니메이션 재생
-	if (IsValid(CancelAttackMontage))
+	if (IsValid(CancelAttackMontage[WeaponType]))
 	{
-		PlayMontage(CancelAttackMontage);
+		PlayMontage(CancelAttackMontage[WeaponType]);
 	}
 }
 
@@ -537,7 +559,7 @@ void ADW_CharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (CurrentCombatState == ECharacterCombatState::Dead) return;
 	
-	if (Montage == AttackMontage)
+	if (Montage == AttackMontage[WeaponType])
 	{
 		CurrentComboIndex = 0;
 		bCanCombo = false;
@@ -575,7 +597,7 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
 		{
 			Monster->Parried();
-			PlayMontage(ParryMontage);
+			PlayMontage(ParryMontage[WeaponType]);
 			ActualDamage = 0.f;
 			return ActualDamage;
 		}
@@ -584,7 +606,7 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	{
 		if (CurrentCombatState == ECharacterCombatState::Parrying)
 		{
-			PlayMontage(ParryMontage);
+			PlayMontage(ParryMontage[WeaponType]);
 			ActualDamage = 0.f;
 			return ActualDamage;
 		}
@@ -602,12 +624,12 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 		{
 			KnockBackCharacter();
 		}
-		else if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
+		else if (AnimInstance->Montage_IsPlaying(KnockBackMontage[WeaponType]))
 		{
 			SetCombatState(ECharacterCombatState::Hit);
-			int32 HitSectionNum = HitMontage->GetNumSections();
+			int32 HitSectionNum = HitMontage[WeaponType]->GetNumSections();
 			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-			PlayMontage(HitMontage, RandomHitSectionNum);
+			PlayMontage(HitMontage[WeaponType], RandomHitSectionNum);
 		}
 	}
 
@@ -643,6 +665,91 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	return ActualDamage;
 }
 
+void ADW_CharacterBase::CheckBlockingActors()
+{
+	const FVector Start = Camera->GetComponentLocation();
+	const FVector End = SpringArm->GetComponentLocation();
+	float CapsuleRadius = 10.f;
+	float CapsuleHalfHeight = SpringArm->TargetArmLength;
+	
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	TSet<AActor*> CurrentBlockingActors;
+	
+	if (GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), QueryParams))
+	{
+		for (FHitResult& HitResult : HitResults)
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor && HitActor != this)
+			{
+				CurrentBlockingActors.Add(HitActor);
+				MakeActorTranslucent(HitActor);
+			}
+		}
+	}
+
+	for (AActor* Actor : BlockingActors)
+	{
+		if (!CurrentBlockingActors.Contains(Actor))
+		{
+			MakeActorOriginalMaterial(Actor);
+		}
+	}
+
+	BlockingActors = CurrentBlockingActors;
+}
+
+void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor)
+{
+	TArray<UMeshComponent*> MeshComponents;
+	Actor->GetComponents<UMeshComponent>(MeshComponents);
+
+	for (UMeshComponent* MeshComp : MeshComponents)
+	{
+		if (IsValid(MeshComp))
+		{
+			int32 NumMaterials = MeshComp->GetNumMaterials();
+			for (int32 i = 0; i < NumMaterials; i++)
+			{
+				UMaterialInterface* OriginalMaterial = MeshComp->GetMaterial(i);
+				if (IsValid(OriginalMaterial))
+				{
+					UMaterialInstanceDynamic* DynamicMaterial = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
+					if (DynamicMaterial)
+					{
+						DynamicMaterial->SetScalarParameterValue("Opacity", 0.3f);
+					}
+				}
+			}
+		}
+	}
+}
+
+void ADW_CharacterBase::MakeActorOriginalMaterial(AActor* Actor)
+{
+	TArray<UMeshComponent*> MeshComponents;
+	Actor->GetComponents<UMeshComponent>(MeshComponents);
+
+	for (UMeshComponent* MeshComp : MeshComponents)
+	{
+		if (IsValid(MeshComp))
+		{
+			int32 NumMaterials = MeshComp->GetNumMaterials();
+			for (int32 i = 0; i < NumMaterials; i++)
+			{
+				UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(MeshComp->GetMaterial(i));
+				if (DynamicMaterial)
+				{
+					DynamicMaterial->SetScalarParameterValue("Opacity", 1.0f);
+				}
+			}
+		}
+	}
+}
+
 void ADW_CharacterBase::SetParrying(bool bIsParrying)
 {
 	if (bIsParrying)
@@ -667,13 +774,13 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 	if (bIsGuarding)
 	{
 		GetCharacterStatComponent()->ConsumeStamina(2.f);
-		PlayMontage(GuardMontage);
+		PlayMontage(GuardMontage[WeaponType]);
 	}
 	else
 	{
 		GetCharacterStatComponent()->StopConsumeStamina();
 		GetCharacterStatComponent()->GenStamina();
-		AnimInstance->Montage_Stop(0.25f, GuardMontage);
+		AnimInstance->Montage_Stop(0.25f, GuardMontage[WeaponType]);
 	}
 }
 
@@ -714,15 +821,15 @@ void ADW_CharacterBase::KnockBackCharacter()
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
 	
 	LaunchCharacter(KnockBackDirection, true, true);
-	if (IsValid(KnockBackMontage) == true)
+	if (IsValid(KnockBackMontage[WeaponType]) == true)
 	{
-		if (AnimInstance->Montage_IsPlaying(KnockBackMontage))
+		if (AnimInstance->Montage_IsPlaying(KnockBackMontage[WeaponType]))
 		{
-			PlayMontage(KnockBackMontage, 1);
+			PlayMontage(KnockBackMontage[WeaponType], 1);
 		}
 		else
 		{
-			PlayMontage(KnockBackMontage);
+			PlayMontage(KnockBackMontage[WeaponType]);
 		}
 	}
 }
@@ -750,11 +857,11 @@ void ADW_CharacterBase::Dead()
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		PlayMontage(DeadMontage, 1);
+		PlayMontage(DeadMontage[WeaponType], 1);
 	}
 	else
 	{
-		PlayMontage(DeadMontage);
+		PlayMontage(DeadMontage[WeaponType]);
 	}
 
 	SetCombatState(ECharacterCombatState::Dead);
