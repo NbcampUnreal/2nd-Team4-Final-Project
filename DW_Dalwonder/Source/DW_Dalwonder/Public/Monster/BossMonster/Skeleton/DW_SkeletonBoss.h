@@ -6,7 +6,6 @@
 #include "Monster/BossMonster/DW_BossMonsterBase.h"
 #include "DW_SkeletonBoss.generated.h"
 
-// 상태는 EnumType의 Index로 관리함. 모든 배열의 0번부터 Warrior, Bandit, Archer, Mage로 해야 함.
 
 UENUM(BlueprintType)
 enum class ESkeletonFormType : uint8
@@ -16,6 +15,27 @@ enum class ESkeletonFormType : uint8
 	Archer UMETA(DisplayName = "Archer"),
 	Mage UMETA(DisplayName = "Mage"),
 	Max UMETA(Hidden)
+};
+
+USTRUCT(BlueprintType)
+struct FFormData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMesh* SkeletalMesh = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UAnimInstance> AnimBP = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMesh* RightHandWeapon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMesh* LeftHandWeapon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UAnimMontage*> Montages;
 };
 
 UCLASS()
@@ -28,42 +48,22 @@ public:
 	ADW_SkeletonBoss();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	USkeletalMeshComponent* LeftHandWeapon;
+	USkeletalMeshComponent* LeftHandWeaponComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	USkeletalMeshComponent* RightHandWeapon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	TArray<USkeletalMeshComponent*> Weapons;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	TArray<USkeletalMesh*> SkeletonMeshs;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	TArray<TSubclassOf<UAnimInstance>> SkeletonABP;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	TArray<UAnimMontage*> WarriorMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	TArray<UAnimMontage*> BanditMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	TArray<UAnimMontage*> ArcherMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	TArray<UAnimMontage*> MageMontages;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
-	TArray<UAnimMontage*> CurrentMontages;
+	USkeletalMeshComponent* RightHandWeaponComp;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
 
-	ESkeletonFormType GetRandomFormType();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
+	TMap<ESkeletonFormType, FFormData> FormDataMap;
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeFormType();
+	void ChangeFormTypeByRandom();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeFormType(const ESkeletonFormType FormType);
 
 protected:
 	// Called when the game starts or when spawned

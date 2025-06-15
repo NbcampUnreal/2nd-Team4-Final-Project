@@ -45,4 +45,5 @@ enum class EMonsterName : uint8
 	Camel UMETA(DisplayName = "Camel"),
 	Chest UMETA(DisplayName = "Chest"),
 	Mimic UMETA(DisplayName = "Mimic"),
+	SkeletonBoss UMETA(DisplayName = "SkeletonBoss"),
 };
