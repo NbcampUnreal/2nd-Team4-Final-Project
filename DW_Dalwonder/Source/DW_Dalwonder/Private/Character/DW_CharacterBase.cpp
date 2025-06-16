@@ -670,7 +670,7 @@ void ADW_CharacterBase::CheckBlockingActors()
 {
 	const FVector Start = Camera->GetComponentLocation();
 	const FVector End = SpringArm->GetComponentLocation();
-	float CapsuleRadius = 10.f;
+	float CapsuleRadius = 7.f;
 	float CapsuleHalfHeight = SpringArm->TargetArmLength;
 	
 	TArray<FHitResult> HitResults;
