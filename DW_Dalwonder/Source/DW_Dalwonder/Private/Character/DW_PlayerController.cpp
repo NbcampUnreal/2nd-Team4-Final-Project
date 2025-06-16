@@ -1,5 +1,6 @@
 #include "Character/DW_PlayerController.h"
 #include "DW_GmBase.h"
+#include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -39,7 +40,7 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
-	
+    GetWorldTimerManager().SetTimer(ObstructionTraceTimerHandle, this, &ADW_PlayerController::UpdateObstructionCheck, 0.1f, true);
 }
 
 void ADW_PlayerController::SetupInputComponent()
@@ -162,4 +163,110 @@ void ADW_PlayerController::HideBossHUD()
 
 		CachedBossHUD = nullptr;
 	}
+}
+
+void ADW_PlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+    GetWorldTimerManager().ClearTimer(ObstructionTraceTimerHandle);
+}
+
+void ADW_PlayerController::UpdateObstructionCheck()
+{
+    // 1. 이전에 투명 처리한 액터들의 머티리얼을 원래대로 복원
+    for (AActor* Actor : PreviouslyHiddenActors)
+    {
+        if (!IsValid(Actor)) continue;
+
+        TArray<UMeshComponent*> Meshes;
+        Actor->GetComponents<UMeshComponent>(Meshes);
+
+        for (int32 i = 0; i < Meshes.Num(); ++i)
+        {
+            UMeshComponent* Mesh = Meshes[i];
+            if (!IsValid(Mesh)) continue;
+
+            if (OriginalMaterials.Contains(Actor))
+            {
+                const TArray<UMaterialInterface*>& Mats = OriginalMaterials[Actor];
+                if (Mats.IsValidIndex(i))
+                {
+                    // 이전에 저장된 머티리얼을 복원
+                    Mesh->SetMaterial(0, Mats[i]);
+                }
+            }
+        }
+    }
+
+    // 복원 완료 후 목록 초기화
+    PreviouslyHiddenActors.Empty();
+    OriginalMaterials.Empty();
+
+    // 2. 현재 플레이어 폰과 카메라 컴포넌트 가져오기
+    APawn* MyPawn = GetPawn();
+    if (!IsValid(MyPawn)) return;
+
+    UCameraComponent* Camera = MyPawn->FindComponentByClass<UCameraComponent>();
+    if (!IsValid(Camera)) return;
+
+    FVector CameraLocation = Camera->GetComponentLocation();
+    FVector PlayerLocation = MyPawn->GetActorLocation();
+
+    // 3. 카메라와 플레이어 사이에 있는 액터들을 감지하기 위한 스피어 트레이스 실행
+    TArray<FHitResult> Hits;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(MyPawn); // 자기 자신은 감지 대상에서 제외
+
+    float TraceRadius = 20.0f; // 스피어 반지름 (장애물 감지 범위)
+    bool bHit = GetWorld()->SweepMultiByChannel(
+        Hits,
+        CameraLocation,
+        PlayerLocation,
+        FQuat::Identity,
+        ECC_Visibility,
+        FCollisionShape::MakeSphere(TraceRadius),
+        Params
+    );
+
+    if (!bHit) return;
+
+    // 4. 감지된 액터들에 대해 머티리얼을 투명 처리
+    for (const FHitResult& Hit : Hits)
+    {
+        AActor* HitActor = Hit.GetActor();
+        if (!IsValid(HitActor) || PreviouslyHiddenActors.Contains(HitActor)) continue;
+
+        TArray<UMeshComponent*> Meshes;
+        HitActor->GetComponents<UMeshComponent>(Meshes);
+
+        TArray<UMaterialInterface*> BackupMaterials;
+
+        for (UMeshComponent* Mesh : Meshes)
+        {
+            if (!IsValid(Mesh)) continue;
+
+            // 기존 머티리얼 백업
+            BackupMaterials.Add(Mesh->GetMaterial(0));
+
+            // 지정된 Obstruction 머티리얼 인스턴스로 교체
+            if (ObstructionMaterialInstance)
+            {
+                UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(ObstructionMaterialInstance, this);
+                Mesh->SetMaterial(0, DynMat);
+            }
+        }
+
+        if (BackupMaterials.Num() > 0)
+        {
+            OriginalMaterials.Add(HitActor, BackupMaterials); // 머티리얼 백업 저장
+        }
+
+        PreviouslyHiddenActors.Add(HitActor); // 현재 프레임에 숨긴 액터 목록에 추가
+    }
+
+#if WITH_EDITOR
+    // 5. 디버그용 라인 및 스피어 시각화 (편집기에서만)
+    /*DrawDebugLine(GetWorld(), CameraLocation, PlayerLocation, FColor::Red, false, 0.1f, 0, 1.f);
+    DrawDebugSphere(GetWorld(), CameraLocation, TraceRadius, 12, FColor::Green, false, 0.1f);*/
+#endif
 }

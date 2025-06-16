@@ -16,7 +16,7 @@ void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
 				StopConsumeHealth();
 			}
 		
-			Health = FMath::Clamp(Health - ConsumeRate, 0.f, MaxHealth);
+			Health = FMath::Clamp(Health - ConsumeRate, 0.f, BaseMaxHealth + BonusMaxHealth);
 		}), 0.5f, true);
 }
 
@@ -32,7 +32,7 @@ void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 				StopConsumeStamina();
 			}
 		
-			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, MaxStamina);
+			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, BaseMaxStamina + BonusMaxStamina);
 		}), 0.5f, true);
 }
 
@@ -71,12 +71,12 @@ void UCharacterStatComponent::GenHealth()
 				StopConsumeHealth();
 			}
 		
-			if (FMath::IsNearlyEqual(Health, MaxHealth))
+			if (FMath::IsNearlyEqual(Health, BaseMaxHealth + BonusMaxHealth))
 			{
 				StopConsumeHealth();
 			}
 		
-			Health = FMath::Clamp(Health + HealthGenRate, 0.f, MaxHealth);
+			Health = FMath::Clamp(Health + BaseHealthGenRate + BonusHealthGenRate, 0.f, BaseMaxHealth + BonusMaxHealth);
 		}), 0.5f, true);
 }
 
@@ -97,30 +97,40 @@ void UCharacterStatComponent::GenStamina()
 				StopConsumeHealth();
 			}
 		
-			if (FMath::IsNearlyEqual(Stamina, MaxStamina))
+			if (FMath::IsNearlyEqual(Stamina, BaseMaxStamina + BonusMaxStamina))
 			{
 				StopConsumeStamina();
 			}
 		
-			Stamina = FMath::Clamp(Stamina + StaminaGenRate, 0.f, MaxStamina);
+			Stamina = FMath::Clamp(Stamina + BaseStaminaGenRate + BonusStaminaGenRate, 0.f, BaseMaxStamina + BonusMaxStamina);
 		}), 0.5f, true);
 }
 
 void UCharacterStatComponent::SetHealth(const float Value)
 {
-	Health = FMath::Clamp(Value, 0.0f, MaxHealth);
+	Health = FMath::Clamp(Value, 0.0f, BaseMaxHealth + BonusMaxHealth);
 
-	if (Health < MaxHealth)
+	if (Health < BaseMaxHealth + BonusMaxHealth)
 	{
 		GenHealth();
 	}
 }
 
-void UCharacterStatComponent::SetMaxHealth(const float Value)
+void UCharacterStatComponent::SetBaseMaxHealth(const float Value)
 {
-	MaxHealth = Value;
+	BaseMaxHealth = Value;
 
-	if (Health < MaxHealth)
+	if (Health < BaseMaxHealth + BonusMaxHealth)
+	{
+		GenHealth();
+	}
+}
+
+void UCharacterStatComponent::SetBonusMaxHealth(const float Value)
+{
+	BonusMaxHealth = Value;
+
+	if (Health < BaseMaxHealth + BonusMaxHealth)
 	{
 		GenHealth();
 	}
@@ -128,19 +138,29 @@ void UCharacterStatComponent::SetMaxHealth(const float Value)
 
 void UCharacterStatComponent::SetStamina(const float Value)
 {
-	Stamina = FMath::Clamp(Value, 0.0f, MaxStamina);
+	Stamina = FMath::Clamp(Value, 0.0f, BaseMaxStamina + BonusMaxStamina);
 
-	if (Stamina < MaxStamina)
+	if (Stamina < BaseMaxStamina + BonusMaxStamina)
 	{
 		GenStamina();
 	}
 }
 
-void UCharacterStatComponent::SetMaxStamina(const float Value)
+void UCharacterStatComponent::SetBaseMaxStamina(const float Value)
 {
-	MaxStamina = Value;
+	BaseMaxStamina = Value;
 
-	if (Stamina < MaxStamina)
+	if (Stamina < BaseMaxStamina + BonusMaxStamina)
+	{
+		GenStamina();
+	}
+}
+
+void UCharacterStatComponent::SetBonusMaxStamina(const float Value)
+{
+	BonusMaxStamina = Value;
+
+	if (Stamina < BaseMaxStamina + BonusMaxStamina)
 	{
 		GenStamina();
 	}

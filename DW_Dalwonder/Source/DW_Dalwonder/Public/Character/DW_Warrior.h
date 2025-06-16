@@ -14,6 +14,8 @@ public:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	void SetWeaponType(int32 NewWeaponType) override;
+
 protected:
 	virtual void BeginPlay() override;
 };
