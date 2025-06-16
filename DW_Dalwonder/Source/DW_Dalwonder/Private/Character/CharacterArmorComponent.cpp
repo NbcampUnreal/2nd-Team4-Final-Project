@@ -1,6 +1,7 @@
 #include "Character/CharacterArmorComponent.h"
 #include "Item/ItemBase.h"
 #include "Character/DW_CharacterBase.h"
+#include "Character/DW_Warrior.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
 	: Helmet(nullptr), Armor(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
@@ -45,7 +46,11 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	if (ItemType == ECharacterArmor::Weapon)
 	{
 		Weapon = Item;
-		AdjustArmorMesh(ECharacterArmor::Weapon);
+		int32 WeaponType = Item->ItemCode / 10000;
+		if (ADW_Warrior* Warrior = Cast<ADW_Warrior>(Character))
+		{
+			Warrior->SetWeaponType(WeaponType);
+		}
 		return true;
 	}
 
