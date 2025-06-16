@@ -5,11 +5,20 @@
 #include "CoreMinimal.h"
 #include "DialogueLine.generated.h"
 
+UENUM(BlueprintType)
+enum class EQuestDialogueStage : uint8
+{
+    BeforeAccept,   //  퀘스트 수락전
+    InProgress,     //  퀘스트 진행중
+    Completed,      //  퀘스트 완료
+    None            //  아무것도 아닌 NPC
+};
+
 /**
  * 
  */
 USTRUCT(BlueprintType)
-struct FDialogueLine
+struct FDialogueLine : public FTableRowBase
 {
     GENERATED_BODY()
 
@@ -24,4 +33,7 @@ struct FDialogueLine
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FName QuestID;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EQuestDialogueStage DialogueStage = EQuestDialogueStage::None;  // 기본값 아무것도 아닌상태
 };

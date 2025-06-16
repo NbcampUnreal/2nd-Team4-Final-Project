@@ -23,6 +23,9 @@ void UESCMenuWidget::NativeConstruct()
     if (InventoryButton)
         InventoryButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnInventoryClicked);
 
+    if (QuestListButton)
+        QuestListButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnQuestListClicked);
+
     if (SaveButton)
         SaveButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnSaveClicked);
 
@@ -58,6 +61,15 @@ void UESCMenuWidget::OnInventoryClicked()
     if (GameMode && InventoryWidgetClass)
     {
         GameMode->ShowPopupUI(InventoryWidgetClass);
+    }
+}
+
+void UESCMenuWidget::OnQuestListClicked()
+{
+    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (GameMode && QuestListWidgetClass)
+    {
+        GameMode->ShowPopupUI(QuestListWidgetClass);
     }
 }
 
