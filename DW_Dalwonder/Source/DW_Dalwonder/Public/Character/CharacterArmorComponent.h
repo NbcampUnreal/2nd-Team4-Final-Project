@@ -50,4 +50,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	ADW_CharacterBase* Character;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+	UDataTable* ItemTable;
+	
 };
