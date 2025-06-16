@@ -86,7 +86,7 @@ void ADW_CharacterBase::BeginPlay()
 		BlockActorsTimer,
 		this,
 		&ADW_CharacterBase::CheckBlockingActors,
-		0.1f,
+		0.3f,
 		true
 	);
 
@@ -668,10 +668,10 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 
 void ADW_CharacterBase::CheckBlockingActors()
 {
-	const FVector Start = Camera->GetComponentLocation();
-	const FVector End = SpringArm->GetComponentLocation();
-	float CapsuleRadius = 7.f;
-	float CapsuleHalfHeight = SpringArm->TargetArmLength;
+	const FVector Start = GetActorLocation() + BaseEyeHeight;
+	const FVector End = Camera->GetComponentLocation();
+	float CapsuleRadius = 15.f;
+	float CapsuleHalfHeight = SpringArm->TargetArmLength * 0.5f;
 	
 	TArray<FHitResult> HitResults;
 	FCollisionQueryParams QueryParams;
