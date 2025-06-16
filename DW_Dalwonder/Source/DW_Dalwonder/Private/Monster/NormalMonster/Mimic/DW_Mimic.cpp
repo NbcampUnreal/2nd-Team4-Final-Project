@@ -41,7 +41,7 @@ void ADW_Mimic::BeginPlay()
 	BeginPlayNS,
 	GetActorLocation(),
 	GetActorRotation(),
-	FVector(10.f),
+	FVector(1.f),
 	true,
 	true
 );
@@ -96,7 +96,7 @@ void ADW_Mimic::MimicAttack()
 			AttackNS,
 			SpawnLocation,
 			SpawnRotation,
-			FVector(10.f),
+			FVector(1.f),
 			true,
 			true
 		);

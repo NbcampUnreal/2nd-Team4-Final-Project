@@ -118,4 +118,6 @@ public:
 	virtual float GetPlayerDistance() = 0;
 
 	virtual void DropItem(UDataTable* NewDataTable) = 0;
+
+	virtual void ResetAttakingActors() = 0;
 };

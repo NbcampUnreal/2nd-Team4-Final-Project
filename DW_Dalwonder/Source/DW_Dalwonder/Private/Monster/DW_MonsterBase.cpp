@@ -316,12 +316,16 @@ void ADW_MonsterBase::PerformAttackTrace()
 	const FVector CurrStart = TraceStart->GetComponentLocation();
 	const FVector CurrEnd = TraceEnd->GetComponentLocation();
 
-	const int NumSteps = 5;
+	const int NumSteps = 3;
+	const float SideOffset = 30.f;
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
 		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceEndVector, Alpha);
 		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
+		
+		FVector SideOffsetLeft = FVector(-SideOffset, -SideOffset, -SideOffset);
+		FVector SideOffsetRight = FVector(SideOffset, SideOffset, SideOffset);
 
 		FHitResult Hit;
 		FCollisionQueryParams Params;
@@ -330,25 +334,27 @@ void ADW_MonsterBase::PerformAttackTrace()
 		if (bDrawDebugTrace)
 		{
 #if WITH_EDITOR
-			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
+			DrawDebugLine(GetWorld(), Prev + SideOffsetLeft, Curr + SideOffsetLeft, FColor::Red, false, DebugDrawTime, 0, 2.f);
+			DrawDebugLine(GetWorld(), Prev + SideOffsetRight, Curr + SideOffsetRight, FColor::Blue, false, DebugDrawTime, 0, 2.f); 
+			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Green, false, DebugDrawTime, 0, 2.f);
 			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
 #endif
 		}
-
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
+		
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev + SideOffsetLeft, Curr + SideOffsetLeft, ECC_Pawn, Params) ||
+			GetWorld()->LineTraceSingleByChannel(Hit, Prev + SideOffsetRight, Curr + SideOffsetRight, ECC_Pawn, Params) ||
+			GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
+				UE_LOG(LogTemp, Error, TEXT("%s"), *Hit.GetActor()->GetName());
+
 				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
 
-					// 데미지 처리
 					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
-
-#if WITH_EDITOR
-					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
-#endif
+					
 				}
 			}
 		}
@@ -571,4 +577,9 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			ItemActor->SetItemCode(ItemData.ItemCode);
 		}
 	}
+}
+
+void ADW_MonsterBase::ResetAttakingActors()
+{
+	AlreadyAttackingActors.Empty();
 }
