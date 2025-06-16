@@ -18,15 +18,10 @@ void UQuestManagerComponent::AcceptQuest(const FQuestData& QuestData)
 {
     if (AcceptedQuests.Contains(QuestData.QuestID))
     {
-        UE_LOG(LogTemp, Warning, TEXT("퀘스트 '%s'는 이미 수락되었습니다."), *QuestData.QuestID.ToString());
         return;
     }
 
     AcceptedQuests.Add(QuestData.QuestID, QuestData);
-
-    UE_LOG(LogTemp, Log, TEXT("퀘스트 수락됨: %s - %s"),
-        *QuestData.QuestID.ToString(),
-        *QuestData.Title.ToString());
 }
 
 void UQuestManagerComponent::UpdateObjectiveProgress(FName TargetID, int32 Amount)
@@ -47,32 +42,56 @@ void UQuestManagerComponent::UpdateObjectiveProgress(FName TargetID, int32 Amoun
             if (Objective.TargetID == TargetID && !Objective.IsCompleted())
             {
                 Objective.CurrentCount += Amount;
-
-                UE_LOG(LogTemp, Log, TEXT(" 목표 갱신: %s (%d/%d)"),
-                    *TargetID.ToString(),
-                    Objective.CurrentCount,
-                    Objective.RequiredCount);
-
                 bAnyUpdated = true;
             }
         }
 
-        // 모든 목표 완료 여부 확인
-        bool bAllCompleted = true;
-        for (const FQuestObjective& Obj : Quest.Objectives)
+        // 퀘스트 전체 완료 여부 검사
+        if (IsQuestCompleted(Quest))
         {
-            if (!Obj.IsCompleted())
+            CompleteQuest(Elem.Key); // 퀘스트 완료 처리
+        }
+    }
+}
+
+bool UQuestManagerComponent::IsQuestAccepted(const FQuestData& Quest) const
+{
+    return AcceptedQuests.Contains(Quest.QuestID);
+}
+
+bool UQuestManagerComponent::IsQuestCompleted(const FQuestData& Quest)
+{
+    if (const FQuestData* Completed = CompletedQuests.Find(Quest.QuestID))
+    {
+        return true;
+    }
+
+    if (const FQuestData* Accepted = AcceptedQuests.Find(Quest.QuestID))
+    {
+        for (const FQuestObjective& Obj : Accepted->Objectives)
+        {
+            if (Obj.CurrentCount < Obj.RequiredCount)
             {
-                bAllCompleted = false;
-                break;
+                return false;
             }
         }
+        return true;
+    }
 
-        if (bAnyUpdated && bAllCompleted)
-        {
-            Quest.bIsCompleted = true;
-            UE_LOG(LogTemp, Log, TEXT(" 퀘스트 완료됨: %s"), *Quest.Title.ToString());
-        }
+    return false; // 목록에 없다면 아직 시작하지 않은 퀘스트
+}
+
+void UQuestManagerComponent::CompleteQuest(FName QuestID)
+{
+    if (FQuestData* Quest = AcceptedQuests.Find(QuestID))
+    {
+        UE_LOG(LogTemp, Log, TEXT("퀘스트 [%s] 완료!"), *QuestID.ToString());
+
+        // 보상 지급 (추후 확장)
+        // ...
+
+        CompletedQuests.Add(QuestID, *Quest);
+        AcceptedQuests.Remove(QuestID);
     }
 }
 
