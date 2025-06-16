@@ -18,11 +18,11 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* Mesh;
 
-    // UWidgetComponent¸¦ ¼±¾ð
+    // UWidgetComponentï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UWidgetComponent* InteractionWidget;
 
-    // UUserWidget Å¬·¡½º¸¦ ÁöÁ¤ÇÏ´Â º¯¼ö
+    // UUserWidget Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> InteractionWidgetClass;
 
