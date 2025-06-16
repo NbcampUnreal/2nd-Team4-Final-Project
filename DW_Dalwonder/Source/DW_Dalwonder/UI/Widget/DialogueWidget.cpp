@@ -47,33 +47,30 @@ void UDialogueWidget::ShowNextDialogueLine()
     {
         const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex];
 
-        if (DialogueText) DialogueText->SetText(Line.DialogueText);
-        if (SpeakerNameText)  SpeakerNameText->SetText(Line.SpeakerName);
+        DialogueText->SetText(Line.DialogueText);
+        SpeakerNameText->SetText(Line.SpeakerName);
 
-        // 마지막 줄이고 퀘스트 있음 → 버튼 이름 바꾸기
         if (Line.bIsQuestDialogue)
         {
             bHasQuest = true;
             QuestID = Line.QuestID;
 
-            // 안내 텍스트 및 수락 버튼 표시
+            // 안내 텍스트
             AcceptQuestButton->SetVisibility(ESlateVisibility::Visible);
             QuestQuestionText->SetText(FText::FromString(TEXT("수락")));
             QuestQuestionText->SetVisibility(ESlateVisibility::Visible);
 
-            // Next 버튼을 "거절" 역할로 전환
             if (NexiDialogueText)
             {
                 NexiDialogueText->SetText(FText::FromString(TEXT("거절")));
             }
+
             ++CurrentDialogueIndex;
-            // 여기서 대사 진행을 멈추고 버튼 클릭을 기다리기.
             return;
         }
 
         ++CurrentDialogueIndex;
 
-        // 텍스트 복원 (혹시 이전에 "거절"로 바꿨던 것)
         if (NexiDialogueText)
         {
             NexiDialogueText->SetText(FText::FromString(TEXT("다음")));
@@ -81,25 +78,80 @@ void UDialogueWidget::ShowNextDialogueLine()
     }
     else
     {
-        // 마지막 줄 끝났고, 퀘스트도 없음 → 창 닫기
         if (!bHasQuest)
         {
             RemoveFromParent();
-
             APlayerController* PC = GetWorld()->GetFirstPlayerController();
-            if (PC)
-            {
-                PC->SetInputMode(FInputModeGameOnly());
-                PC->bShowMouseCursor = false;
-            }
+            PC->SetInputMode(FInputModeGameOnly());
+            PC->bShowMouseCursor = false;
         }
     }
+
+    //if (CurrentDialogueIndex < DialogueLines.Num())
+    //{
+    //    const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex];
+
+    //    if (DialogueText) DialogueText->SetText(Line.DialogueText);
+    //    if (SpeakerNameText)  SpeakerNameText->SetText(Line.SpeakerName);
+
+    //    // 마지막 줄이고 퀘스트 있음 → 버튼 이름 바꾸기
+    //    if (Line.bIsQuestDialogue)
+    //    {
+    //        bHasQuest = true;
+    //        QuestID = Line.QuestID;
+
+    //        // 안내 텍스트 및 수락 버튼 표시
+    //        AcceptQuestButton->SetVisibility(ESlateVisibility::Visible);
+    //        QuestQuestionText->SetText(FText::FromString(TEXT("수락")));
+    //        QuestQuestionText->SetVisibility(ESlateVisibility::Visible);
+
+    //        // Next 버튼을 "거절" 역할로 전환
+    //        if (NexiDialogueText)
+    //        {
+    //            NexiDialogueText->SetText(FText::FromString(TEXT("거절")));
+    //        }
+    //        ++CurrentDialogueIndex;
+    //        // 여기서 대사 진행을 멈추고 버튼 클릭을 기다리기.
+    //        return;
+    //    }
+
+    //    ++CurrentDialogueIndex;
+
+    //    // 텍스트 복원 (혹시 이전에 "거절"로 바꿨던 것)
+    //    if (NexiDialogueText)
+    //    {
+    //        NexiDialogueText->SetText(FText::FromString(TEXT("다음")));
+    //    }
+    //}
+    //else
+    //{
+    //    // 마지막 줄 끝났고, 퀘스트도 없음 → 창 닫기
+    //    if (!bHasQuest)
+    //    {
+    //        RemoveFromParent();
+
+    //        APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    //        if (PC)
+    //        {
+    //            PC->SetInputMode(FInputModeGameOnly());
+    //            PC->bShowMouseCursor = false;
+    //        }
+    //    }
+    //}
 }
 
 void UDialogueWidget::InitQuest(FName InQuestID)
 {
     QuestID = InQuestID;
     bHasQuest = true;
+
+    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetGameInstance()))
+    {
+        if (UQuestDatabase* DB = GI->QuestDatabase)
+        {
+            CachedQuestData = DB->FindQuestByID(QuestID);
+        }
+    }
 }
 
 void UDialogueWidget::OnNextButtonClicked()
@@ -125,52 +177,70 @@ void UDialogueWidget::OnNextButtonClicked()
 
 void UDialogueWidget::OnAcceptQuestClicked()
 {
-    if (DialogueLines.IsValidIndex(CurrentDialogueIndex - 1))
+    if (!bHasQuest || CachedQuestData.QuestID == NAME_None) return;
+
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(PC->GetPawn());
+
+    if (Player && Player->QuestManager)
     {
-        const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex - 1];
+        Player->QuestManager->AcceptQuest(CachedQuestData);
 
-        if (Line.bIsQuestDialogue && Line.QuestID != NAME_None)
-        {
-            // 플레이어 캐릭터 접근
-            APlayerController* PC = GetWorld()->GetFirstPlayerController();
-            ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(PC->GetPawn());
+        // UI 닫기
+        AcceptQuestButton->SetVisibility(ESlateVisibility::Collapsed);
+        RemoveFromParent();
+        PC->SetInputMode(FInputModeGameOnly());
+        PC->bShowMouseCursor = false;
 
-            if (Player && Player->QuestManager)
-            {
-                // GameInstance에서 QuestDatabase 접근
-                UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this));
-                if (GI && GI->QuestDatabase)
-                {
-                    // QuestID로 퀘스트 정보 검색
-                    FQuestData Quest = GI->QuestDatabase->FindQuestByID(Line.QuestID);
-                    if (Quest.QuestID != NAME_None)
-                    {
-                        // 퀘스트 수락
-                        Player->QuestManager->AcceptQuest(Quest);
-
-                        // UI 처리
-                        AcceptQuestButton->SetVisibility(ESlateVisibility::Collapsed);
-                        // 입력 모드 원래대로 복원
-                        if (PC)
-                        {
-                            PC->SetInputMode(FInputModeGameOnly());
-                            PC->bShowMouseCursor = false;
-                            RemoveFromParent();
-                        }
-
-                        UE_LOG(LogTemp, Log, TEXT("퀘스트 [%s] 수락 완료"), *Quest.Title.ToString());
-                    }
-                    else
-                    {
-                        UE_LOG(LogTemp, Warning, TEXT("퀘스트 ID '%s'를 QuestDatabase에서 찾을 수 없습니다."), *Line.QuestID.ToString());
-                    }
-                }
-                else
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("UDW_GameInstance 또는 QuestDatabase가 존재하지 않습니다."));
-                }
-            }
-        }
+        UE_LOG(LogTemp, Log, TEXT("퀘스트 [%s] 수락 완료"), *CachedQuestData.Title.ToString());
     }
+
+    //if (DialogueLines.IsValidIndex(CurrentDialogueIndex - 1))
+    //{
+    //    const FDialogueLine& Line = DialogueLines[CurrentDialogueIndex - 1];
+
+    //    if (Line.bIsQuestDialogue && Line.QuestID != NAME_None)
+    //    {
+    //        // 플레이어 캐릭터 접근
+    //        APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    //        ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(PC->GetPawn());
+
+    //        if (Player && Player->QuestManager)
+    //        {
+    //            // GameInstance에서 QuestDatabase 접근
+    //            UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this));
+    //            if (GI && GI->QuestDatabase)
+    //            {
+    //                // QuestID로 퀘스트 정보 검색
+    //                FQuestData Quest = GI->QuestDatabase->FindQuestByID(Line.QuestID);
+    //                if (Quest.QuestID != NAME_None)
+    //                {
+    //                    // 퀘스트 수락
+    //                    Player->QuestManager->AcceptQuest(Quest);
+
+    //                    // UI 처리
+    //                    AcceptQuestButton->SetVisibility(ESlateVisibility::Collapsed);
+    //                    // 입력 모드 원래대로 복원
+    //                    if (PC)
+    //                    {
+    //                        PC->SetInputMode(FInputModeGameOnly());
+    //                        PC->bShowMouseCursor = false;
+    //                        RemoveFromParent();
+    //                    }
+
+    //                    UE_LOG(LogTemp, Log, TEXT("퀘스트 [%s] 수락 완료"), *Quest.Title.ToString());
+    //                }
+    //                else
+    //                {
+    //                    UE_LOG(LogTemp, Warning, TEXT("퀘스트 ID '%s'를 QuestDatabase에서 찾을 수 없습니다."), *Line.QuestID.ToString());
+    //                }
+    //            }
+    //            else
+    //            {
+    //                UE_LOG(LogTemp, Warning, TEXT("UDW_GameInstance 또는 QuestDatabase가 존재하지 않습니다."));
+    //            }
+    //        }
+    //    }
+    //}
 }
 

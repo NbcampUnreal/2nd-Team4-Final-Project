@@ -29,6 +29,9 @@ public:
     void OnInventoryClicked();
 
     UFUNCTION()
+    void OnQuestListClicked();
+
+    UFUNCTION()
     void OnSaveClicked();
 
     UFUNCTION()
@@ -50,6 +53,9 @@ protected:
     class UCustomButtonWidget* InventoryButton;
 
     UPROPERTY(meta = (BindWidget))
+    class UCustomButtonWidget* QuestListButton;
+
+    UPROPERTY(meta = (BindWidget))
     class UCustomButtonWidget* SaveButton;
 
     UPROPERTY(meta = (BindWidget))
@@ -66,6 +72,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> QuestListWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> OptionMenuWidgetClass;
