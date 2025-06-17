@@ -20,10 +20,8 @@
 #include "DW_InteractInterface.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/CharacterArmorComponent.h"
-#include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Tracks/MovieSceneMaterialTrack.h"
 
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -80,15 +78,6 @@ ADW_CharacterBase::ADW_CharacterBase()
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetWorld()->GetTimerManager().SetTimer
-	(
-		BlockActorsTimer,
-		this,
-		&ADW_CharacterBase::CheckBlockingActors,
-		0.3f,
-		true
-	);
 
 	GetWorld()->GetTimerManager().SetTimer  //아이템 업그레이드 타이머
 	(
@@ -153,9 +142,7 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-
-	GetWorldTimerManager().ClearTimer(BlockActorsTimer);
-	BlockActorsTimer.Invalidate();
+	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
 	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(DodgeTimer);
@@ -664,64 +651,6 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	}
 	
 	return ActualDamage;
-}
-
-void ADW_CharacterBase::CheckBlockingActors()
-{
-	const FVector Start = GetActorLocation() + BaseEyeHeight;
-	const FVector End = Camera->GetComponentLocation();
-	float CapsuleRadius = 15.f;
-	float CapsuleHalfHeight = SpringArm->TargetArmLength * 0.5f;
-	
-	TArray<FHitResult> HitResults;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	TSet<AActor*> CurrentBlockingActors;
-	
-	if (GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), QueryParams))
-	{
-		for (FHitResult& HitResult : HitResults)
-		{
-			AActor* HitActor = HitResult.GetActor();
-			if (HitActor && HitActor != this)
-			{
-				CurrentBlockingActors.Add(HitActor);
-				MakeActorTranslucent(HitActor, true);
-			}
-		}
-	}
-
-	for (AActor* Actor : BlockingActors)
-	{
-		if (!CurrentBlockingActors.Contains(Actor))
-		{
-			MakeActorTranslucent(Actor, false);
-		}
-	}
-
-	BlockingActors = CurrentBlockingActors;
-}
-
-void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor, bool bIsBlocking)
-{
-	TArray<UMeshComponent*> MeshComponents;
-	Actor->GetComponents<UMeshComponent>(MeshComponents);
-
-	for (UMeshComponent* MeshComp : MeshComponents)
-	{
-		if (IsValid(MeshComp))
-		{
-			if (bIsBlocking)
-			{
-				MeshComp->SetOverlayMaterial(OverlayMaterial);
-			}
-			else
-			{
-				MeshComp->SetOverlayMaterial(nullptr);
-			}
-		}
-	}
 }
 
 void ADW_CharacterBase::SetParrying(bool bIsParrying)

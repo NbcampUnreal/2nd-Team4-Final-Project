@@ -28,7 +28,7 @@ public:
 	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
 
 	UPROPERTY()
-	UUserWidget* ESCMenuWidgetInstance;
+	UUserWidget* ESCMenuWidgetInstance = nullptr;
 
 	bool bIsESCMenuOpen = false;
 
@@ -76,7 +76,7 @@ public:
 public:
 	//HUD
 	UPROPERTY()
-	UUserWidget* HUDWidgetInstance;
+	UUserWidget* HUDWidgetInstance = nullptr;
 
 	UPROPERTY()
 	UBossHUDWidget* CachedBossHUD;

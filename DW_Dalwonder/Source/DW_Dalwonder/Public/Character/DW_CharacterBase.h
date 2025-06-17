@@ -90,10 +90,6 @@ public:
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	void CheckBlockingActors();
-
-	void MakeActorTranslucent(AActor* Actor, bool bIsBlocking);
-
 	// -----------------------------
 	// 📌 카메라 및 무기 관련 컴포넌트
 	// -----------------------------
@@ -105,14 +101,6 @@ protected:
 	// 실제 시점 카메라
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* Camera;
-
-	// 캐릭터를 가리는 액터 목록
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TSet<AActor*> BlockingActors;
-
-	// 오버레이 머티리얼
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
-	UMaterialInstance* OverlayMaterial;
 
 	// 캐릭터의 무기 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -137,9 +125,6 @@ protected:
 
 	// 캐릭터 조작 가능 여부
 	bool bCanControl = true;
-
-	UPROPERTY()
-	FTimerHandle BlockActorsTimer;
 	
 // 전투 관련 시스템 (Combat)
 #pragma region Combat

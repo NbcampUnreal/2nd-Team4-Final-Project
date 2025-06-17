@@ -9,7 +9,6 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UI/Widget/BossHUDWidget.h"
-#include "Character/DW_CharacterBase.h"
 
 ADW_PlayerController::ADW_PlayerController()
 	: InputMappingContext(nullptr),
@@ -18,10 +17,10 @@ ADW_PlayerController::ADW_PlayerController()
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
+	ESCAction(nullptr),
 	GuardAction(nullptr),
 	DodgeAction(nullptr),
-	LockonAction(nullptr),
-	ESCAction(nullptr)
+	LockonAction(nullptr)
 {
 }
 
