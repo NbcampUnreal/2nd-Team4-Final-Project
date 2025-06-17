@@ -86,15 +86,20 @@ TArray<FDialogueLine> ADW_NpcBase::GetDialogueForQuestState(UQuestManagerCompone
         // 퀘스트가 있는 NPC → 해당 QuestID와 상태가 맞는 대사만
         if (bHasQuest)
         {
-            if (Row->QuestID == QuestID && Row->DialogueStage == Stage)
+            if (Row->QuestID == QuestID && Row->DialogueStage == Stage && Row->SpeakerName.ToString() == Name.ToString())
             {
+                // 데이터 테이블에서 이름을 찾아서 대사 저장
                 Result.Add(*Row);
             }
         }
         // 퀘스트 없는 NPC → DialogueStage == None만 허용
         else if (Row->DialogueStage == EQuestDialogueStage::None)
         {
-            Result.Add(*Row);
+            // 데이터 테이블에서 이름을 찾아서 대사 저장
+            if (Row->SpeakerName.ToString() == Name.ToString())
+            {
+                Result.Add(*Row);
+            }
         }
     }
 

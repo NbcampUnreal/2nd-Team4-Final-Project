@@ -27,6 +27,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
     FName QuestID;
 
+    /** NPC이름 (이 NPC가 주는 퀘스트) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+    FText Name;
+
     /** 퀘스트 대사 포함 여부 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
     bool bGivesQuest = false;
