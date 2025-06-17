@@ -11,6 +11,8 @@
 // Sets default values
 ADW_NpcBase::ADW_NpcBase()
 {
+    MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComponent"));
+    RootComponent = MeshComponent;
 }
 
 void ADW_NpcBase::Interact_Implementation(AActor* Interactor)

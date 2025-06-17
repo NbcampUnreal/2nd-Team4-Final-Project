@@ -18,6 +18,11 @@ class DW_DALWONDER_API ADW_NpcBase : public ADW_InteractItemBase
 public:
     ADW_NpcBase();
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NPC")
+    USkeletalMeshComponent* MeshComponent;
+    
+    FORCEINLINE USkeletalMeshComponent* GetNpcMesh() const { return MeshComponent; }
+
 public:
     /** 대화 데이터 테이블 (NPC마다 할당) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
