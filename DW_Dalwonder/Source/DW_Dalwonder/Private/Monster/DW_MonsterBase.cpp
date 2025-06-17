@@ -316,45 +316,46 @@ void ADW_MonsterBase::PerformAttackTrace()
 	const FVector CurrStart = TraceStart->GetComponentLocation();
 	const FVector CurrEnd = TraceEnd->GetComponentLocation();
 
-	const int NumSteps = 3;
-	const float SideOffset = 30.f;
+	const int NumSteps = 5;
+	const float CapsuleRadius = 40.f;
+
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
 		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceEndVector, Alpha);
 		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
-		
-		FVector SideOffsetLeft = FVector(-SideOffset, -SideOffset, -SideOffset);
-		FVector SideOffsetRight = FVector(SideOffset, SideOffset, SideOffset);
+
+		FVector Segment = Curr - Prev;
+		float Length = Segment.Size();
+		if (Length < KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
+
+		FVector Direction = Segment / Length;
+		FQuat Rotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Direction);
+
+		FVector Center = (Prev + Curr) / 2.0f;
+		float CapsuleHalfHeight = Length / 2.0f;
 
 		FHitResult Hit;
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
 
 		if (bDrawDebugTrace)
 		{
 #if WITH_EDITOR
-			DrawDebugLine(GetWorld(), Prev + SideOffsetLeft, Curr + SideOffsetLeft, FColor::Red, false, DebugDrawTime, 0, 2.f);
-			DrawDebugLine(GetWorld(), Prev + SideOffsetRight, Curr + SideOffsetRight, FColor::Blue, false, DebugDrawTime, 0, 2.f); 
-			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Green, false, DebugDrawTime, 0, 2.f);
-			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+			DrawDebugCapsule(GetWorld(), Center, CapsuleHalfHeight, CapsuleRadius, Rotation, FColor::Green, false, DebugDrawTime);
 #endif
 		}
-		
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev + SideOffsetLeft, Curr + SideOffsetLeft, ECC_Pawn, Params) ||
-			GetWorld()->LineTraceSingleByChannel(Hit, Prev + SideOffsetRight, Curr + SideOffsetRight, ECC_Pawn, Params) ||
-			GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
+
+		if (GetWorld()->SweepSingleByChannel(Hit, Prev, Curr, Rotation, ECC_Pawn, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params))
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
-				UE_LOG(LogTemp, Error, TEXT("%s"), *Hit.GetActor()->GetName());
-
 				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
-
 					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
-					
 				}
 			}
 		}

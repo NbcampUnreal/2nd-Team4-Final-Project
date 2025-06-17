@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
+#include "Components/CapsuleComponent.h"
 
 
 // Sets default values
@@ -22,6 +23,9 @@ ADW_SkeletonBoss::ADW_SkeletonBoss()
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned
@@ -35,6 +39,25 @@ void ADW_SkeletonBoss::BeginPlay()
 void ADW_SkeletonBoss::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bRotateToPlayer)
+	{
+		if (PlayerCharacter)
+		{
+			FRotator CurrentRotation = GetActorRotation();
+
+			FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+			DirectionToPlayer.Z = 0;
+
+			if (!DirectionToPlayer.IsNearlyZero())
+			{
+				FRotator TargetRotation = DirectionToPlayer.Rotation();
+				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.f);
+
+				SetActorRotation(NewRotation);
+			}
+		}
+	}
 }
 
 void ADW_SkeletonBoss::ChangeFormTypeByRandom()
