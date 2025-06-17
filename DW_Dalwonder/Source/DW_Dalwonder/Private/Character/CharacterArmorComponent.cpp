@@ -73,7 +73,7 @@ USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) c
 		return nullptr;
 	}
 
-	return StaticCast<USkeletalMesh*>(ItemDataRow->ItemMesh);
+	return nullptr; // StaticCast<USkeletalMesh*>(ItemDataRow->ItemMesh);
 }
 
 AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
@@ -88,5 +88,5 @@ AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
 		return nullptr;
 	}
 
-	return StaticCast<AActor*>(ItemDataRow->ItemMesh);
+	return nullptr; // StaticCast<AActor*>(ItemDataRow->ItemMesh);
 }
