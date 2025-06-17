@@ -1,4 +1,6 @@
 #include "Character/CharacterArmorComponent.h"
+
+#include "MediaSampleSink.h"
 #include "Item/ItemBase.h"
 #include "Character/DW_CharacterBase.h"
 #include "Character/DW_Warrior.h"
@@ -22,30 +24,32 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	if (ItemType == ECharacterArmor::Helmet)
 	{
 		Helmet = Item;
-		AdjustArmorMesh(ECharacterArmor::Helmet);
+		GetArmorSkeletalMesh(Helmet);
 		return true;
 	}
 	if (ItemType == ECharacterArmor::Armor)
 	{
 		Armor = Item;
-		AdjustArmorMesh(ECharacterArmor::Armor);
+		GetArmorSkeletalMesh(Armor);
 		return true;
 	}
 	if (ItemType == ECharacterArmor::Glove)
 	{
 		Glove = Item;
-		AdjustArmorMesh(ECharacterArmor::Glove);
+		GetArmorSkeletalMesh(Glove);
 		return true;
 	}
 	if (ItemType == ECharacterArmor::Boots)
 	{
 		Boots = Item;
-		AdjustArmorMesh(ECharacterArmor::Boots);
+		GetArmorSkeletalMesh(Boots);
 		return true;
 	}
 	if (ItemType == ECharacterArmor::Weapon)
 	{
 		Weapon = Item;
+		Character->SetWeapon(GetWeaponActor(Item));
+		
 		int32 WeaponType = Item->ItemCode / 10000;
 		if (ADW_Warrior* Warrior = Cast<ADW_Warrior>(Character))
 		{
@@ -57,18 +61,32 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	return false;
 }
 
-void UCharacterArmorComponent::AdjustArmorMesh(ECharacterArmor ArmorType)
+USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) const
 {
-	if (ArmorType == ECharacterArmor::Weapon)
+	check(IsValid(ItemTable));
+
+	FName RowName(FString::FromInt(Item->ItemCode / 10000));
+	const FString ContextString(TEXT("ItemTable	Lookup"));
+	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
+	if (ItemDataRow == nullptr)
 	{
-		AActor* WeaponActor = nullptr;// = Item->GetWeaponActor();
-		if (IsValid(Character))
-		{
-			//Character->SetWeapon(WeaponActor);
-		}
+		return nullptr;
 	}
-	else
+
+	return StaticCast<USkeletalMesh*>(ItemDataRow->ItemMesh);
+}
+
+AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
+{
+	check(IsValid(ItemTable));
+
+	FName RowName(FString::FromInt(Item->ItemCode / 10000));
+	const FString ContextString(TEXT("ItemTable	Lookup"));
+	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
+	if (ItemDataRow == nullptr)
 	{
-		//USkeletalMesh* SkeletalMesh = Armor->GetArmorSkeletalMesh();
+		return nullptr;
 	}
+
+	return StaticCast<AActor*>(ItemDataRow->ItemMesh);
 }
