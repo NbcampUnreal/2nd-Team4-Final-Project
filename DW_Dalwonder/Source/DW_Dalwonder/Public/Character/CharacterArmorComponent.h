@@ -30,7 +30,9 @@ protected:
 
 	bool EquipArmor(UItemBase* Item);
 
-	void AdjustArmorMesh(ECharacterArmor ArmorType);
+	USkeletalMesh* GetArmorSkeletalMesh(UItemBase* Item) const;
+	
+	AActor* GetWeaponActor(UItemBase* Item) const;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
