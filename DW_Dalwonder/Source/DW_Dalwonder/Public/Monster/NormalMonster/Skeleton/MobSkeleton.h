@@ -24,6 +24,7 @@ private:
 
 	virtual void Tick(float DeltaTime) override;
 
+
 	void SpawnTickEnd();
 
 public:
@@ -101,9 +102,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Propertys|Patrol")
 	float GeneratRandomRadius;*/
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float InterpSpeed = 5.0f;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bIsStrafe;
+
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	float HitDelay;*/
@@ -131,4 +135,6 @@ public:
 	bool bHaveEnhanced = false;
 
 	bool bSpawnTick = true;
+
+
 };

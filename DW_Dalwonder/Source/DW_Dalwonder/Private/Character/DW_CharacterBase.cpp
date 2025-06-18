@@ -23,6 +23,7 @@
 #include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "UI/Widget/LockOnWidget.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 
 
@@ -1323,8 +1324,13 @@ void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 	{
 		LockOnWidgetInstance->SetPositionInViewport(ScreenPosition, true);
 	}
-}
 
+	if (ULockOnWidget* LockOnWidget = Cast<ULockOnWidget>(LockOnWidgetInstance))
+	{
+		float Distance = FVector::Dist(GetActorLocation(), LockOnTarget->GetActorLocation());
+		LockOnWidget->SetMarkerSizeByDistance(Distance);
+	}
+}
 
 void ADW_CharacterBase::SwitchLockOnTarget()
 {

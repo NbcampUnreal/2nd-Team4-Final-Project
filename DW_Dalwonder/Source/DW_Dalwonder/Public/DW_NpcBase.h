@@ -1,59 +1,69 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "DW_InteractItemBase.h"
+#include "GameFramework/Character.h"
 #include "UI/Component/Struct/DialogueLine.h"
 #include "UI/Component/Struct/QuestData.h"
+#include "DW_InteractInterface.h"
+#include "Components/WidgetComponent.h"
 #include "DW_NpcBase.generated.h"
 
 class UUserWidget;
 class ACameraActor;
 
 UCLASS()
-class DW_DALWONDER_API ADW_NpcBase : public ADW_InteractItemBase
+class DW_DALWONDER_API ADW_NpcBase : public ACharacter, public IDW_InteractInterface
 {
 	GENERATED_BODY()
-	
-public:
-    ADW_NpcBase();
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NPC")
-    USkeletalMeshComponent* MeshComponent;
-    
-    FORCEINLINE USkeletalMeshComponent* GetNpcMesh() const { return MeshComponent; }
 
 public:
-    /** 대화 데이터 테이블 (NPC마다 할당) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
-    UDataTable* DialogueDataTable;
+	ADW_NpcBase();
 
-    /** 퀘스트 ID (이 NPC가 주는 퀘스트) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
-    FName QuestID;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NPC")
+	USkeletalMeshComponent* MeshComponent;
 
-    /** 퀘스트 대사 포함 여부 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
-    bool bGivesQuest = false;
+	FORCEINLINE USkeletalMeshComponent* GetNpcMesh() const { return MeshComponent; }
+
+	// 위젯 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	UWidgetComponent* InteractionWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TSubclassOf<UUserWidget> InteractionWidgetClass;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
+	UDataTable* DialogueDataTable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	FName QuestID;
+
+  /** NPC이름 (이 NPC가 주는 퀘스트) */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+  FText Name;
+
+  /** 퀘스트 대사 포함 여부 */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+  bool bGivesQuest = false;
 
 protected:
-    virtual void Interact_Implementation(AActor* Interactor) override;
-    void FocusCameraOnNPC(AActor* PlayerActor);
+	virtual void BeginPlay() override;
 
-    /** 퀘스트 진행 상태에 맞는 대사 필터링 */
-    TArray<FDialogueLine> GetDialogueForQuestState(class UQuestManagerComponent* QuestManager) const;
+	// 인터페이스 구현
+	virtual void Interact_Implementation(AActor* Interactor) override;
+	virtual void ShowInteractionWidget_Implementation() override;
+	virtual void HideInteractionWidget_Implementation() override;
+
+	void FocusCameraOnNPC(AActor* PlayerActor);
+	TArray<FDialogueLine> GetDialogueForQuestState(class UQuestManagerComponent* QuestManager) const;
 
 protected:
-    // UI 클래스 (인터페이스에서 사용)
-    UPROPERTY(EditAnywhere, Category = "UI")
-    TSubclassOf<UUserWidget> DialogueUIClass;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> DialogueUIClass;
 
-    // 전역 UI 인스턴스
-    UPROPERTY()
-    UUserWidget* DialogueUIInstance;
+	UPROPERTY()
+	UUserWidget* DialogueUIInstance;
 
-    // 카메라 전환용 (자동화 or 수동 설정)
-    UPROPERTY(EditAnywhere, Category = "Camera")
-    ACameraActor* NPCInteractionCamera;
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	ACameraActor* NPCInteractionCamera;
 };
-

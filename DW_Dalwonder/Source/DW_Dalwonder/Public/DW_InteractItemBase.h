@@ -18,11 +18,9 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* Mesh;
 
-    // UWidgetComponent�� ����
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UWidgetComponent* InteractionWidget;
 
-    // UUserWidget Ŭ������ �����ϴ� ����
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> InteractionWidgetClass;
 
