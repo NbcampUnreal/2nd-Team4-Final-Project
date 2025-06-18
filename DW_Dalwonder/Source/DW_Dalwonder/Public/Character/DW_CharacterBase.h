@@ -10,6 +10,7 @@
 #include "UI/Component/Manager/QuestManagerComponent.h"
 #include "DW_CharacterBase.generated.h"
 
+class UDW_AnimInstanceBase;
 class UCharacterArmorComponent;
 struct FInputActionValue;
 class USpringArmComponent;
@@ -142,7 +143,7 @@ protected:
 	UCharacterStatComponent* StatComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	TArray<UAnimInstance*> AnimInstanceArray;
+	TArray<TSubclassOf<UAnimInstance>> AnimInstanceArray;
 
 	UPROPERTY()
 	UAnimInstance* AnimInstance;

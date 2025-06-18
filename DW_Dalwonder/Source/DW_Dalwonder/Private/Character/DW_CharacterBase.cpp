@@ -502,9 +502,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 
 void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
 {
+	if (WeaponType == NewWeaponType)
+	{
+		return;
+	}
+	
 	WeaponType = NewWeaponType;
-	AnimInstance = AnimInstanceArray[WeaponType];
-	GetMesh()->SetAnimInstanceClass(AnimInstance->GetClass());
+	GetMesh()->SetAnimInstanceClass(AnimInstanceArray[WeaponType]);
+	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
