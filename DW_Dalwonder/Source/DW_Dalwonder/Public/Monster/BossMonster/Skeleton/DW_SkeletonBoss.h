@@ -48,13 +48,16 @@ public:
 	ADW_SkeletonBoss();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class UProjectileSpawnerComponent* PJSpawner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* LeftHandWeaponComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* RightHandWeaponComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
+	ESkeletonFormType CurrentFormType = ESkeletonFormType::Archer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
@@ -67,6 +70,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeFormType(const ESkeletonFormType FormType);
+
+	UFUNCTION(BlueprintCallable)
+	void JumpToTarget(const FVector& TargetLocation, float AirTime = 3.f);
 
 protected:
 	// Called when the game starts or when spawned
