@@ -11,7 +11,7 @@ UENUM(BlueprintType)
 enum class ESkeletonFormType : uint8
 {
 	Warrior UMETA(DisplayName = "Warrior"),
-	Bandit UMETA(DisplayName = "Bandit"),
+	GreatWarrior UMETA(DisplayName = "GreatWarrior"),
 	Archer UMETA(DisplayName = "Archer"),
 	Mage UMETA(DisplayName = "Mage"),
 	Max UMETA(Hidden)
@@ -48,16 +48,22 @@ public:
 	ADW_SkeletonBoss();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class UProjectileSpawnerComponent* PJSpawner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* LeftHandWeaponComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* RightHandWeaponComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
+	ESkeletonFormType CurrentFormType = ESkeletonFormType::Archer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bRotateToPlayer = false;
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeFormTypeByRandom();
@@ -65,7 +71,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ChangeFormType(const ESkeletonFormType FormType);
 
+	UFUNCTION(BlueprintCallable)
+	void JumpToTarget(const FVector& TargetLocation, float AirTime = 3.f);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 };

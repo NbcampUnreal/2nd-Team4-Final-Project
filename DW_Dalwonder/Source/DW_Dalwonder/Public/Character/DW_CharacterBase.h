@@ -81,6 +81,9 @@ public:
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
+	void SetWeapon(AActor* NewWeapon) { Weapon->SetChildActorClass(NewWeapon->GetClass()); }
+
+	UFUNCTION(BlueprintCallable)
 	virtual void SetWeaponType(int32 NewWeaponType);
 
 	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }

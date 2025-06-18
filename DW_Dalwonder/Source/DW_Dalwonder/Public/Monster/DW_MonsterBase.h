@@ -255,4 +255,6 @@ public:
 	virtual bool CanBeCut_Implementation(const FHitResult& Hit) override;
 
 	virtual void DropItem(UDataTable* NewDataTable) override;
+
+	virtual void ResetAttakingActors() override;
 };

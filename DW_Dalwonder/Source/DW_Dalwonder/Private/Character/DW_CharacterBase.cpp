@@ -23,6 +23,7 @@
 #include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "UI/Widget/LockOnWidget.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 
 
@@ -86,7 +87,7 @@ void ADW_CharacterBase::BeginPlay()
 		BlockActorsTimer,
 		this,
 		&ADW_CharacterBase::CheckBlockingActors,
-		0.1f,
+		0.3f,
 		true
 	);
 
@@ -668,10 +669,10 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 
 void ADW_CharacterBase::CheckBlockingActors()
 {
-	const FVector Start = Camera->GetComponentLocation();
-	const FVector End = SpringArm->GetComponentLocation();
-	float CapsuleRadius = 7.f;
-	float CapsuleHalfHeight = SpringArm->TargetArmLength;
+	const FVector Start = GetActorLocation() + BaseEyeHeight;
+	const FVector End = Camera->GetComponentLocation();
+	float CapsuleRadius = 15.f;
+	float CapsuleHalfHeight = SpringArm->TargetArmLength * 0.5f;
 	
 	TArray<FHitResult> HitResults;
 	FCollisionQueryParams QueryParams;
@@ -1169,10 +1170,15 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 	AActor* BestTarget = nullptr;
 	float ClosestDistSquared = FLT_MAX;
 
+	const float MaxLockOnDistance = 5000.f;
+
 	for (AActor* Candidate : Candidates)
 	{
 		if (!IsValid(Candidate) || Candidate == this) continue;
 		if (!PC->LineOfSightTo(Candidate)) continue;
+
+		float Distance = FVector::Dist(GetActorLocation(), Candidate->GetActorLocation());
+		if (Distance > MaxLockOnDistance) continue;
 
 		FVector2D ScreenPos;
 		bool bOnScreen = PC->ProjectWorldLocationToScreen(Candidate->GetActorLocation(), ScreenPos);
@@ -1206,6 +1212,7 @@ void ADW_CharacterBase::UpdateLockOnRotation()
 	(MonsterTarget && MonsterTarget->bIsDead))
 	{
 		AActor* NewTarget = FindClosestTarget(800.f);
+
 		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
 		{
 			LockOnTarget = NewTarget;
@@ -1222,9 +1229,8 @@ void ADW_CharacterBase::UpdateLockOnRotation()
 	FRotator DesiredRotation = ToTarget.Rotation();
 
 	float HeightDiff = ToTarget.Z;
-	float MaxHeightEffect = 200.f;     // 200 이상 높이차는 최대 효과
+	float MaxHeightEffect = 200.f;
 	float TargetPitch = FMath::Clamp(HeightDiff / MaxHeightEffect, -1.f, 1.f) * 30.f;
-	// -30도 ~ +30도 범위에서 자연스러운 Pitch 설정
 
 	DesiredRotation.Pitch = TargetPitch;
 	DesiredRotation.Roll = 0.f;
@@ -1261,7 +1267,6 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		FVector2D ScreenPos;
 		if (PC->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
 		{
-			// 오른쪽에 있는 타겟만 선별 (왼쪽 정렬 원하면 반대로)
 			if (ScreenPos.X > ScreenCenter.X)
 			{
 				LockOnCandidates.Add(Target);
@@ -1319,8 +1324,13 @@ void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 	{
 		LockOnWidgetInstance->SetPositionInViewport(ScreenPosition, true);
 	}
-}
 
+	if (ULockOnWidget* LockOnWidget = Cast<ULockOnWidget>(LockOnWidgetInstance))
+	{
+		float Distance = FVector::Dist(GetActorLocation(), LockOnTarget->GetActorLocation());
+		LockOnWidget->SetMarkerSizeByDistance(Distance);
+	}
+}
 
 void ADW_CharacterBase::SwitchLockOnTarget()
 {

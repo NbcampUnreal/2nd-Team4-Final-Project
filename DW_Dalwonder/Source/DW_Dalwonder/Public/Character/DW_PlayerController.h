@@ -87,4 +87,23 @@ protected:
 	
 
 #pragma endregion
+
+#pragma region CustomDepth
+
+public:
+	void UpdateObstructionCheck();
+
+	FTimerHandle ObstructionTraceTimerHandle;
+
+	TMap<AActor*, TArray<UMaterialInterface*>> OriginalMaterials;
+
+	UPROPERTY()
+	TArray<AActor*> PreviouslyHiddenActors;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Obstruction")
+	UMaterialInterface* ObstructionMaterialInstance;
+
+#pragma endregion
 };
