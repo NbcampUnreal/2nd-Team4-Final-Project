@@ -17,8 +17,6 @@ void ULockOnWidget::SetMarkerSizeByDistance(float Distance)
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(ScaleBox->Slot))
 		{
 			CanvasSlot->SetSize(FVector2D(NewSize, NewSize));
-
-			UE_LOG(LogTemp, Log, TEXT("[LockOnWidget] 거리: %.2f → 마커 크기: %.2f"), Distance, NewSize);
 		}
 	}
 }
