@@ -22,6 +22,30 @@ class UPhysicalMaterial;
 class USceneCaptureComponent2D;
 class UTextureRenderTarget2D;
 
+USTRUCT(BlueprintType)
+struct FAnimMontageArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UAnimMontage*> Montages;
+
+	FORCEINLINE UAnimMontage*& operator[](int32 Index)
+	{
+		return Montages[Index];
+	}
+
+	FORCEINLINE const UAnimMontage* operator[](int32 Index) const
+	{
+		return Montages[Index];
+	}
+	
+	FORCEINLINE int32 Num() const
+	{
+		return Montages.Num();
+	}
+};
+
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
 {
@@ -163,6 +187,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndGuard();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkill();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot1();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot2();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot3();
+
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void KnockBackCharacter();
@@ -223,6 +259,9 @@ public:
 	// 사망 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	TArray<UAnimMontage*> DeadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TArray<FAnimMontageArray> SkillMontage;
 
 	// 전투 상태 타이머
 	UPROPERTY()

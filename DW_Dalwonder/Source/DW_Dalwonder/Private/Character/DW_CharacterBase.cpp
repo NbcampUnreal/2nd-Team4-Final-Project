@@ -243,6 +243,42 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Lockon);
 			}
 
+			if (PlayerController->SkillAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->SkillAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::UseActiveSkill);
+			}
+
+			if (PlayerController->UseSkill1Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill1Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot1);
+			}
+
+			if (PlayerController->UseSkill2Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill2Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot2);
+			}
+
+			if (PlayerController->UseSkill3Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill3Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot3);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 #if WITH_EDITOR
@@ -711,6 +747,39 @@ void ADW_CharacterBase::StartGuard()
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
+}
+
+void ADW_CharacterBase::UseActiveSkill()
+{
+	//@TODO : SkillComponent 와 연계해서 액티브 스킬 사용 만들기 -> Montage, 스킬 Array, 자원 소모 구현
+	// SkillComponent->GetActiveSkillArray();
+
+	FTimerHandle SkillUseTimer;
+	GetWorld()->GetTimerManager().SetTimer(SkillUseTimer, FTimerDelegate::CreateLambda([&]
+	{
+		// TODO
+	}), 2.f, false);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot1()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][0]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot2()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][1]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot3()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][2]);
 }
 
 void ADW_CharacterBase::KnockBackCharacter()

@@ -20,7 +20,11 @@ ADW_PlayerController::ADW_PlayerController()
 	ESCAction(nullptr),
 	GuardAction(nullptr),
 	DodgeAction(nullptr),
-	LockonAction(nullptr)
+	LockonAction(nullptr),
+	SkillAction(nullptr),
+	UseSkill1Action(nullptr),
+	UseSkill2Action(nullptr),
+	UseSkill3Action(nullptr)
 {
 }
 
