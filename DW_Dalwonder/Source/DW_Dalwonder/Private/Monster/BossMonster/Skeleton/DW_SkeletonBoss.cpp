@@ -3,12 +3,17 @@
 
 #include "Monster/BossMonster/Skeleton/DW_SkeletonBoss.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Character/DW_CharacterBase.h"
+#include "Components/CapsuleComponent.h"
+
 
 // Sets default values
 ADW_SkeletonBoss::ADW_SkeletonBoss()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	LeftHandWeaponComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftHandWeapon"));
 	LeftHandWeaponComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -18,6 +23,9 @@ ADW_SkeletonBoss::ADW_SkeletonBoss()
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned
@@ -26,6 +34,30 @@ void ADW_SkeletonBoss::BeginPlay()
 	Super::BeginPlay();
 
 	ChangeFormType(CurrentFormType);
+}
+
+void ADW_SkeletonBoss::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bRotateToPlayer)
+	{
+		if (PlayerCharacter)
+		{
+			FRotator CurrentRotation = GetActorRotation();
+
+			FVector DirectionToPlayer = PlayerCharacter->GetActorLocation() - GetActorLocation();
+			DirectionToPlayer.Z = 0;
+
+			if (!DirectionToPlayer.IsNearlyZero())
+			{
+				FRotator TargetRotation = DirectionToPlayer.Rotation();
+				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.f);
+
+				SetActorRotation(NewRotation);
+			}
+		}
+	}
 }
 
 void ADW_SkeletonBoss::ChangeFormTypeByRandom()
@@ -68,19 +100,35 @@ void ADW_SkeletonBoss::ChangeFormType(const ESkeletonFormType FormType)
 		if (LeftHandWeaponComp && FormData->LeftHandWeapon)
 		{
 			LeftHandWeaponComp->SetSkeletalMesh(FormData->LeftHandWeapon);
-			LeftHandWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_l"));
+			// LeftHandWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_l"));
+		}
+		else
+		{
+			LeftHandWeaponComp->SetSkeletalMesh(nullptr);
 		}
 
 		// 무기(오른손)
 		if (RightHandWeaponComp && FormData->RightHandWeapon)
 		{
 			RightHandWeaponComp->SetSkeletalMesh(FormData->RightHandWeapon);
-			RightHandWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
+			// RightHandWeaponComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
+		}
+		else
+		{
+			RightHandWeaponComp->SetSkeletalMesh(nullptr);
 		}
 
 		// 몽타주
 		AnimMontages = FormData->Montages;
 	}
-	// TODO : 블랙보드 값까지 변환예정
+
+	if (AAIController* Ctr = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BBC = Ctr->GetBlackboardComponent())
+		{
+			BBC->SetValueAsEnum(FName("BossForm"), static_cast<uint8>(FormType));
+		}
+	}
+	
 	// TODO : 변환 시의 나이아가라 추가예정(사운드 포함)
 }

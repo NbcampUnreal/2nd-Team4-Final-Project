@@ -11,7 +11,7 @@ UENUM(BlueprintType)
 enum class ESkeletonFormType : uint8
 {
 	Warrior UMETA(DisplayName = "Warrior"),
-	Bandit UMETA(DisplayName = "Bandit"),
+	GreatWarrior UMETA(DisplayName = "GreatWarrior"),
 	Archer UMETA(DisplayName = "Archer"),
 	Mage UMETA(DisplayName = "Mage"),
 	Max UMETA(Hidden)
@@ -59,6 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bRotateToPlayer = false;
+
 	UFUNCTION(BlueprintCallable)
 	void ChangeFormTypeByRandom();
 
@@ -68,4 +71,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 };

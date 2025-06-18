@@ -54,11 +54,6 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
 	
-	GetCharacterMovement()->bUseRVOAvoidance = true;
-	GetCharacterMovement()->AvoidanceWeight = 0.f;
-	GetCharacterMovement()->SetAvoidanceGroup(1);
-	GetCharacterMovement()->SetGroupsToAvoid(1);
-	
 }
 
 void ADW_MonsterBase::BeginPlay()
@@ -322,38 +317,45 @@ void ADW_MonsterBase::PerformAttackTrace()
 	const FVector CurrEnd = TraceEnd->GetComponentLocation();
 
 	const int NumSteps = 5;
+	const float CapsuleRadius = 40.f;
+
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
 		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceEndVector, Alpha);
 		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
 
+		FVector Segment = Curr - Prev;
+		float Length = Segment.Size();
+		if (Length < KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
+
+		FVector Direction = Segment / Length;
+		FQuat Rotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Direction);
+
+		FVector Center = (Prev + Curr) / 2.0f;
+		float CapsuleHalfHeight = Length / 2.0f;
+
 		FHitResult Hit;
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
 
 		if (bDrawDebugTrace)
 		{
 #if WITH_EDITOR
-			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
-			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+			DrawDebugCapsule(GetWorld(), Center, CapsuleHalfHeight, CapsuleRadius, Rotation, FColor::Green, false, DebugDrawTime);
 #endif
 		}
 
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
+		if (GetWorld()->SweepSingleByChannel(Hit, Prev, Curr, Rotation, ECC_Pawn, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params))
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
 				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
-
-					// 데미지 처리
 					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
-
-#if WITH_EDITOR
-					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
-#endif
 				}
 			}
 		}
@@ -576,4 +578,9 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			ItemActor->SetItemCode(ItemData.ItemCode);
 		}
 	}
+}
+
+void ADW_MonsterBase::ResetAttakingActors()
+{
+	AlreadyAttackingActors.Empty();
 }
