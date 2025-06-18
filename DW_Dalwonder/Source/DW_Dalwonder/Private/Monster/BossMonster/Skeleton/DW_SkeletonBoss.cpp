@@ -4,6 +4,7 @@
 #include "Monster/BossMonster/Skeleton/DW_SkeletonBoss.h"
 
 #include "AIController.h"
+#include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
 #include "Components/CapsuleComponent.h"
@@ -57,7 +58,7 @@ void ADW_SkeletonBoss::Tick(float DeltaTime)
 			if (!DirectionToPlayer.IsNearlyZero())
 			{
 				FRotator TargetRotation = DirectionToPlayer.Rotation();
-				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.f);
+				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 10.f);
 
 				SetActorRotation(NewRotation);
 			}
@@ -158,4 +159,19 @@ void ADW_SkeletonBoss::JumpToTarget(const FVector& TargetLocation, float AirTime
 	FVector LaunchVelocity = HorizontalVelocity + FVector(0.f, 0.f, VerticalVelocity);
 
 	LaunchCharacter(LaunchVelocity, true, true);
+}
+
+void ADW_SkeletonBoss::SpawnTeleportNS()
+{
+	if (IsValid(TeleportNS))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		TeleportNS,
+		GetActorLocation(),
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true);
+	}
 }
