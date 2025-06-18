@@ -26,6 +26,9 @@ void UESCMenuWidget::NativeConstruct()
     if (QuestListButton)
         QuestListButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnQuestListClicked);
 
+    if (MapButton)
+        MapButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnMapClicked);
+
     if (SaveButton)
         SaveButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnSaveClicked);
 
@@ -70,6 +73,15 @@ void UESCMenuWidget::OnQuestListClicked()
     if (GameMode && QuestListWidgetClass)
     {
         GameMode->ShowPopupUI(QuestListWidgetClass);
+    }
+}
+
+void UESCMenuWidget::OnMapClicked()
+{
+    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (GameMode && MapWidgetClass)
+    {
+        GameMode->ShowPopupUI(MapWidgetClass);
     }
 }
 

@@ -38,10 +38,64 @@ void ADW_NpcBase::BeginPlay()
 
 void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
 {
-#if WITH_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("NPC와 상호작용 발생: %s"), *GetName());
-#endif
-	// 여기서 대화 UI 띄우기 또는 퀘스트 진행 로직 호출
+    TArray<FDialogueLine> Result;
+
+    if (!DialogueDataTable) return Result;
+
+    // 퀘스트 연동 여부 판단 기본값 None
+    bool bHasQuest = QuestID != NAME_None;
+    EQuestDialogueStage Stage = EQuestDialogueStage::None;
+
+    if (bGivesQuest && bHasQuest && QuestManager)
+    {
+        if (UDW_GameInstance* DWGI = Cast<UDW_GameInstance>(GetGameInstance()))
+        {
+            if (UQuestDatabase* QuestDB = DWGI->QuestDatabase)
+            {
+                FQuestData QuestData = QuestDB->FindQuestByID(QuestID);
+
+                if (QuestData.QuestID != NAME_None)  // 유효한지 확인
+                {
+                    if (QuestManager->IsQuestCompleted(QuestData))
+                        Stage = EQuestDialogueStage::Completed;
+                    else if (QuestManager->IsQuestAccepted(QuestData))
+                        Stage = EQuestDialogueStage::InProgress;
+                    else
+                        Stage = EQuestDialogueStage::BeforeAccept;
+                }
+            }
+        }
+    }
+
+    static const FString Context = TEXT("NPC Dialogue");
+    TArray<FDialogueLine*> AllRows;
+    DialogueDataTable->GetAllRows(Context, AllRows);
+
+    for (const FDialogueLine* Row : AllRows)
+    {
+        if (!Row) continue;
+
+        // 퀘스트가 있는 NPC → 해당 QuestID와 상태가 맞는 대사만
+        if (bHasQuest)
+        {
+            if (Row->QuestID == QuestID && Row->DialogueStage == Stage && Row->SpeakerName.ToString() == Name.ToString())
+            {
+                // 데이터 테이블에서 이름을 찾아서 대사 저장
+                Result.Add(*Row);
+            }
+        }
+        // 퀘스트 없는 NPC → DialogueStage == None만 허용
+        else if (Row->DialogueStage == EQuestDialogueStage::None)
+        {
+            // 데이터 테이블에서 이름을 찾아서 대사 저장
+            if (Row->SpeakerName.ToString() == Name.ToString())
+            {
+                Result.Add(*Row);
+            }
+        }
+    }
+
+    return Result;
 }
 
 void ADW_NpcBase::ShowInteractionWidget_Implementation()
