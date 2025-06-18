@@ -11,6 +11,8 @@
 #include "AI/Navigation/NavigationTypes.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "Character/DW_CharacterBase.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AMobSkeleton::AMobSkeleton()
 {
@@ -33,6 +35,9 @@ void AMobSkeleton::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	bUseControllerRotationYaw = true;
 
 	CurrentZ = GetActorLocation().Z;
 
@@ -67,7 +72,37 @@ void AMobSkeleton::Tick(float DeltaTime)
 		SetActorLocation(Location);
 	}
 
+	//if (IsValid(GetPlayerCharacter()))
+	//{
+	//	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	//	{
+	//		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+	//		{
+	//			if (BB->GetValueAsEnum(FName("CurrentState")) == 2)
+	//			{
+	//				FRotator CurrentRot = AIC->GetControlRotation();
+	//				FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+	//				FVector MyLocation = GetActorLocation();
+
+	//				FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+	//				TargetRot.Pitch = 0.f;
+	//				TargetRot.Roll = 0.f;
+
+	//				FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+
+	//				AIC->SetControlRotation(NewRot);
+	//				FaceRotation(TargetRot, DeltaTime);
+
+	//				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Actor Rotation Yaw: %f"), GetActorRotation().Yaw));
+	//				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Control Rotation Yaw: %f"), GetController()->GetControlRotation().Yaw));
+
+	//				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("%f"), AIC->GetControlRotation().Yaw));
+	//			}
+	//		}
+	//	}
+	//}
 }
+
 
 void AMobSkeleton::SpawnTickEnd()
 {
