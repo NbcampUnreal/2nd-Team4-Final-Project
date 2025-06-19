@@ -19,17 +19,19 @@ void AMob_WoodGolem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*if (bSpawnTick)
+	if (bIsJumping)
 	{
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
-		float JumpOffset = AnimInstance->GetCurveValue(FName("JumpOffset"));
+		float JumpZ = AnimInstance->GetCurveValue(FName("Wood_Jump_Z"));
+		float JumpX = AnimInstance->GetCurveValue(FName("Wood_Jump_X"));
 
-		FVector Location = GetActorLocation();
-		Location.Z = CurrentZ + JumpOffset;
-		SetActorLocation(Location);
-	}*/
+		FVector JumpingLocation = GetActorLocation();
+		JumpingLocation.Z = CurrentVector.Z + JumpZ;
+		JumpingLocation.X = CurrentVector.X + JumpX * GetActorForwardVector().X;
+		SetActorLocation(JumpingLocation);
+	}
 }
 
 void AMob_WoodGolem::UseFirstSkill()
@@ -46,4 +48,15 @@ void AMob_WoodGolem::UseFirstSkill()
 void AMob_WoodGolem::BackToNature()
 {
 	Destroy();
+}
+
+void AMob_WoodGolem::JumpOn()
+{
+	CurrentVector = GetActorLocation();
+	bIsJumping = true;
+}
+
+void AMob_WoodGolem::JumpOff()
+{
+	bIsJumping = false;
 }

@@ -4,9 +4,12 @@
 #include "Monster/BossMonster/Skeleton/DW_SkeletonBoss.h"
 
 #include "AIController.h"
+#include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/DW_CharacterBase.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Projectile/ProjectileSpawnerComponent.h"
 
 
 // Sets default values
@@ -23,6 +26,9 @@ ADW_SkeletonBoss::ADW_SkeletonBoss()
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
+	PJSpawner = CreateDefaultSubobject<UProjectileSpawnerComponent>(TEXT("PJSpawner"));
+	PJSpawner->SetupAttachment(GetMesh(), TEXT("hand_l"));
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
@@ -52,7 +58,7 @@ void ADW_SkeletonBoss::Tick(float DeltaTime)
 			if (!DirectionToPlayer.IsNearlyZero())
 			{
 				FRotator TargetRotation = DirectionToPlayer.Rotation();
-				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.f);
+				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 10.f);
 
 				SetActorRotation(NewRotation);
 			}
@@ -131,4 +137,41 @@ void ADW_SkeletonBoss::ChangeFormType(const ESkeletonFormType FormType)
 	}
 	
 	// TODO : 변환 시의 나이아가라 추가예정(사운드 포함)
+}
+
+void ADW_SkeletonBoss::JumpToTarget(const FVector& TargetLocation, float AirTime)
+{
+	FVector StartLocation = GetActorLocation();
+	FVector Delta = TargetLocation - StartLocation;
+
+	if (FMath::IsNearlyZero(Delta.Size()) || AirTime <= 0.f)
+		return;
+
+	const float Gravity = GetCharacterMovement()->GetGravityZ();
+	if (FMath::IsNearlyZero(Gravity))
+		return;
+
+	FVector HorizontalDelta = FVector(Delta.X, Delta.Y, 0.f);
+	float HorizontalDistance = HorizontalDelta.Size();
+	FVector HorizontalVelocity = HorizontalDelta / AirTime;
+
+	float VerticalVelocity = (Delta.Z - 0.5f * Gravity * AirTime * AirTime) / AirTime;
+	FVector LaunchVelocity = HorizontalVelocity + FVector(0.f, 0.f, VerticalVelocity);
+
+	LaunchCharacter(LaunchVelocity, true, true);
+}
+
+void ADW_SkeletonBoss::SpawnTeleportNS()
+{
+	if (IsValid(TeleportNS))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		TeleportNS,
+		GetActorLocation(),
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true);
+	}
 }

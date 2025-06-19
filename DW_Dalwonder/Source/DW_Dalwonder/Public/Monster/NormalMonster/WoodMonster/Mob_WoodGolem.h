@@ -25,14 +25,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void BackToNature();
 
-	/*UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable)
 	void JumpOn();
 
 	UFUNCTION(BlueprintCallable)
-	void JumpOff();*/
+	void JumpOff();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* FirstSkill;
 
-	//bool bIsJumping = false;
+
+private:
+	bool bIsJumping = false;
+
+	FVector CurrentVector;
 };

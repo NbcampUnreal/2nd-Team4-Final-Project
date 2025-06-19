@@ -36,7 +36,7 @@ void ATelegraghActor::OnEffectOverlap(UPrimitiveComponent* OverlappedComponent, 
 	{
 		if (!bIsDOT)
 		{
-			CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			SetNoCollision();
 
 			UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, nullptr, this, nullptr);
 		}
@@ -119,7 +119,7 @@ void ATelegraghActor::RealEffectSpawnLogic()
 	else
 	{
 		GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 3.f, false);
-
+		GetWorldTimerManager().SetTimer(NoCollisionTimerHandle, this, &ATelegraghActor::SetNoCollision, NoCollisionTime, false);
 	}
 }
 
@@ -148,5 +148,10 @@ void ATelegraghActor::DOTDurationEndLogic()
 
 	GetWorldTimerManager().SetTimer(TelegraphTimerHandle, this, &ATelegraghActor::DestroyToDelay, 3.f, false);
 
+}
+
+void ATelegraghActor::SetNoCollision() const
+{
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 

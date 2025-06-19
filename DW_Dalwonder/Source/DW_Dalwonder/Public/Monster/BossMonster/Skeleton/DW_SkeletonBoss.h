@@ -48,16 +48,22 @@ public:
 	ADW_SkeletonBoss();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class UProjectileSpawnerComponent* PJSpawner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* LeftHandWeaponComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USkeletalMeshComponent* RightHandWeaponComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
+	ESkeletonFormType CurrentFormType = ESkeletonFormType::Mage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* TeleportNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool bRotateToPlayer = false;
@@ -67,6 +73,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeFormType(const ESkeletonFormType FormType);
+
+	UFUNCTION(BlueprintCallable)
+	void JumpToTarget(const FVector& TargetLocation, float AirTime = 3.f);
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnTeleportNS();
 
 protected:
 	// Called when the game starts or when spawned
