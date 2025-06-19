@@ -53,7 +53,11 @@ void UItemDataManager::InitializeDataManager(class UDataTable* InItemBaseDataTab
     ItemBaseDataTable = InItemBaseDataTable;
 
     // 데이터테이블 유효성 검사
-    if (!ItemBaseDataTable) { UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ItemBaseDataTable is not assigned!")); }
+    if (!ItemBaseDataTable) { 
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Error, TEXT("ItemDataManager: ItemBaseDataTable is not assigned!")); 
+#endif
+    }
 
     if (!ItemBaseDataTable) { 
 #if WITH_EDITOR
@@ -83,5 +87,16 @@ FItemData UItemDataManager::GetItemBaseData(FName ItemID, bool& bOutSuccess)
     UE_LOG(LogTemp, Warning, TEXT("Failed to find ItemBaseData for ItemID: %s"), *ItemID.ToString());
 #endif
 	return FItemData();
+}
+
+const FItemData* UItemDataManager::GetItemData(int32 InRowID) const
+{
+    if (ItemBaseDataTable)
+    {
+        FName RowName = FName(*FString::FromInt(InRowID));
+        return ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemData"));
+    }
+    UE_LOG(LogTemp, Warning, TEXT("UItemDataManager: ItemDataTable is null. Cannot get item data for RowID %d."), InRowID);
+    return nullptr;
 }
 
