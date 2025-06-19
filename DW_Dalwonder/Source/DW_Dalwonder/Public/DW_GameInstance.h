@@ -63,4 +63,11 @@ private:
     UPROPERTY(EditAnywhere, Category = "Loading")
     TSubclassOf<ULoadingWidget> LoadingWidgetClass;
 
+protected:
+    UPROPERTY()
+    class UItemDataManager* ItemDataManager; // 매니저 인스턴스 참조
+
+    UPROPERTY(EditAnywhere, Category = "Data Tables")
+    TSoftObjectPtr<UDataTable> ItemBaseDataTableRef; // 에디터에서 할당할 데이터 테이블 경로
+
 };

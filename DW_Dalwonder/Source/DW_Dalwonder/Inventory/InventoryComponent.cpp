@@ -105,3 +105,12 @@ void UInventoryComponent::ShowInventoryStatus()
 #endif
     }
 }
+
+UItemBase* UInventoryComponent::GetEquippedItem(EEquipSlotType SlotType) const
+{
+    if (EquippedItems.Contains(SlotType))
+    {
+        return EquippedItems[SlotType];
+    }
+    return nullptr;
+}

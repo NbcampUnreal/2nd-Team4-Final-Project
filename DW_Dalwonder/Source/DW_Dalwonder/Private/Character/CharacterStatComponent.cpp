@@ -173,4 +173,59 @@ void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+	HealthTimer.Invalidate();
+	StaminaTimer.Invalidate();
+
+	// 모든 버프 타이머도 클리어
+	for (FTimerHandle Handle : BuffTimerHandles)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(Handle);
+	}
+	BuffTimerHandles.Empty();
+}
+
+void UCharacterStatComponent::ApplyAttackBuff(float Amount, float Duration)
+{
+	SetBonusAttack(GetBonusAttack() + Amount); // 보너스 공격력 증가
+
+	if (Duration > 0.0f)
+	{
+		FTimerHandle BuffTimerHandle;
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindLambda([this, Amount]()
+			{
+				RemoveAttackBuff(Amount);
+			});
+		GetWorld()->GetTimerManager().SetTimer(BuffTimerHandle, TimerDelegate, Duration, false);
+		BuffTimerHandles.Add(BuffTimerHandle); // 타이머 핸들 저장
+	}
+}
+
+void UCharacterStatComponent::RemoveAttackBuff(float Amount)
+{
+	SetBonusAttack(GetBonusAttack() - Amount); // 보너스 공격력 감소
+	// TODO: BuffTimerHandles에서 해당 타이머 핸들을 제거하는 로직 추가 (복잡하면 생략 가능)
+}
+
+void UCharacterStatComponent::ApplyDefenseBuff(float Amount, float Duration)
+{
+	SetBonusDefense(GetBonusDefense() + Amount); // 보너스 방어력 증가
+
+	if (Duration > 0.0f)
+	{
+		FTimerHandle BuffTimerHandle;
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindLambda([this, Amount]()
+			{
+				RemoveDefenseBuff(Amount);
+			});
+		GetWorld()->GetTimerManager().SetTimer(BuffTimerHandle, TimerDelegate, Duration, false);
+		BuffTimerHandles.Add(BuffTimerHandle);
+	}
+}
+
+void UCharacterStatComponent::RemoveDefenseBuff(float Amount)
+{
+	SetBonusDefense(GetBonusDefense() - Amount); // 보너스 방어력 감소
+	// TODO: BuffTimerHandles에서 해당 타이머 핸들을 제거하는 로직 추가
 }
