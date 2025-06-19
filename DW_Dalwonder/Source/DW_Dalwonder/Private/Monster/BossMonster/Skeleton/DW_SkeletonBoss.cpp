@@ -39,7 +39,7 @@ void ADW_SkeletonBoss::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ChangeFormType(CurrentFormType);
+	ChangeFormTypeByRandom();
 }
 
 void ADW_SkeletonBoss::Tick(float DeltaTime)
@@ -136,7 +136,17 @@ void ADW_SkeletonBoss::ChangeFormType(const ESkeletonFormType FormType)
 		}
 	}
 	
-	// TODO : 변환 시의 나이아가라 추가예정(사운드 포함)
+	if (IsValid(ChangeFormNS))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		ChangeFormNS,
+		GetActorLocation(),
+		GetActorRotation(),
+		FVector(1.f),
+		true,
+		true);
+	}
 }
 
 void ADW_SkeletonBoss::JumpToTarget(const FVector& TargetLocation, float AirTime)

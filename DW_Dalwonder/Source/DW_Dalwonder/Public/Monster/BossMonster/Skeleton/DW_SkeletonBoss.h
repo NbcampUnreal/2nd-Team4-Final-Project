@@ -57,13 +57,16 @@ public:
 	USkeletalMeshComponent* RightHandWeaponComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	ESkeletonFormType CurrentFormType = ESkeletonFormType::Mage;
+	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
 	UNiagaraSystem* TeleportNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* ChangeFormNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool bRotateToPlayer = false;
