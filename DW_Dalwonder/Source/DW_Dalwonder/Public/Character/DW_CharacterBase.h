@@ -10,6 +10,7 @@
 #include "UI/Component/Manager/QuestManagerComponent.h"
 #include "DW_CharacterBase.generated.h"
 
+class UDW_AnimInstanceBase;
 class UCharacterArmorComponent;
 struct FInputActionValue;
 class USpringArmComponent;
@@ -21,6 +22,30 @@ class UNiagaraSystem;
 class UPhysicalMaterial;
 class USceneCaptureComponent2D;
 class UTextureRenderTarget2D;
+
+USTRUCT(BlueprintType)
+struct FAnimMontageArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UAnimMontage*> Montages;
+
+	FORCEINLINE UAnimMontage*& operator[](int32 Index)
+	{
+		return Montages[Index];
+	}
+
+	FORCEINLINE const UAnimMontage* operator[](int32 Index) const
+	{
+		return Montages[Index];
+	}
+	
+	FORCEINLINE int32 Num() const
+	{
+		return Montages.Num();
+	}
+};
 
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
@@ -90,10 +115,6 @@ public:
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	void CheckBlockingActors();
-
-	void MakeActorTranslucent(AActor* Actor, bool bIsBlocking);
-
 	// -----------------------------
 	// 📌 카메라 및 무기 관련 컴포넌트
 	// -----------------------------
@@ -105,14 +126,6 @@ protected:
 	// 실제 시점 카메라
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* Camera;
-
-	// 캐릭터를 가리는 액터 목록
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TSet<AActor*> BlockingActors;
-
-	// 오버레이 머티리얼
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
-	UMaterialInstance* OverlayMaterial;
 
 	// 캐릭터의 무기 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -130,16 +143,13 @@ protected:
 	UCharacterStatComponent* StatComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	TArray<UAnimInstance*> AnimInstanceArray;
+	TArray<TSubclassOf<UAnimInstance>> AnimInstanceArray;
 
 	UPROPERTY()
 	UAnimInstance* AnimInstance;
 
 	// 캐릭터 조작 가능 여부
 	bool bCanControl = true;
-
-	UPROPERTY()
-	FTimerHandle BlockActorsTimer;
 	
 // 전투 관련 시스템 (Combat)
 #pragma region Combat
@@ -177,6 +187,18 @@ public:
 	// 가드 종료
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndGuard();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkill();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot1();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot2();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot3();
 
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -238,6 +260,9 @@ public:
 	// 사망 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	TArray<UAnimMontage*> DeadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TArray<FAnimMontageArray> SkillMontage;
 
 	// 전투 상태 타이머
 	UPROPERTY()

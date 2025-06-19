@@ -28,7 +28,7 @@ public:
 	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
 
 	UPROPERTY()
-	UUserWidget* ESCMenuWidgetInstance;
+	UUserWidget* ESCMenuWidgetInstance = nullptr;
 
 	bool bIsESCMenuOpen = false;
 
@@ -69,6 +69,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* LockonAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* SkillAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* UseSkill1Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* UseSkill2Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* UseSkill3Action;
+
 	// -----------------------------
 	// UI 관련
 	// -----------------------------
@@ -76,7 +88,7 @@ public:
 public:
 	//HUD
 	UPROPERTY()
-	UUserWidget* HUDWidgetInstance;
+	UUserWidget* HUDWidgetInstance = nullptr;
 
 	UPROPERTY()
 	UBossHUDWidget* CachedBossHUD;
