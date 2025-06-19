@@ -144,13 +144,9 @@ void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
-	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(DodgeTimer);
-	DodgeTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(InvincibleTimer);
-	InvincibleTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
-	IdleStateTimer.Invalidate();
 }
 
 void ADW_CharacterBase::PostInitializeComponents()
@@ -394,7 +390,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
 		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->GenStamina();
+		GetCharacterStatComponent()->StartStaminaRegen();
 	}
 }
 
@@ -723,7 +719,7 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 	else
 	{
 		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->GenStamina();
+		GetCharacterStatComponent()->StartStaminaRegen();
 		AnimInstance->Montage_Stop(0.25f, GuardMontage[WeaponType]);
 	}
 }
