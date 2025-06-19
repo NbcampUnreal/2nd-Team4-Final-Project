@@ -3,7 +3,7 @@
 
 UCharacterStatComponent::UCharacterStatComponent()
 {
-	Character = Cast<ADW_CharacterBase>(GetOwner());
+	Character = nullptr;
 }
 
 void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
@@ -14,6 +14,7 @@ void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
 			if (FMath::IsNearlyZero(Health) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeHealth();
+				return;
 			}
 		
 			Health = FMath::Clamp(Health - ConsumeRate, 0.f, BaseMaxHealth + BonusMaxHealth);
@@ -30,6 +31,7 @@ void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 			if (FMath::IsNearlyZero(Stamina) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeStamina();
+				return;
 			}
 		
 			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, BaseMaxStamina + BonusMaxStamina);
@@ -56,7 +58,7 @@ void UCharacterStatComponent::StopConsumeStamina()
 	}
 }
 
-void UCharacterStatComponent::GenHealth()
+void UCharacterStatComponent::StartHealthRegen()
 {
 	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
 	{
@@ -69,18 +71,20 @@ void UCharacterStatComponent::GenHealth()
 			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeHealth();
+				return;
 			}
 		
-			if (FMath::IsNearlyEqual(Health, BaseMaxHealth + BonusMaxHealth))
+			if (Health >= BaseMaxHealth + BonusMaxHealth)
 			{
 				StopConsumeHealth();
+				return;
 			}
 		
 			Health = FMath::Clamp(Health + BaseHealthGenRate + BonusHealthGenRate, 0.f, BaseMaxHealth + BonusMaxHealth);
 		}), 0.5f, true);
 }
 
-void UCharacterStatComponent::GenStamina()
+void UCharacterStatComponent::StartStaminaRegen()
 {
 	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
 	{
@@ -94,12 +98,14 @@ void UCharacterStatComponent::GenStamina()
 
 			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
-				StopConsumeHealth();
+				StopConsumeStamina();
+				return;
 			}
 		
-			if (FMath::IsNearlyEqual(Stamina, BaseMaxStamina + BonusMaxStamina))
+			if (Stamina >= BaseMaxStamina + BonusMaxStamina)
 			{
 				StopConsumeStamina();
+				return;
 			}
 		
 			Stamina = FMath::Clamp(Stamina + BaseStaminaGenRate + BonusStaminaGenRate, 0.f, BaseMaxStamina + BonusMaxStamina);
@@ -112,7 +118,7 @@ void UCharacterStatComponent::SetHealth(const float Value)
 
 	if (Health < BaseMaxHealth + BonusMaxHealth)
 	{
-		GenHealth();
+		StartHealthRegen();
 	}
 }
 
@@ -120,20 +126,14 @@ void UCharacterStatComponent::SetBaseMaxHealth(const float Value)
 {
 	BaseMaxHealth = Value;
 
-	if (Health < BaseMaxHealth + BonusMaxHealth)
-	{
-		GenHealth();
-	}
+	SetHealth(Health);
 }
 
 void UCharacterStatComponent::SetBonusMaxHealth(const float Value)
 {
 	BonusMaxHealth = Value;
 
-	if (Health < BaseMaxHealth + BonusMaxHealth)
-	{
-		GenHealth();
-	}
+	SetHealth(Health);
 }
 
 void UCharacterStatComponent::SetStamina(const float Value)
@@ -142,7 +142,7 @@ void UCharacterStatComponent::SetStamina(const float Value)
 
 	if (Stamina < BaseMaxStamina + BonusMaxStamina)
 	{
-		GenStamina();
+		StartStaminaRegen();
 	}
 }
 
@@ -150,26 +150,21 @@ void UCharacterStatComponent::SetBaseMaxStamina(const float Value)
 {
 	BaseMaxStamina = Value;
 
-	if (Stamina < BaseMaxStamina + BonusMaxStamina)
-	{
-		GenStamina();
-	}
+	SetStamina(Stamina);
 }
 
 void UCharacterStatComponent::SetBonusMaxStamina(const float Value)
 {
 	BonusMaxStamina = Value;
 
-	if (Stamina < BaseMaxStamina + BonusMaxStamina)
-	{
-		GenStamina();
-	}
+	SetStamina(Stamina);
 }
 
 void UCharacterStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
 
 void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -178,6 +173,4 @@ void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-	HealthTimer.Invalidate();
-	StaminaTimer.Invalidate();
 }

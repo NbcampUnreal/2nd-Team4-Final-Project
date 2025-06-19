@@ -22,9 +22,11 @@ public:
 
 	void StopConsumeStamina();
 
-	void GenHealth();
+	void StartHealthRegen();
 
-	void GenStamina();
+	void StartStaminaRegen();
+
+	void StartTimer(FTimerHandle& TimerHandle, float& CurrentValue, float& MaxValue, float& RegenRate);
 
 #pragma region GetterSetter
 	float GetHealth() const
