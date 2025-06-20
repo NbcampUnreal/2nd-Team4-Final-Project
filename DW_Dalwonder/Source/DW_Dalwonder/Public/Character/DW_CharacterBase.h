@@ -111,6 +111,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void SetWeaponType(int32 NewWeaponType);
 
+	UFUNCTION(BlueprintCallable)
+	void UpdateSkeletalMesh();
+
 	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
@@ -118,6 +121,22 @@ public:
 	// -----------------------------
 	// 📌 카메라 및 무기 관련 컴포넌트
 	// -----------------------------
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton")
+	USkeletalMeshComponent* Helmet;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton")
+	USkeletalMeshComponent* Armor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton")
+	USkeletalMeshComponent* Pants;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton")
+	USkeletalMeshComponent* Glove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton")
+	USkeletalMeshComponent* Boots;
+
 protected:
 	// 카메라 붐(캐릭터 뒤에 부착)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")

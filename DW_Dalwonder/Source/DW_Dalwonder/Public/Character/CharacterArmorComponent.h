@@ -28,7 +28,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	bool EquipArmor(UItemBase* Item);
+	void EquipArmor(UItemBase* Item);
 
 	USkeletalMesh* GetArmorSkeletalMesh(UItemBase* Item) const;
 	
