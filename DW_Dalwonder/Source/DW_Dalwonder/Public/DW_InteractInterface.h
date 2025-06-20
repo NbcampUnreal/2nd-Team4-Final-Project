@@ -18,7 +18,7 @@ class DW_DALWONDER_API IDW_InteractInterface
 	GENERATED_BODY()
 
 public:
-	virtual void Interact_Implementation(AActor* Interactor) = 0;
+	//virtual void Interact_Implementation(AActor* Interactor) = 0;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	void Interact(AActor* Interactor);

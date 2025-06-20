@@ -57,10 +57,16 @@ public:
 	USkeletalMeshComponent* RightHandWeaponComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	ESkeletonFormType CurrentFormType = ESkeletonFormType::Archer;
+	ESkeletonFormType CurrentFormType = ESkeletonFormType::Warrior;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FormData")
 	TMap<ESkeletonFormType, FFormData> FormDataMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* TeleportNS;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara")
+	UNiagaraSystem* ChangeFormNS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool bRotateToPlayer = false;
@@ -73,6 +79,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void JumpToTarget(const FVector& TargetLocation, float AirTime = 3.f);
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnTeleportNS();
 
 protected:
 	// Called when the game starts or when spawned

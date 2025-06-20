@@ -32,6 +32,9 @@ public:
     void OnQuestListClicked();
 
     UFUNCTION()
+    void OnMapClicked();
+
+    UFUNCTION()
     void OnSaveClicked();
 
     UFUNCTION()
@@ -56,6 +59,9 @@ protected:
     class UCustomButtonWidget* QuestListButton;
 
     UPROPERTY(meta = (BindWidget))
+    class UCustomButtonWidget* MapButton;
+
+    UPROPERTY(meta = (BindWidget))
     class UCustomButtonWidget* SaveButton;
 
     UPROPERTY(meta = (BindWidget))
@@ -75,6 +81,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> QuestListWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> MapWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> OptionMenuWidgetClass;

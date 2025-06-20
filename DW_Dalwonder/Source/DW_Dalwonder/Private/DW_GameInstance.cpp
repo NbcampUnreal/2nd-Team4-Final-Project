@@ -4,6 +4,7 @@
 #include "Character/DW_CharacterBase.h"
 #include "DW_LevelLoadSubsystem.h"
 #include "UI/Widget/LoadingWidget.h"
+#include "Item/ItemDataManager.h"
 
 void UDW_GameInstance::Init()
 {
@@ -17,10 +18,41 @@ void UDW_GameInstance::Init()
     {
         UE_LOG(LogTemp, Warning, TEXT("QuestDatabase 또는 QuestDataTable이 블루프린트에서 설정되지 않았습니다."));
     }
+
+    // 1. UItemDataManager 인스턴스 생성
+    ItemDataManager = NewObject<UItemDataManager>(this); // GameInstance를 Outer로 설정
+
+    // 2. SetInstance를 통해 싱글턴 인스턴스 등록
+    UItemDataManager::SetInstance(ItemDataManager);
+
+    // 3. 데이터 테이블 로드 및 초기화
+    if (!ItemBaseDataTableRef.IsNull())
+    {
+        UDataTable* LoadedDataTable = ItemBaseDataTableRef.LoadSynchronous(); // 동기 로딩
+        if (LoadedDataTable)
+        {
+            ItemDataManager->InitializeDataManager(LoadedDataTable);
+        }
+        else
+        {
+#if WITH_EDITOR
+            UE_LOG(LogTemp, Error, TEXT("Failed to load ItemBaseDataTable for UItemDataManager from %s"), *ItemBaseDataTableRef.GetAssetName());
+#endif
+        }
+    }
+    else
+    {
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Error, TEXT("ItemBaseDataTableRef is not set in GameInstance."));
+#endif
+    }
 }
 
 void UDW_GameInstance::Shutdown()
 {
+
+    // 게임 종료 시 싱글턴 인스턴스 해제
+    UItemDataManager::SetInstance(nullptr); // SetInstance 내부에서 RemoveFromRoot 호출
     Super::Shutdown();
 }
 

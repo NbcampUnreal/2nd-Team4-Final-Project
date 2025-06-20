@@ -20,7 +20,6 @@
 #include "DW_InteractInterface.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/CharacterArmorComponent.h"
-#include "Engine/DamageEvents.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "UI/Widget/LockOnWidget.h"
@@ -81,15 +80,6 @@ ADW_CharacterBase::ADW_CharacterBase()
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetWorld()->GetTimerManager().SetTimer
-	(
-		BlockActorsTimer,
-		this,
-		&ADW_CharacterBase::CheckBlockingActors,
-		0.3f,
-		true
-	);
 
 	GetWorld()->GetTimerManager().SetTimer  //아이템 업그레이드 타이머
 	(
@@ -154,17 +144,11 @@ void ADW_CharacterBase::BeginPlay()
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-
-	GetWorldTimerManager().ClearTimer(BlockActorsTimer);
-	BlockActorsTimer.Invalidate();
+	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
-	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(DodgeTimer);
-	DodgeTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(InvincibleTimer);
-	InvincibleTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
-	IdleStateTimer.Invalidate();
 }
 
 void ADW_CharacterBase::PostInitializeComponents()
@@ -255,6 +239,42 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					ETriggerEvent::Started,
 					this,
 					&ADW_CharacterBase::Lockon);
+			}
+
+			if (PlayerController->SkillAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->SkillAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::UseActiveSkill);
+			}
+
+			if (PlayerController->UseSkill1Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill1Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot1);
+			}
+
+			if (PlayerController->UseSkill2Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill2Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot2);
+			}
+
+			if (PlayerController->UseSkill3Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill3Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot3);
 			}
 
 			if (PlayerController->InteractAction)
@@ -372,7 +392,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
 		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->GenStamina();
+		GetCharacterStatComponent()->StartStaminaRegen();
 	}
 }
 
@@ -480,9 +500,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 
 void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
 {
+	if (WeaponType == NewWeaponType)
+	{
+		return;
+	}
+	
 	WeaponType = NewWeaponType;
-	AnimInstance = AnimInstanceArray[WeaponType];
-	GetMesh()->SetAnimInstanceClass(AnimInstance->GetClass());
+	GetMesh()->SetAnimInstanceClass(AnimInstanceArray[WeaponType]);
+	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
@@ -667,64 +692,6 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	return ActualDamage;
 }
 
-void ADW_CharacterBase::CheckBlockingActors()
-{
-	const FVector Start = GetActorLocation() + BaseEyeHeight;
-	const FVector End = Camera->GetComponentLocation();
-	float CapsuleRadius = 15.f;
-	float CapsuleHalfHeight = SpringArm->TargetArmLength * 0.5f;
-	
-	TArray<FHitResult> HitResults;
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	TSet<AActor*> CurrentBlockingActors;
-	
-	if (GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), QueryParams))
-	{
-		for (FHitResult& HitResult : HitResults)
-		{
-			AActor* HitActor = HitResult.GetActor();
-			if (HitActor && HitActor != this)
-			{
-				CurrentBlockingActors.Add(HitActor);
-				MakeActorTranslucent(HitActor, true);
-			}
-		}
-	}
-
-	for (AActor* Actor : BlockingActors)
-	{
-		if (!CurrentBlockingActors.Contains(Actor))
-		{
-			MakeActorTranslucent(Actor, false);
-		}
-	}
-
-	BlockingActors = CurrentBlockingActors;
-}
-
-void ADW_CharacterBase::MakeActorTranslucent(AActor* Actor, bool bIsBlocking)
-{
-	TArray<UMeshComponent*> MeshComponents;
-	Actor->GetComponents<UMeshComponent>(MeshComponents);
-
-	for (UMeshComponent* MeshComp : MeshComponents)
-	{
-		if (IsValid(MeshComp))
-		{
-			if (bIsBlocking)
-			{
-				MeshComp->SetOverlayMaterial(OverlayMaterial);
-			}
-			else
-			{
-				MeshComp->SetOverlayMaterial(nullptr);
-			}
-		}
-	}
-}
-
 void ADW_CharacterBase::SetParrying(bool bIsParrying)
 {
 	if (bIsParrying)
@@ -754,7 +721,7 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 	else
 	{
 		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->GenStamina();
+		GetCharacterStatComponent()->StartStaminaRegen();
 		AnimInstance->Montage_Stop(0.25f, GuardMontage[WeaponType]);
 	}
 }
@@ -783,6 +750,39 @@ void ADW_CharacterBase::StartGuard()
 void ADW_CharacterBase::EndGuard()
 {
 	SetGuarding(false);
+}
+
+void ADW_CharacterBase::UseActiveSkill()
+{
+	//@TODO : SkillComponent 와 연계해서 액티브 스킬 사용 만들기 -> Montage, 스킬 Array, 자원 소모 구현
+	// SkillComponent->GetActiveSkillArray();
+
+	FTimerHandle SkillUseTimer;
+	GetWorld()->GetTimerManager().SetTimer(SkillUseTimer, FTimerDelegate::CreateLambda([&]
+	{
+		// TODO
+	}), 2.f, false);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot1()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][0]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot2()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][1]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot3()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][2]);
 }
 
 void ADW_CharacterBase::KnockBackCharacter()

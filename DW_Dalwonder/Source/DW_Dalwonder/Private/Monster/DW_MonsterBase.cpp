@@ -138,6 +138,11 @@ FName ADW_MonsterBase::GetMonsterName() const
 	//이 함수는 더미 함수임.
 }
 
+float ADW_MonsterBase::GetMonsterMaxHP() const
+{
+	return MonsterMaxHP;
+}
+
 float ADW_MonsterBase::GetMonsterHP() const
 {
 	return MonsterHP;
@@ -262,7 +267,7 @@ int32 ADW_MonsterBase::GetRandomMontage()
 // 	}
 // }
 
-void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
+void ADW_MonsterBase::PlayAttackSound(const int32 SoundIndex)
 {
 	if (AttackSoundComponent && AttackSounds[SoundIndex])
 	{
@@ -271,11 +276,12 @@ void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
 	}
 }
 
-void ADW_MonsterBase::PlayHitSound(int32 SoundIndex)
+void ADW_MonsterBase::PlayHitSound()
 {
-	if (AttackSoundComponent && HitSounds[SoundIndex])
+	if (AttackSoundComponent && HitSounds.Num() > 0)
 	{
-		AttackSoundComponent->SetSound(HitSounds[SoundIndex]);
+		const int32 RandomValue = FMath::RandRange(0, HitSounds.Num() - 1);
+		AttackSoundComponent->SetSound(HitSounds[RandomValue]);
 		AttackSoundComponent->Play();
 	}
 }
@@ -352,10 +358,35 @@ void ADW_MonsterBase::PerformAttackTrace()
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
-				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
+				if (!AlreadyAttackingActors.Contains(HitActor) && HitActor->IsA(ADW_CharacterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
-					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
+
+					const float DamageAmount = MonsterDamage * MonsterDamageMultiplier;
+					const FVector HitFromDirection = -GetActorForwardVector();
+					const FVector HitLocation = Hit.ImpactPoint;
+					const FHitResult HitResult = Hit;
+
+					UGameplayStatics::ApplyPointDamage(
+						HitActor,
+						DamageAmount,
+						HitFromDirection,
+						HitResult,
+						nullptr,
+						this,
+						nullptr
+					);
+
+					if (IsValid(HitImpactNS))
+					{
+						UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+							GetWorld(),
+							HitImpactNS,
+							HitLocation,
+							GetActorRotation(),
+							FVector(1.f)
+						);
+					}
 				}
 			}
 		}
@@ -476,6 +507,8 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	}
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
+
+	PlayHitSound();
 
 	bIsGuard = false;
 

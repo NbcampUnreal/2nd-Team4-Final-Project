@@ -22,9 +22,24 @@ public:
 
 	void StopConsumeStamina();
 
-	void GenHealth();
+	void StartHealthRegen();
 
-	void GenStamina();
+	void StartStaminaRegen();
+
+	void StartTimer(FTimerHandle& TimerHandle, float& CurrentValue, float& MaxValue, float& RegenRate);
+
+	// 버프 적용 함수
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void ApplyAttackBuff(float Amount, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void RemoveAttackBuff(float Amount); // 버프 제거 함수 (내부적으로 호출될 것)
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void ApplyDefenseBuff(float Amount, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void RemoveDefenseBuff(float Amount); // 버프 제거 함수
 
 #pragma region GetterSetter
 	float GetHealth() const
@@ -305,4 +320,7 @@ protected:
 
 	UPROPERTY()
 	ADW_CharacterBase* Character;
+
+	UPROPERTY()
+	TArray<FTimerHandle> BuffTimerHandles; // 여러 버프 타이머를 관리하기 위한 배열
 };
