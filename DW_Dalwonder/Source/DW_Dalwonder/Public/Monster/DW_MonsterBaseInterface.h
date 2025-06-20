@@ -35,6 +35,8 @@ public:
 	// 몬스터 이름 반환
 	virtual FName GetMonsterName() const = 0;
 
+	virtual float GetMonsterMaxHP() const = 0;
+
 	// 몬스터 현재 HP 반환
 	virtual float GetMonsterHP() const = 0;
 
@@ -66,10 +68,10 @@ public:
 	// virtual void SetRandomAttackKey(int32 PatternIndex) = 0;
 
 	// 공격 사운드 재생
-	virtual void PlayAttackSound(int32 SoundIndex) = 0;
+	virtual void PlayAttackSound(const int32 SoundIndex) = 0;
 
 	// 피격 사운드 재생
-	virtual void PlayHitSound(int32 SoundIndex) = 0;
+	virtual void PlayHitSound() = 0;
 
 	// 패링 판정 시작(AnimNotify에서 실행 되어야 함)
 	virtual void CanParry() = 0;
