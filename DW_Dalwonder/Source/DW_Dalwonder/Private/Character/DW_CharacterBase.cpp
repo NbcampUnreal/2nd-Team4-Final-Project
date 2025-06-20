@@ -111,8 +111,6 @@ void ADW_CharacterBase::BeginPlay()
 		true     // 반복 여부
 	);
 
-	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
-
 	// HUD 타이머 설정 (0.1초 간격)
 	GetWorld()->GetTimerManager().SetTimer(
 		HUDUpdateTimerHandle,
@@ -938,16 +936,17 @@ void ADW_CharacterBase::Interact()
 	{
 
 		UItemBase* Data = CurrentItem->ItemBase; // 아이템 정보 가져오기
-		bool bAdded = InventoryComponent->AddItem(Data);
+		int32 ItemCount = CurrentItem->GetItemCount(); // 아이템 개수 가져오기
+		bool bAdded = InventoryComponent->AddItem(Data, ItemCount);
 		if (bAdded)
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
 		}
-	}
-	else
-	{
-		
+		else
+		{
+			CurrentItem->SetItemCount(ItemCount);
+		}
 	}
 }
 

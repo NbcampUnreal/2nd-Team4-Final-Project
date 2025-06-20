@@ -31,6 +31,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Item")
     UDataTable* ItemDataTable;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	int32 ItemCount = 1; // 아이템 획득 시 추가할 수량
+
     // 상호작용 문구 위젯 (이 UWidgetComponent는 이제 UInteractionprompt 타입의 위젯을 생성할 겁니다)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
     UWidgetComponent* InteractionWidget;
@@ -64,4 +67,8 @@ public:
 
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
+
+	int32 GetItemCount() const { return ItemCount; }
+
+    void SetItemCount(int32 changevalue) { ItemCount = changevalue; }
 };
