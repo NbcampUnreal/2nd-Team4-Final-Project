@@ -6,7 +6,7 @@
 void ULockOnWidget::SetMarkerSizeByDistance(float Distance)
 {
 	const float MinSize = 15.f;
-	const float MaxSize = 100.f;
+	const float MaxSize = 50.f;
 	const float MaxDistance = 3000.f;
 
 	float SizeRatio = 1.f - FMath::Clamp(Distance / MaxDistance, 0.f, 1.f);

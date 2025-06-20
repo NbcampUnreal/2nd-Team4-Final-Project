@@ -10,7 +10,6 @@ class DW_DALWONDER_API ANPC_Controller : public AAIController
 	GENERATED_BODY()
 public:
 	virtual void OnPossess(APawn* InPawn) override;
-	virtual void BeginPlay() override;
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 protected:
