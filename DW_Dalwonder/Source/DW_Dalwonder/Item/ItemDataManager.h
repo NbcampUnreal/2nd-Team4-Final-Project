@@ -29,8 +29,8 @@ struct FGenericItemSubData
 UCLASS(Blueprintable, BlueprintType)
 class DW_DALWONDER_API UItemDataManager : public UObject
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 private:
     // 싱글턴 인스턴스
     static UItemDataManager* ItemDataManagerInstance;
@@ -49,7 +49,7 @@ public:
         class UDataTable* InConsumableSubDataTable);
 
 
-	// 아이템 기본 데이터 테이블과 서브 데이터 테이블
+    // 아이템 기본 데이터 테이블
     UPROPERTY()
     class UDataTable* ItemBaseDataTable;
 
@@ -63,6 +63,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
     FItemData GetItemBaseData(FName ItemID, bool& bOutSuccess);
 
+    const FItemData* GetItemData(int32 InRowID) const;
 
 	// 아이템 서브 데이터 테이블에서 데이터를 가져오는 함수 (템플릿을 사용하여 다양한 서브 데이터 타입을 처리)
     template<typename TBaseSubData>

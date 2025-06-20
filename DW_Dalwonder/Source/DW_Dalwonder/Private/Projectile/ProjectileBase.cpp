@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "Character/DW_CharacterBase.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AProjectileBase::AProjectileBase() : HitEffectSize(1.f), DestroyDelay(10.f), CollisionRadius(1.f)
@@ -59,6 +60,7 @@ void AProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* Othe
 			}
 			else
 			{
+				bUseCurvedTrajectory = false;
 				GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileBase::DestroyToDelay, DestroyDelay, false);
 			}
 		}
@@ -70,6 +72,23 @@ void AProjectileBase::BeginPlay()
 	Super::BeginPlay();
 	
 	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileBase::DestroyToDelay, HitDestroyDelay, false);
+	
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADW_CharacterBase::StaticClass(), FoundActors);
+
+	if (bUseCurvedTrajectory)
+	{
+		for (AActor* Actor : FoundActors)
+		{
+			if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(Actor))
+			{
+				if (bUseCurvedTrajectory && Character)
+				{
+					LaunchCurvedProjectile(Character);
+				}
+			}
+		}
+	}
 
 }
 
@@ -103,5 +122,54 @@ void AProjectileBase::HitEffectSpawnLogic(const FHitResult& Hit)
 void AProjectileBase::DestroyToDelay()
 {
 	Destroy();
+}
+
+void AProjectileBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (bUseCurvedTrajectory)
+	{
+		ElapsedTime += DeltaTime;
+
+		float Alpha = ElapsedTime / CurveDuration;
+
+		if (Alpha < 1.f)
+		{
+			FVector FlatPos = FMath::Lerp(CurveStartLocation, CurveTargetLocation, Alpha);
+			FVector Offset = CurveDirection * FMath::Sin(Alpha * PI) * CurveHeight;
+			FVector NewLocation = FlatPos + Offset;
+
+			LastVelocity = (NewLocation - GetActorLocation()) / DeltaTime;
+			SetActorLocation(NewLocation);
+		}
+		else
+		{
+			FVector NewLocation = GetActorLocation() + LastVelocity * DeltaTime;
+			SetActorLocation(NewLocation);
+		}
+	}
+}
+
+void AProjectileBase::LaunchCurvedProjectile(AActor* Target)
+{
+	if (!IsValid(Target)) return;
+	
+	ElapsedTime = 0.f;
+
+	CurveStartLocation = GetActorLocation();
+	CurveTargetLocation = Target->GetActorLocation();
+	CurveDuration = 1.0f;
+	CurveHeight = 300.f;
+
+	// 휘는 방향 계산 (아래로는 X)
+	FVector ToTarget = (CurveTargetLocation - CurveStartLocation).GetSafeNormal();
+	FVector RandomDir = UKismetMathLibrary::RandomUnitVector();
+	RandomDir.Z = 0.f;
+	RandomDir.Normalize();
+	
+	FVector UpComponent = FVector::UpVector * FMath::FRandRange(MinUpBias, MaxUpBias);
+
+	CurveDirection = (RandomDir + UpComponent).GetSafeNormal();
 }
 

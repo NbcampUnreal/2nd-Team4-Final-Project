@@ -6,6 +6,8 @@
 #include "DW_GmBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "DW_GameInstance.h"
+#include "UI/Widget/SavedGameWidget.h"
 
 void UESCMenuWidget::NativeConstruct()
 {
@@ -20,6 +22,15 @@ void UESCMenuWidget::NativeConstruct()
 
     if (InventoryButton)
         InventoryButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnInventoryClicked);
+
+    if (QuestListButton)
+        QuestListButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnQuestListClicked);
+
+    if (MapButton)
+        MapButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnMapClicked);
+
+    if (SaveButton)
+        SaveButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnSaveClicked);
 
     if (OptionButton)
         OptionButton->OnCustomClicked.AddDynamic(this, &UESCMenuWidget::OnOptionClicked);
@@ -53,6 +64,32 @@ void UESCMenuWidget::OnInventoryClicked()
     if (GameMode && InventoryWidgetClass)
     {
         GameMode->ShowPopupUI(InventoryWidgetClass);
+    }
+}
+
+void UESCMenuWidget::OnQuestListClicked()
+{
+    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (GameMode && QuestListWidgetClass)
+    {
+        GameMode->ShowPopupUI(QuestListWidgetClass);
+    }
+}
+
+void UESCMenuWidget::OnMapClicked()
+{
+    ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (GameMode && MapWidgetClass)
+    {
+        GameMode->ShowPopupUI(MapWidgetClass);
+    }
+}
+
+void UESCMenuWidget::OnSaveClicked()
+{
+    if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
+    {
+        GameInstance->SaveGameData();   //저장
     }
 }
 

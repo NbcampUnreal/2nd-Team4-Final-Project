@@ -44,6 +44,9 @@ protected:
 	// 도트 필드 종료시 DestroyToDelay 호출하기 위한 함수.
 	void DOTDurationEndLogic();
 
+	// 콜리전을 NoCollision으로 바꾸기 위한 함수.
+	void SetNoCollision() const;
+
 	// ---------- 컴포넌트 선언 ----------
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -84,6 +87,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
 	float CollisionRadius = 250.f;
 
+	// Hit 판정 Destroy 시간을 조절합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Class")
+	float NoCollisionTime = 3.f;
+
 	// 플레이어에게 가하는 데미지입니다. 도트 데미지일 경우 지속시간 동안 해당 수치를 나누어 입힙니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Effect")
 	float DamageAmount;
@@ -115,6 +122,7 @@ private:
 	FTimerHandle TelegraphTimerHandle;
 	FTimerHandle DOTIntervalTimerHandle;
 	FTimerHandle DOTDurationTimerHandle;
+	FTimerHandle NoCollisionTimerHandle;
 
 	AActor* DOTTargetActor = nullptr;
 

@@ -7,8 +7,11 @@
 #include "DW_AttributeComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Inventory/InventoryComponent.h"
+#include "UI/Component/Manager/QuestManagerComponent.h"
 #include "DW_CharacterBase.generated.h"
 
+class UDW_AnimInstanceBase;
+class UCharacterArmorComponent;
 struct FInputActionValue;
 class USpringArmComponent;
 class UCameraComponent;
@@ -17,6 +20,32 @@ class UUserWidget;
 class UNiagaraFunctionLibrary;
 class UNiagaraSystem;
 class UPhysicalMaterial;
+class USceneCaptureComponent2D;
+class UTextureRenderTarget2D;
+
+USTRUCT(BlueprintType)
+struct FAnimMontageArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UAnimMontage*> Montages;
+
+	FORCEINLINE UAnimMontage*& operator[](int32 Index)
+	{
+		return Montages[Index];
+	}
+
+	FORCEINLINE const UAnimMontage* operator[](int32 Index) const
+	{
+		return Montages[Index];
+	}
+	
+	FORCEINLINE int32 Num() const
+	{
+		return Montages.Num();
+	}
+};
 
 UCLASS()
 class DW_DALWONDER_API ADW_CharacterBase : public ACharacter
@@ -64,8 +93,8 @@ public:
 	UFUNCTION()
 	void Attack(const FInputActionValue& Value);
 
-	UFUNCTION()
-	void Sprint(const FInputActionValue& Value);
+	UFUNCTION(blueprintCallable)
+	void Sprint(bool bOnSprint);
 
 	UFUNCTION()
 	void Dodge(const FInputActionValue& Value);
@@ -77,6 +106,11 @@ public:
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
+	void SetWeapon(AActor* NewWeapon) { Weapon->SetChildActorClass(NewWeapon->GetClass()); }
+
+	UFUNCTION(BlueprintCallable)
+	virtual void SetWeaponType(int32 NewWeaponType);
+
 	UCharacterStatComponent* GetCharacterStatComponent() const { return StatComponent; }
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
@@ -85,30 +119,40 @@ public:
 	// 📌 카메라 및 무기 관련 컴포넌트
 	// -----------------------------
 protected:
+	// 카메라 붐(캐릭터 뒤에 부착)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	USpringArmComponent* SpringArm;                        // 카메라 붐(캐릭터 뒤에 부착)
+	USpringArmComponent* SpringArm;
 
+	// 실제 시점 카메라
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* Camera;                              // 실제 시점 카메라
+	UCameraComponent* Camera;
 
+	// 캐릭터의 무기 액터
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UChildActorComponent* Weapon;                          // 캐릭터의 무기 액터
+	UChildActorComponent* Weapon;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 WeaponType = 0;
+
+	// 캐릭터의 장비 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Armor")
+	UCharacterArmorComponent* ArmorComponent;
+
+	// 캐릭터의 스탯 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	UCharacterStatComponent* StatComponent;				   // 캐릭터의 스탯 컴포넌트
+	UCharacterStatComponent* StatComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	TArray<TSubclassOf<UAnimInstance>> AnimInstanceArray;
+
+	UPROPERTY()
 	UAnimInstance* AnimInstance;
 
-	bool bIsSprinting = false;
-
-	bool bCanControl = true;                               // 캐릭터 조작 가능 여부
-
-	// -----------------------------
-	// ⚔️ 전투 관련 시스템 (Combat)
-	// -----------------------------
+	// 캐릭터 조작 가능 여부
+	bool bCanControl = true;
+	
+// 전투 관련 시스템 (Combat)
 #pragma region Combat
-
 public:
 	// 전투 상태 변경 (예: Idle → Attacking)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -144,6 +188,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndGuard();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkill();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot1();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot2();
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseActiveSkillSlot3();
+
 	// 캐릭터 넉백 처리 (피격 반응)
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void KnockBackCharacter();
@@ -168,43 +224,45 @@ public:
 
 	// 기본 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* AttackMontage;
+	TArray<UAnimMontage*> AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TArray<UAnimMontage*> CancelAttackMontage;
 
 	// 공중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* FallingAttackMontage;
+	TArray<UAnimMontage*> FallingAttackMontage;
 
 	// 가드 중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* GuardAttackMontage;
+	TArray<UAnimMontage*> GuardAttackMontage;
 
 	// 달리기 중 공격
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* SprintAttackMontage;
+	TArray<UAnimMontage*> SprintAttackMontage;
 
 	// 피격 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* HitMontage;
+	TArray<UAnimMontage*> HitMontage;
 	
 	// 넉백(쓰러지는) 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* KnockBackMontage;
+	TArray<UAnimMontage*> KnockBackMontage;
 
 	// 가드 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* GuardMontage;
-
-	// 구르기(회피) 애니메이션
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* DodgeMontage;
+	TArray<UAnimMontage*> GuardMontage;
 	
 	// 패링 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* ParryMontage;
+	TArray<UAnimMontage*> ParryMontage;
 
 	// 사망 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UAnimMontage* DeadMontage;
+	TArray<UAnimMontage*> DeadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TArray<FAnimMontageArray> SkillMontage;
 
 	// 전투 상태 타이머
 	UPROPERTY()
@@ -227,6 +285,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentComboIndex = 0;
+	
+	// 달리기 중 여부
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsSprinting = false;
 
 	// 가드 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
@@ -286,7 +348,7 @@ public:
 
 	AActor* FindBestLockOnTarget();
 	
-	AActor* FindClosestTarget(float MaxDistance = 1500.f);
+	AActor* FindClosestTarget(float MaxDistance = 800.f);
 	
 	UPROPERTY()
 	TArray<AActor*> LockOnCandidates;
@@ -300,10 +362,10 @@ public:
 	UUserWidget* LockOnWidgetInstance;
 
 #pragma endregion
-
+	
+// Interaction 관련 시스템
 #pragma region Interact
 public:
-	
 	FTimerHandle ItemScanTimerHandle;
 	
 	UFUNCTION()
@@ -356,34 +418,30 @@ private:
 	AActor* CurrentInteractTarget = nullptr;
 
 #pragma endregion
-
-	// -----------------------------
-	// UI 관련 시스템
-	// -----------------------------
-
+	
+// UI 관련 시스템
 #pragma region UI
 public:
 	//타이머
 	FTimerHandle HUDUpdateTimerHandle;
 
-	//ESC메뉴
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> ESCMenuWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* ESCMenuWidgetInstance;
-
-	bool bIsESCMenuOpen = false;
+	// 퀘스트 매니저(퀘스트 저장 및 관리)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest")
+	UQuestManagerComponent* QuestManager;
 
 public:
-
 	//HUD업데이트함수
 	UFUNCTION()
 	void UpdateHUD();
 
-	// ESC 메뉴 이벤트
-	UFUNCTION()
-	void ToggleESCMenu();
+protected:
 
+	// SceneCapture 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Render")
+	USceneCaptureComponent2D* SceneCaptureComponent;
+
+	// RenderTarget
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Render")
+	UTextureRenderTarget2D* RenderTarget;
 #pragma endregion
 };

@@ -1,0 +1,95 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "UI/Component/Manager/QuestManagerComponent.h"
+#include "GameFramework/Actor.h"
+
+// Sets default values for this component's properties
+UQuestManagerComponent::UQuestManagerComponent()
+{
+	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
+	// off to improve performance if you don't need them.
+	PrimaryComponentTick.bCanEverTick = false;
+
+	// ...
+}
+
+void UQuestManagerComponent::AcceptQuest(const FQuestData& QuestData)
+{
+    if (AcceptedQuests.Contains(QuestData.QuestID))
+    {
+        return;
+    }
+
+    AcceptedQuests.Add(QuestData.QuestID, QuestData);
+}
+
+void UQuestManagerComponent::UpdateObjectiveProgress(FName TargetID, int32 Amount)
+{
+    for (auto& Elem : AcceptedQuests)
+    {
+        FQuestData& Quest = Elem.Value;
+
+        if (Quest.bIsCompleted)
+        {
+            continue; // 이미 완료된 퀘스트는 스킵
+        }
+
+        bool bAnyUpdated = false;
+
+        for (FQuestObjective& Objective : Quest.Objectives)
+        {
+            if (Objective.TargetID == TargetID && !Objective.IsCompleted())
+            {
+                Objective.CurrentCount += Amount;
+                bAnyUpdated = true;
+            }
+        }
+
+        // 퀘스트 전체 완료 여부 검사
+        if (IsQuestCompleted(Quest))
+        {
+            CompleteQuest(Elem.Key); // 퀘스트 완료 처리
+        }
+    }
+}
+
+bool UQuestManagerComponent::IsQuestAccepted(const FQuestData& Quest) const
+{
+    return AcceptedQuests.Contains(Quest.QuestID);
+}
+
+bool UQuestManagerComponent::IsQuestCompleted(const FQuestData& Quest)
+{
+    if (const FQuestData* Completed = CompletedQuests.Find(Quest.QuestID))
+    {
+        return true;
+    }
+
+    if (const FQuestData* Accepted = AcceptedQuests.Find(Quest.QuestID))
+    {
+        for (const FQuestObjective& Obj : Accepted->Objectives)
+        {
+            if (Obj.CurrentCount < Obj.RequiredCount)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false; // 목록에 없다면 아직 시작하지 않은 퀘스트
+}
+
+void UQuestManagerComponent::CompleteQuest(FName QuestID)
+{
+    if (FQuestData* Quest = AcceptedQuests.Find(QuestID))
+    {
+        // 보상 지급 (추후 확장)
+        // ...
+
+        CompletedQuests.Add(QuestID, *Quest);
+        AcceptedQuests.Remove(QuestID);
+    }
+}
+

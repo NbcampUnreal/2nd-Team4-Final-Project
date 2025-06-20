@@ -3,6 +3,7 @@
 
 #include "Monster/NormalMonster/Skeleton/MobSkeleton.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NavigationSystem.h"
@@ -10,10 +11,16 @@
 #include "AI/Navigation/NavigationTypes.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "Character/DW_CharacterBase.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AMobSkeleton::AMobSkeleton()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->SetupAttachment(GetCapsuleComponent());
+	NiagaraComponent->SetAutoActivate(false);
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
@@ -28,8 +35,78 @@ void AMobSkeleton::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//SetSpawnLocation();
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	bUseControllerRotationYaw = true;
 
+	CurrentZ = GetActorLocation().Z;
+
+	//SetSpawnLocation();
+	DefaultHP = MonsterMaxHP;
+	DefaultDamage = MonsterDamage;
+
+	FTimerHandle SpawnTickHandle;
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(SpawnTickHandle,
+			this,
+			&AMobSkeleton::SpawnTickEnd,
+			3.1f,
+			false);
+	}
+}
+
+void AMobSkeleton::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (bSpawnTick)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
+
+		float ZOffset = AnimInstance->GetCurveValue(FName("ZOffset"));
+
+		FVector Location = GetActorLocation();
+		Location.Z = CurrentZ + ZOffset;
+		SetActorLocation(Location);
+	}
+
+	//if (IsValid(GetPlayerCharacter()))
+	//{
+	//	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	//	{
+	//		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+	//		{
+	//			if (BB->GetValueAsEnum(FName("CurrentState")) == 2)
+	//			{
+	//				FRotator CurrentRot = AIC->GetControlRotation();
+	//				FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+	//				FVector MyLocation = GetActorLocation();
+
+	//				FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+	//				TargetRot.Pitch = 0.f;
+	//				TargetRot.Roll = 0.f;
+
+	//				FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+
+	//				AIC->SetControlRotation(NewRot);
+	//				FaceRotation(TargetRot, DeltaTime);
+
+	//				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Actor Rotation Yaw: %f"), GetActorRotation().Yaw));
+	//				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Control Rotation Yaw: %f"), GetController()->GetControlRotation().Yaw));
+
+	//				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("%f"), AIC->GetControlRotation().Yaw));
+	//			}
+	//		}
+	//	}
+	//}
+}
+
+
+void AMobSkeleton::SpawnTickEnd()
+{
+	bSpawnTick = false;
 }
 
 void AMobSkeleton::PlayAlertMontage()
@@ -54,9 +131,41 @@ void AMobSkeleton::PlayAlertMontage()
 
 float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	
 
-	if (DamageAmount >= MonsterMaxHP * 0.3f)
+	if (bHaveEnergeSheild)
+	{
+		DamageAmount /= 2;
+	}
+
+	if (DamageCauser)
+	{
+		if(bIsShieldUse)
+		{
+			FVector MyLocation = GetActorLocation();
+			FVector MyForward = GetActorForwardVector();
+
+			FVector CauserLocation = DamageCauser->GetActorLocation();
+
+			FVector DirectionFromCauser = (MyLocation - CauserLocation).GetSafeNormal();
+
+			float Dot = FVector::DotProduct(MyForward, DirectionFromCauser);
+
+			if (Dot < 0.5f)
+			{
+				bIsGuard = true;
+
+				DamageAmount *= 0;
+			}
+			else
+			{
+				bIsGuard = false;
+			}
+		}
+	}
+
+	//bIsShieldUse = false;
+
+	/*if (DamageAmount >= MonsterMaxHP * 0.3f)
 	{
 		if (AAIController* AICon = Cast<AAIController>(GetController()))
 		{
@@ -69,16 +178,118 @@ float AMobSkeleton::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 				GetWorldTimerManager().SetTimer(HitDelayTimer, this, &ADW_NormalMonsterBase::BehaviorOn, HitDelay, false);
 			}
 		}
-	}
+	}*/
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	if (MonsterHP <= 0)
+	/*if (MonsterHP <= 0)
 	{
 		GetWorldTimerManager().ClearTimer(HitDelayTimer);
-	}
+	}*/
 
     return 0.0f;
+}
+
+void AMobSkeleton::Dead()
+{
+	NiagaraComponent->Deactivate();
+
+	Super::Dead();
+}
+
+void AMobSkeleton::AffectToEnergeShield()
+{
+	if (bHaveEnergeSheild)
+	{
+		return;
+	}
+
+	bHaveEnergeSheild = true;
+
+	if (NiagaraComponent)
+	{
+		NiagaraComponent->Activate(true);
+	}
+
+	GetWorldTimerManager().SetTimer(EnergeShieldTimer, this, &AMobSkeleton::EnergeShieldDeactive, 10.f, false);
+
+}
+
+void AMobSkeleton::EnergeShieldDeactive()
+{
+	GetWorldTimerManager().ClearTimer(ScaleUpTimer);
+
+	bHaveEnergeSheild = false;
+
+	NiagaraComponent->Deactivate();
+}
+
+void AMobSkeleton::AffectToEnhance()
+{
+	if (bHaveEnhanced)
+	{
+		return;
+	}
+
+	bHaveEnhanced = true;
+
+	MonsterMaxHP += DefaultHP / 2;
+	MonsterHP += DefaultHP / 2;
+
+	MonsterDamage += DefaultDamage / 2;
+	
+	GetWorldTimerManager().SetTimer(ScaleUpTimer, this, &AMobSkeleton::ScaleUp, 0.05f, true);
+	GetWorldTimerManager().SetTimer(EnhancedTimer, this, &AMobSkeleton::EnhanceDeactive, 10.f, false);
+
+}
+
+void AMobSkeleton::ScaleUp()
+{
+	if (ScaleUpCount > 40)
+	{
+		ScaleUpCount = 40;
+		GetWorldTimerManager().ClearTimer(ScaleUpTimer);
+	}
+
+	float Alpha = FMath::Clamp(ScaleUpCount / 40.f, 0.f, 1.f);
+	float NewScale = FMath::Lerp(1.f, 1.3f, Alpha);
+
+	SetActorScale3D(FVector(NewScale));
+
+	ScaleUpCount++;
+
+}
+
+void AMobSkeleton::ScaleDown()
+{
+	if (ScaleUpCount < 0)
+	{
+		ScaleUpCount = 0;
+		GetWorldTimerManager().ClearTimer(ScaleDownTimer);
+	}
+
+	float Alpha = FMath::Clamp(ScaleUpCount / 40.f, 0.f, 1.f);
+	float NewScale = FMath::Lerp(1.f, 1.3f, Alpha);
+
+	SetActorScale3D(FVector(NewScale));
+
+	ScaleUpCount--;
+
+}
+
+void AMobSkeleton::EnhanceDeactive()
+{
+	GetWorldTimerManager().SetTimer(ScaleDownTimer, this, &AMobSkeleton::ScaleDown, 0.05f, true);
+
+	bHaveEnhanced = false;
+
+	MonsterMaxHP = DefaultHP;
+	if (MonsterHP > DefaultHP)
+	{
+		MonsterHP = DefaultHP;
+	}
+
+	MonsterDamage = DefaultDamage;
 }
 
 void AMobSkeleton::UseFirstSkill()
@@ -101,6 +312,16 @@ void AMobSkeleton::UseSecondSkill()
 			GetMesh()->GetAnimInstance()->Montage_Play(SecondSkill);
 		}
 	}
+}
+
+void AMobSkeleton::ShieldOn()
+{
+	bIsShieldUse = true;
+}
+
+void AMobSkeleton::ShieldOff()
+{
+	bIsShieldUse = false;
 }
 
 void AMobSkeleton::SetMovementWalk()
@@ -149,8 +370,8 @@ bool AMobSkeleton::SetRandomLocations(float RanRadius, float DistanceFromMe)
 						RandomLocation1 = OutLocation1.Location;
 						RandomLocation2 = OutLocation2.Location;
 
-						DrawDebugSphere(GetWorld(), RandomLocation1, 30.f, 12, FColor::Green, false, 5.f);
-						DrawDebugSphere(GetWorld(), RandomLocation2, 30.f, 12, FColor::Green, false, 5.f);
+						//DrawDebugSphere(GetWorld(), RandomLocation1, 30.f, 12, FColor::Green, false, 5.f);
+						//DrawDebugSphere(GetWorld(), RandomLocation2, 30.f, 12, FColor::Green, false, 5.f);
 
 						return true;
 					}

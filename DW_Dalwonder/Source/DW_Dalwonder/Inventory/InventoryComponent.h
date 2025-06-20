@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Inventory/InventorySlot.h"
+#include "Item/EquipSlotType.h"
 #include "InventoryComponent.generated.h"
 
 
@@ -20,12 +21,21 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 InventorySlotQuantity = 30;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory | Equipped")
+    TMap<EEquipSlotType, UItemBase*> EquippedItems;
+
     UFUNCTION(BlueprintCallable)
     void InitializeSlots();
 
     UFUNCTION(BlueprintCallable)
     bool AddItem(const FItemData& ItemData);
 
+
+    UFUNCTION(BlueprintPure, Category = "Inventory | Equipped")
+    UItemBase* GetEquippedItem(EEquipSlotType SlotType) const;
+
     void ShowInventoryStatus();
+
+
 		
 };

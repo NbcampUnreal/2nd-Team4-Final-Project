@@ -102,4 +102,32 @@ public:
 protected:
 	FTimerHandle DestroyTimer;
 	// ---------- ---------- ----------
+
+public:
+	// True 시 플레이어에게 휘면서 발사됩니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class")
+	bool bUseCurvedTrajectory = false;
+
+	FVector CurveStartLocation;
+	FVector CurveTargetLocation;
+	FVector CurveDirection;
+	FVector LastVelocity = FVector::ZeroVector;
+
+	float CurveHeight = 300.f;
+	float CurveDuration = 1.f;
+	float ElapsedTime = 0.f;
+
+	// 위로 휘는 정도 조절
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class", meta = (EditCondition = "bUseCurvedTrajectory", EditConditionHides))
+	float MinUpBias = 0.2f;
+	
+	// 위로 휘는 정도 조절
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara|Class", meta = (EditCondition = "bUseCurvedTrajectory", EditConditionHides))
+	float MaxUpBias = 0.5f;
+
+	virtual void Tick(float DeltaTime) override;
+
+	void LaunchCurvedProjectile(AActor* Target);
+
+	// 이쁜 코드를 더럽혀놨읍니다,,,
 };

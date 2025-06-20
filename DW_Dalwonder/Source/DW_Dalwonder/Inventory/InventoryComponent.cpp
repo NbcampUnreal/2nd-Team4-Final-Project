@@ -110,3 +110,12 @@ void UInventoryComponent::ShowInventoryStatus()
         GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::White, Msg);
     }
 }
+
+UItemBase* UInventoryComponent::GetEquippedItem(EEquipSlotType SlotType) const
+{
+    if (EquippedItems.Contains(SlotType))
+    {
+        return EquippedItems[SlotType];
+    }
+    return nullptr;
+}

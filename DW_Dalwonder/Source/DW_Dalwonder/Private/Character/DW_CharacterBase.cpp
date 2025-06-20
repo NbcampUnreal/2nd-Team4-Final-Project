@@ -13,17 +13,17 @@
 #include "Monster/DW_MonsterBase.h"
 #include "Item/WorldItemActor.h"
 #include "NiagaraFunctionLibrary.h"
-#include "EngineUtils.h"
 #include "UI/Widget/HUDWidget.h"
-#include "DW_DamageType.h"
 #include "DW_GmBase.h"
 #include "Components/CapsuleComponent.h"
-#include "Item/WorldItemActor.h"
 #include "Item/ItemDataManager.h"
-#include "UI/Widget/HUDWidget.h"
 #include "DW_InteractInterface.h"
 #include "KismetAnimationLibrary.h"
-#include "Engine/DamageEvents.h"
+#include "Character/CharacterArmorComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "UI/Widget/LockOnWidget.h"
+#include "Tracks/MovieSceneMaterialTrack.h"
 
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -32,22 +32,49 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
-	SpringArm->TargetArmLength = 300.f;
-	SpringArm->SocketOffset = FVector(0.f, 50.f, 50.f);
+	SpringArm->TargetArmLength = 200.f;
+	SpringArm->SetRelativeRotation(FRotator(0.f, 20.f, 0.f));
+	SpringArm->SocketOffset = FVector(0.f, 60.f, 70.f);
+	SpringArm->bDoCollisionTest = false;
 	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+	Camera->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
 	Camera->bUsePawnControlRotation = false;
+	Camera->FieldOfView = 105.f;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
-	GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();;
+	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+
+	ArmorComponent = CreateDefaultSubobject<UCharacterArmorComponent>(TEXT("ArmorComponent"));
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
+
+	// SceneCaptureComponent 초기화
+	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));
+	SceneCaptureComponent->SetupAttachment(RootComponent);
+
+	SceneCaptureComponent->SetRelativeLocation(FVector(250.f, 0.f, 30.f));  // 위치 조정
+	SceneCaptureComponent->SetRelativeRotation(FRotator(-10.f, 180.f, 0.f)); // 캐릭터를 바라보게 회전
+
+	// 기본 렌더링 세팅
+	SceneCaptureComponent->bCaptureEveryFrame = true;
+	SceneCaptureComponent->bCaptureOnMovement = false;
+	SceneCaptureComponent->ProjectionType = ECameraProjectionMode::Perspective;
+	SceneCaptureComponent->FOVAngle = 45.f;
+
+	// 최적화 설정
+	SceneCaptureComponent->bCaptureEveryFrame = false;
+	SceneCaptureComponent->bCaptureOnMovement = false;
+	SceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
+	// 퀘스트 매니저
+	QuestManager = CreateDefaultSubobject<UQuestManagerComponent>(TEXT("QuestManager"));
 }
 
 void ADW_CharacterBase::BeginPlay()
@@ -81,6 +108,37 @@ void ADW_CharacterBase::BeginPlay()
 		0.1f,
 		true  // 반복 여부
 	);
+
+	if (RenderTarget && SceneCaptureComponent)
+	{
+		SceneCaptureComponent->TextureTarget = RenderTarget;
+		SceneCaptureComponent->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+
+		// 자식 액터들의 컴포넌트도 따로 추가
+		TArray<AActor*> ChildActors;
+		GetAttachedActors(ChildActors, true); // true = recursive
+
+		for (AActor* Child : ChildActors)
+		{
+			if (!Child) continue;
+
+			TArray<UActorComponent*> Components = Child->GetComponents().Array();
+			for (UActorComponent* Comp : Components)
+			{
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Comp))
+				{
+					SceneCaptureComponent->ShowOnlyComponent(Primitive);
+				}
+			}
+		}
+
+		// 자신만 보여주도록 설정 (배경 안 보이게)
+		SceneCaptureComponent->ShowOnlyActorComponents(this);
+
+		// 캡처
+		SceneCaptureComponent->CaptureScene();
+	}
+
 }
 
 void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -88,13 +146,9 @@ void ADW_CharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 	
 	GetWorldTimerManager().ClearTimer(BlockTimer);
-	BlockTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(DodgeTimer);
-	DodgeTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(InvincibleTimer);
-	InvincibleTimer.Invalidate();
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
-	IdleStateTimer.Invalidate();
 }
 
 void ADW_CharacterBase::PostInitializeComponents()
@@ -154,15 +208,6 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Attack);
 			}
 
-			if (PlayerController->SprintAction)
-			{
-				EnhancedInputComponent->BindAction(
-					PlayerController->SprintAction,
-					ETriggerEvent::Started,
-					this,
-					&ADW_CharacterBase::Sprint);
-			}
-
 			if (PlayerController->GuardAction)
 			{
 				EnhancedInputComponent->BindAction(
@@ -196,9 +241,47 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Lockon);
 			}
 
+			if (PlayerController->SkillAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->SkillAction,
+					ETriggerEvent::Started,
+					this,
+					&ADW_CharacterBase::UseActiveSkill);
+			}
+
+			if (PlayerController->UseSkill1Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill1Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot1);
+			}
+
+			if (PlayerController->UseSkill2Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill2Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot2);
+			}
+
+			if (PlayerController->UseSkill3Action)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->UseSkill3Action,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::UseActiveSkillSlot3);
+			}
+
 			if (PlayerController->InteractAction)
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
+#endif
 
 				EnhancedInputComponent->BindAction(
 					PlayerController->InteractAction,
@@ -206,22 +289,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					this,
 					&ADW_CharacterBase::Interact);
 
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
+#endif
 			}
 			else
 			{
+#if WITH_EDITOR
 				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
-			}
-
-			if (PlayerController->ESCAction)
-			{
-				// ESC 바인딩
-				EnhancedInputComponent->BindAction(
-					PlayerController->ESCAction,
-					ETriggerEvent::Started,
-					this,
-					&ADW_CharacterBase::ToggleESCMenu
-				);
+#endif
 			}
 		}
 	}
@@ -281,28 +357,42 @@ void ADW_CharacterBase::StopJump(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Attack(const FInputActionValue& Value)
 {
+	if (CurrentCombatState == ECharacterCombatState::Dead ||
+		CurrentCombatState == ECharacterCombatState::Dodging ||
+		CurrentCombatState == ECharacterCombatState::Hit ||
+		CurrentCombatState == ECharacterCombatState::Parrying) return;
+	
 	if (Value.Get<bool>())
 	{
 		StartAttack();
 	}
 }
 
-void ADW_CharacterBase::Sprint(const FInputActionValue& Value)
+void ADW_CharacterBase::Sprint(bool bOnSprint)
 {
-	if (Value.Get<bool>())
+	if (bOnSprint == true && StatComponent->GetStamina() <= 5.f)
 	{
-		if (bIsSprinting == false)
-		{
-			bIsSprinting = true;
-			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
-			GetCharacterStatComponent()->ConsumeStamina(1.f);
-		}
-		else
-		{
-			bIsSprinting = false;
-			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetWalkSpeed();
-			GetCharacterStatComponent()->StopConsumeStamina();
-		}
+		return;
+	}
+	
+	if (bIsSprinting == bOnSprint)
+	{
+		return;
+	}
+
+	bIsSprinting = bOnSprint;
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Sprint Function Called")));
+	
+	if (bIsSprinting)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		GetCharacterStatComponent()->ConsumeStamina(2.f);
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+		GetCharacterStatComponent()->StopConsumeStamina();
+		GetCharacterStatComponent()->StartStaminaRegen();
 	}
 }
 
@@ -362,6 +452,8 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 
 void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 {
+	if (CurrentCombatState == ECharacterCombatState::Dead) return;
+	
 	BlockCharacterControl(true);
 	
 	if (IsValid(AnimInstance))
@@ -376,7 +468,14 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			FName SectionName = Montage->GetSectionName(SectionIndex);
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetBaseAttackSpeed() + StatComponent->GetBonusAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_JumpToSection(SectionName);
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
@@ -385,17 +484,38 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 		{
 			if (AnimInstance->Montage_IsPlaying(Montage) == false)
 			{
-				AnimInstance->Montage_Play(Montage, 1.f, EMontagePlayReturnType::MontageLength, 0, true);
+				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
+				{
+					AnimInstance->Montage_Play(Montage, StatComponent->GetBaseAttackSpeed() + StatComponent->GetBonusAttackSpeed());
+				}
+				else
+				{
+					AnimInstance->Montage_Play(Montage);
+				}
 			}
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
 		}
 	}
 }
 
+void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
+{
+	if (WeaponType == NewWeaponType)
+	{
+		return;
+	}
+	
+	WeaponType = NewWeaponType;
+	GetMesh()->SetAnimInstanceClass(AnimInstanceArray[WeaponType]);
+	AnimInstance = GetMesh()->GetAnimInstance();
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Log, TEXT("전투 상태 변경: %s"), *UEnum::GetValueAsString(NewState));
+#endif
 
 	if (CurrentCombatState != ECharacterCombatState::Idle && CurrentCombatState != ECharacterCombatState::Dodging)
 	{
@@ -412,42 +532,38 @@ void ADW_CharacterBase::StartAttack()
 
 	if (GetMovementComponent()->IsFalling())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Falling"));
-		check(IsValid(FallingAttackMontage));
+		check(IsValid(FallingAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(FallingAttackMontage);
+		PlayMontage(FallingAttackMontage[WeaponType]);
 	}
 	else if (bIsGuarding)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Guard"));
-		check(IsValid(GuardAttackMontage));
+		check(IsValid(GuardAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(GuardAttackMontage);
+		PlayMontage(GuardAttackMontage[WeaponType]);
 	}
-	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
+	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetBaseWalkSpeed() + GetCharacterStatComponent()->GetBonusWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Sprint"));
-		check(IsValid(SprintAttackMontage));
+		check(IsValid(SprintAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
-		PlayMontage(SprintAttackMontage);
+		PlayMontage(SprintAttackMontage[WeaponType]);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("else"));
-		check(IsValid(AttackMontage));
+		check(IsValid(AttackMontage[WeaponType]));
 
 		if (CurrentCombatState == ECharacterCombatState::Idle)
 		{
 			CurrentComboIndex = 0;
-			PlayMontage(AttackMontage);
 			SetCombatState(ECharacterCombatState::ComboWindow);
+			PlayMontage(AttackMontage[WeaponType]);
 		}
 		else if (CurrentCombatState == ECharacterCombatState::ComboWindow && bCanCombo)
 		{
 			CurrentComboIndex++;
-			if (CurrentComboIndex < AttackMontage->GetNumSections())
+			if (CurrentComboIndex < AttackMontage[WeaponType]->GetNumSections())
 			{
-				PlayMontage(AttackMontage, CurrentComboIndex);
+				PlayMontage(AttackMontage[WeaponType], CurrentComboIndex);
 				bCanCombo = false;
 			}
 		}
@@ -456,70 +572,73 @@ void ADW_CharacterBase::StartAttack()
 
 void ADW_CharacterBase::CancelAttack()
 {
-	if (CurrentCombatState == ECharacterCombatState::Attacking)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("공격 취소"));
-		
-		// 현재 재생 중인 모든 몽타주를 중단
-		AnimInstance->Montage_Stop(0.2f);
-
-		OnMontageEnded(nullptr, true);
-	}
-
-	if (CurrentCombatState == ECharacterCombatState::ComboWindow)
-	{
-		OnMontageEnded(AttackMontage, true);
-	}
+	// 현재 재생 중인 모든 몽타주를 중단
+	AnimInstance->Montage_Stop(0.2f);
 	
 	// 튕김 애니메이션 재생
-	if (IsValid(DodgeMontage))
+	if (IsValid(CancelAttackMontage[WeaponType]))
 	{
-		PlayMontage(DodgeMontage);
+		PlayMontage(CancelAttackMontage[WeaponType]);
 	}
 }
 
 void ADW_CharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnMontageEnded Called!!"));
+	if (CurrentCombatState == ECharacterCombatState::Dead) return;
 	
-	SetCombatState(ECharacterCombatState::Idle);
-	BlockCharacterControl(false);
-
-	if (Montage == AttackMontage)
+	if (Montage == AttackMontage[WeaponType])
 	{
 		CurrentComboIndex = 0;
 		bCanCombo = false;
 	}
+
+	if (AnimInstance->Montage_IsPlaying(nullptr))
+	{
+		return;
+	}
+	
+	SetCombatState(ECharacterCombatState::Idle);
+	BlockCharacterControl(false);
 }
 
-float ADW_CharacterBase::TakeDamage
-	(
-	float DamageAmount,
-	FDamageEvent const& DamageEvent,
-	AController* EventInstigator,
-	AActor* DamageCauser
-	)
+float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& DamageEvent,AController* EventInstigator,AActor* DamageCauser)
 {
 	float ActualDamage = DamageAmount;
+
+	if (CurrentCombatState == ECharacterCombatState::Dead)
+	{
+		return 0.f;
+	}
 	
 	// 캐릭터가 무적 상태일 때
 	if (bIsInvincible)
 	{
-		UE_LOG(LogTemp, Log, TEXT("무적"));
 		ActualDamage = 0.f;
 		return ActualDamage;
 	}
 
-	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
 	// 몬스터가 패링 가능한 상태이고, 캐릭터의 State가 Parrying일 때
-	if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+	ADW_MonsterBase* Monster = Cast<ADW_MonsterBase>(DamageCauser);
+	if (DamageCauser->Implements<IDW_MonsterBaseInterface::UClassType>())
 	{
-		Monster->Parried();
-		PlayMontage(ParryMontage);
-		ActualDamage = 0.f;
-		return ActualDamage;
+		if (Monster->GetCanParry() && CurrentCombatState == ECharacterCombatState::Parrying)
+		{
+			Monster->Parried();
+			PlayMontage(ParryMontage[WeaponType]);
+			ActualDamage = 0.f;
+			return ActualDamage;
+		}
 	}
-
+	else
+	{
+		if (CurrentCombatState == ECharacterCombatState::Parrying)
+		{
+			PlayMontage(ParryMontage[WeaponType]);
+			ActualDamage = 0.f;
+			return ActualDamage;
+		}
+	}
+	
 	// 캐릭터가 가드 상태일 때
 	if (bIsGuarding)
 	{
@@ -527,38 +646,38 @@ float ADW_CharacterBase::TakeDamage
 	}
 	else
 	{
-		UDW_DamageType* DW_DamageType = Cast<UDW_DamageType>(DamageEvent.DamageTypeClass);
-
-		// 대미지 타입을 커스텀 대미지 타입으로 받았을 때
-		if (IsValid(DW_DamageType))
+		float KnockBackAmount = (GetCharacterStatComponent()->GetBaseMaxHealth() + GetCharacterStatComponent()->GetBonusMaxHealth()) * 0.3f;
+		if (DamageAmount > KnockBackAmount)
 		{
-			// 넉백이 적용되는 공격을 맞았을 때
-			if (DW_DamageType->bCanKnockdown == true)
+			KnockBackCharacter();
+		}
+		else if (AnimInstance->Montage_IsPlaying(KnockBackMontage[WeaponType]))
+		{
+			SetCombatState(ECharacterCombatState::Hit);
+			int32 HitSectionNum = HitMontage[WeaponType]->GetNumSections();
+			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
+			PlayMontage(HitMontage[WeaponType], RandomHitSectionNum);
+		}
+	}
+
+	// 데미지 입을경우 UI 전부 닫기
+	if (ActualDamage > 0.f)
+	{
+		if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+		{
+			while (GM->GetPopupWidgetCount() > 0)
 			{
-				KnockBackCharacter();
-			}
-			// 넉백이 적용되지 않는 공격을 맞았을 때
-			else
-			{
-				float KnockBackAmount = GetCharacterStatComponent()->GetMaxHealth() * 0.3f;
-				if (DamageAmount > KnockBackAmount)
-				{
-					KnockBackCharacter();
-				}
-				else
-				{
-					int32 HitSectionNum = HitMontage->GetNumSections();
-					int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-					PlayMontage(HitMontage, RandomHitSectionNum);
-				}
+				GM->CloseLastPopupUI();
 			}
 		}
-		// 일반 대미지 타입으로 받았을 때
-		else
+
+		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
 		{
-			int32 HitSectionNum = HitMontage->GetNumSections();
-			int32 RandomHitSectionNum = FMath::RandRange(0, HitSectionNum - 1);
-			PlayMontage(HitMontage, RandomHitSectionNum);
+			PC->SetShowMouseCursor(false);
+			PC->SetInputMode(FInputModeGameOnly());
+			this->EnableInput(PC);
+			PC->ESCMenuWidgetInstance = nullptr;
+			PC->bIsESCMenuOpen = false;
 		}
 	}
 
@@ -578,12 +697,10 @@ void ADW_CharacterBase::SetParrying(bool bIsParrying)
 	if (bIsParrying)
 	{
 		SetCombatState(ECharacterCombatState::Parrying);
-		UE_LOG(LogTemp, Log, TEXT("패링 시작"));
 	}
 	else
 	{
 		SetCombatState(ECharacterCombatState::Idle);
-		UE_LOG(LogTemp, Log, TEXT("패링 종료"));
 	}
 }
 
@@ -598,15 +715,14 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 
 	if (bIsGuarding)
 	{
-		UE_LOG(LogTemp, Log, TEXT("가드 시작"));
 		GetCharacterStatComponent()->ConsumeStamina(2.f);
-		PlayMontage(GuardMontage);
+		PlayMontage(GuardMontage[WeaponType]);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("가드 종료"));
 		GetCharacterStatComponent()->StopConsumeStamina();
-		AnimInstance->Montage_Stop(0.25f, GuardMontage);
+		GetCharacterStatComponent()->StartStaminaRegen();
+		AnimInstance->Montage_Stop(0.25f, GuardMontage[WeaponType]);
 	}
 }
 
@@ -616,15 +732,6 @@ void ADW_CharacterBase::SetInvincible(bool bNewInvincible)
 		return;
 
 	bIsInvincible = bNewInvincible;
-
-	if (bNewInvincible)
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 상태 ON"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("무적 상태 OFF"));
-	}
 }
 
 void ADW_CharacterBase::StartGuard()
@@ -645,17 +752,60 @@ void ADW_CharacterBase::EndGuard()
 	SetGuarding(false);
 }
 
+void ADW_CharacterBase::UseActiveSkill()
+{
+	//@TODO : SkillComponent 와 연계해서 액티브 스킬 사용 만들기 -> Montage, 스킬 Array, 자원 소모 구현
+	// SkillComponent->GetActiveSkillArray();
+
+	FTimerHandle SkillUseTimer;
+	GetWorld()->GetTimerManager().SetTimer(SkillUseTimer, FTimerDelegate::CreateLambda([&]
+	{
+		// TODO
+	}), 2.f, false);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot1()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][0]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot2()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][1]);
+}
+
+void ADW_CharacterBase::UseActiveSkillSlot3()
+{
+	SetCombatState(ECharacterCombatState::Attacking);
+	StatComponent->SetStamina(StatComponent->GetStamina() - 10.f);
+	PlayMontage(SkillMontage[WeaponType][2]);
+}
+
 void ADW_CharacterBase::KnockBackCharacter()
 {
-	SetCombatState(ECharacterCombatState::Hit);
+	if (CurrentCombatState != ECharacterCombatState::Dead)
+	{
+		SetCombatState(ECharacterCombatState::Hit);
+	}
 	
 	const float KnockBackMultiplier = 50.f;
 	const FVector KnockBackDirection = -GetActorForwardVector() * KnockBackMultiplier;
 	
 	LaunchCharacter(KnockBackDirection, true, true);
-	if (IsValid(KnockBackMontage) == true)
+	if (IsValid(KnockBackMontage[WeaponType]) == true)
 	{
-		PlayMontage(KnockBackMontage);
+		if (AnimInstance->Montage_IsPlaying(KnockBackMontage[WeaponType]))
+		{
+			PlayMontage(KnockBackMontage[WeaponType], 1);
+		}
+		else
+		{
+			PlayMontage(KnockBackMontage[WeaponType]);
+		}
 	}
 }
 
@@ -676,27 +826,35 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 
 void ADW_CharacterBase::Dead()
 {
+	DisableInput(Cast<APlayerController>(GetController()));
+	StatComponent->StopConsumeHealth();
+	StatComponent->StopConsumeStamina();
+	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
-		PlayMontage(DeadMontage, 1);
+		PlayMontage(DeadMontage[WeaponType], 1);
 	}
 	else
 	{
-		PlayMontage(DeadMontage);
+		PlayMontage(DeadMontage[WeaponType]);
 	}
 
 	SetCombatState(ECharacterCombatState::Dead);
+	
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->ShowResultUI("YOU DIED");
+	};
 }
 
 void ADW_CharacterBase::SetIdleState()
 {
 	GetWorldTimerManager().ClearTimer(IdleStateTimer);
-	UE_LOG(LogTemp, Warning, TEXT("SetIdleState"));
 
 	GetWorldTimerManager().SetTimer(IdleStateTimer, FTimerDelegate::CreateLambda([&]
 	{
 		bIsOnCombat = false;
-	}), 5.f, false);
+	}), 10.f, false);
 }
 
 void ADW_CharacterBase::Interact()
@@ -721,71 +879,48 @@ void ADW_CharacterBase::Interact()
 		Params
 	);
 
+#if WITH_EDITOR
 	DrawDebugSphere(GetWorld(), End, realSphereRadius, 12, FColor::Green, false, 1.0f);
+#endif
 
 	if (bHit && Hit.bBlockingHit)
 	{
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor && HitActor->Implements<UDW_InteractInterface>())
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 맞은 액터: %s"), *HitActor->GetName());
+#endif
 			IDW_InteractInterface::Execute_Interact(HitActor, this);
 		}
 		else
 		{
+#if WITH_EDITOR
 			UE_LOG(LogTemp, Warning, TEXT("[Interact] 인터페이스 미구현 액터: %s"), *GetNameSafe(HitActor));
+#endif
 		}
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("[Interact] 아무것도 맞지 않음."));
+#endif
 	}
 
 	if (CurrentItem)
 	{
 
-		FItemData Data = CurrentItem->ItemBase->ItemBaseData; // 아이템 정보 가져오기
+		UItemBase* Data = CurrentItem->ItemBase; // 아이템 정보 가져오기
 		bool bAdded = InventoryComponent->AddItem(Data);
-		UItemDataManager* ItemDataManager = UItemDataManager::GetInstance();
-		if (ItemDataManager)
-		{
-			bool bSuccess;
-			FName TargetItemID = FName(*FString::FromInt(Data.ItemID)); // 데이터테이블에 있는 ItemID
-
-			FItemData BaseData = ItemDataManager->GetItemBaseData(TargetItemID, bSuccess);
-			if (bSuccess)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Item Found: %s (Type: %s)"), *BaseData.ItemName.ToString(), *UEnum::GetValueAsString(BaseData.ItemType));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Item ID '%s' not found in ItemDataManager."), *TargetItemID.ToString());
-			}
-		}
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, bAdded ? FColor::Green : FColor::Red,
-				FString::Printf(TEXT("Item %s %s"),
-					*Data.ItemName.ToString(),
-					bAdded ? TEXT("added to inventory!") : TEXT("failed to add!")
-				));
-		}
-
 		if (bAdded)
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
 		}
-
-		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
-		{
-			PC->RequestInventoryUIUpdate();
-		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("아이템 없음"));
+		
 	}
 }
 
@@ -921,56 +1056,14 @@ void ADW_CharacterBase::UpdateHUD()
 	{
 		if (UHUDWidget* HUD = Cast<UHUDWidget>(PC->HUDWidgetInstance))  // 정확한 클래스 캐스팅
 		{
-			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetMaxHealth());
-			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetMaxStamina());
+			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetBaseMaxHealth() + StatComponent->GetBonusMaxHealth());
+			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetBaseMaxStamina() + StatComponent->GetBonusMaxStamina());
 		}
 		else {
 			//캐스팅 실패시 타이머 초기화
 			GetWorld()->GetTimerManager().ClearTimer(HUDUpdateTimerHandle);
 		}
 		//현재 HP, Stamina만 업데이트중 아이템(물약) 사용시도 필요하면 제작
-	}
-}
-
-void ADW_CharacterBase::ToggleESCMenu()
-{
-	ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
-	if (!GameMode || !ESCMenuWidgetClass) return;
-
-	if (!bIsESCMenuOpen)
-	{
-		ESCMenuWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), ESCMenuWidgetClass);
-		if (ESCMenuWidgetInstance)
-		{
-			GameMode->SwitchUI(ESCMenuWidgetClass);  // ESC 메뉴 열기
-			bIsESCMenuOpen = true;
-
-			if (APlayerController* PC = Cast<APlayerController>(GetController()))
-			{
-				PC->SetShowMouseCursor(true);
-				// UI Focus말고 키보드 입력도 먹도록 수정
-				FInputModeGameAndUI InputMode;
-				InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-				InputMode.SetHideCursorDuringCapture(false);
-				PC->SetInputMode(InputMode);
-			}
-		}
-	}
-	else
-	{
-		if (ESCMenuWidgetInstance)
-		{
-			GameMode->ClosePopupUI(ESCMenuWidgetInstance);  // ESC 메뉴 닫기
-			ESCMenuWidgetInstance = nullptr;
-		}
-
-		bIsESCMenuOpen = false;
-
-		if (APlayerController* PC = Cast<APlayerController>(GetController()))
-		{
-			PC->SetShowMouseCursor(false);
-			PC->SetInputMode(FInputModeGameOnly());
-		}
 	}
 }
 
@@ -1053,7 +1146,6 @@ AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
 		const float Distance = FVector::Dist(MyLocation, Monster->GetActorLocation());
 		if (Distance > ClosestDistance) continue;
 
-		// 🔍 LineOfSight 검사 (시야 안에 있는지)
 		if (IsValid(PC) && !PC->LineOfSightTo(Monster)) continue;
 
 		ClosestDistance = Distance;
@@ -1078,10 +1170,15 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 	AActor* BestTarget = nullptr;
 	float ClosestDistSquared = FLT_MAX;
 
+	const float MaxLockOnDistance = 5000.f;
+
 	for (AActor* Candidate : Candidates)
 	{
 		if (!IsValid(Candidate) || Candidate == this) continue;
 		if (!PC->LineOfSightTo(Candidate)) continue;
+
+		float Distance = FVector::Dist(GetActorLocation(), Candidate->GetActorLocation());
+		if (Distance > MaxLockOnDistance) continue;
 
 		FVector2D ScreenPos;
 		bool bOnScreen = PC->ProjectWorldLocationToScreen(Candidate->GetActorLocation(), ScreenPos);
@@ -1102,26 +1199,49 @@ AActor* ADW_CharacterBase::FindBestLockOnTarget()
 
 void ADW_CharacterBase::UpdateLockOnRotation()
 {
-	if (!bIsLockOn || !IsValid(LockOnTarget))
+	if (!bIsLockOn)
 	{
 		GetWorldTimerManager().ClearTimer(LockOnRotationTimer);
-		bIsLockOn = false;
 		LockOnTarget = nullptr;
 		return;
 	}
+	
+	ADW_MonsterBase* MonsterTarget = Cast<ADW_MonsterBase>(LockOnTarget);
+	if (!IsValid(LockOnTarget) ||
+	!GetController()->LineOfSightTo(LockOnTarget) ||
+	(MonsterTarget && MonsterTarget->bIsDead))
+	{
+		AActor* NewTarget = FindClosestTarget(800.f);
 
+		if (IsValid(NewTarget) && NewTarget != LockOnTarget)
+		{
+			LockOnTarget = NewTarget;
+		}
+		else
+		{
+			ToggleLockOn();
+			return;
+		}
+	}
+
+	// 회전 처리
 	FVector ToTarget = LockOnTarget->GetActorLocation() - GetActorLocation();
 	FRotator DesiredRotation = ToTarget.Rotation();
-	DesiredRotation.Pitch = 0.f;
+
+	float HeightDiff = ToTarget.Z;
+	float MaxHeightEffect = 200.f;
+	float TargetPitch = FMath::Clamp(HeightDiff / MaxHeightEffect, -1.f, 1.f) * 30.f;
+
+	DesiredRotation.Pitch = TargetPitch;
 	DesiredRotation.Roll = 0.f;
 
-	// 🔁 Controller 회전 → 캐릭터 & 카메라 모두 회전
 	FRotator InterpRot = FMath::RInterpTo(
 		GetControlRotation(),
 		DesiredRotation,
 		GetWorld()->GetDeltaSeconds(),
 		10.f
 	);
+
 	GetController()->SetControlRotation(InterpRot);
 }
 
@@ -1147,7 +1267,6 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		FVector2D ScreenPos;
 		if (PC->ProjectWorldLocationToScreen(Target->GetActorLocation(), ScreenPos))
 		{
-			// 오른쪽에 있는 타겟만 선별 (왼쪽 정렬 원하면 반대로)
 			if (ScreenPos.X > ScreenCenter.X)
 			{
 				LockOnCandidates.Add(Target);
@@ -1155,7 +1274,7 @@ void ADW_CharacterBase::UpdateLockOnCandidates()
 		}
 	}
 
-	// 👉 화면 중심 가까운 순 정렬
+	// 화면 중심 가까운 순 정렬
 	LockOnCandidates.Sort([&](AActor& A, AActor& B)
 	{
 		FVector2D APos, BPos;
@@ -1174,24 +1293,44 @@ void ADW_CharacterBase::UpdateLockOnMarkerPosition()
 
 	FVector WorldLocation;
 
-	// 캡슐 기준 높이 계산 (가슴 위치 근처)
-	UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(LockOnTarget->GetComponentByClass(UCapsuleComponent::StaticClass()));
-	if (Capsule)
+	// 메시 소켓 기준으로 락온 마커 위치 지정
+	USkeletalMeshComponent* TargetMesh = LockOnTarget->FindComponentByClass<USkeletalMeshComponent>();
+	
+	if (TargetMesh->DoesSocketExist("spine_02"))
 	{
-		WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+		WorldLocation = TargetMesh->GetSocketLocation("spine_02");
+	}
+	else if (TargetMesh->DoesSocketExist("spine2"))
+	{
+		WorldLocation = TargetMesh->GetSocketLocation("spine2");
 	}
 	else
 	{
-		WorldLocation = LockOnTarget->GetActorLocation();
+		// 예외 상황엔 캡슐 기준으로
+		UCapsuleComponent* Capsule = LockOnTarget->FindComponentByClass<UCapsuleComponent>();
+		if (Capsule)
+		{
+			WorldLocation = LockOnTarget->GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight() * 0.6f);
+		}
+		else
+		{
+			WorldLocation = LockOnTarget->GetActorLocation();
+		}
 	}
 
+	// 화면에 락온 마커 표시
 	FVector2D ScreenPosition;
 	if (PC->ProjectWorldLocationToScreen(WorldLocation, ScreenPosition))
 	{
 		LockOnWidgetInstance->SetPositionInViewport(ScreenPosition, true);
 	}
-}
 
+	if (ULockOnWidget* LockOnWidget = Cast<ULockOnWidget>(LockOnWidgetInstance))
+	{
+		float Distance = FVector::Dist(GetActorLocation(), LockOnTarget->GetActorLocation());
+		LockOnWidget->SetMarkerSizeByDistance(Distance);
+	}
+}
 
 void ADW_CharacterBase::SwitchLockOnTarget()
 {

@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "CharacterStatComponent.generated.h"
 
+class ADW_CharacterBase;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DW_DALWONDER_API UCharacterStatComponent : public UActorComponent
 {
@@ -20,7 +22,24 @@ public:
 
 	void StopConsumeStamina();
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void StartHealthRegen();
+
+	void StartStaminaRegen();
+
+	void StartTimer(FTimerHandle& TimerHandle, float& CurrentValue, float& MaxValue, float& RegenRate);
+
+	// 버프 적용 함수
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void ApplyAttackBuff(float Amount, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void RemoveAttackBuff(float Amount); // 버프 제거 함수 (내부적으로 호출될 것)
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void ApplyDefenseBuff(float Amount, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
+	void RemoveDefenseBuff(float Amount); // 버프 제거 함수
 
 #pragma region GetterSetter
 	float GetHealth() const
@@ -28,29 +47,40 @@ public:
 		return Health;
 	}
 
-	void SetHealth(const float Value)
+	void SetHealth(const float Value);
+	
+	float GetBaseMaxHealth() const
 	{
-		Health = FMath::Clamp(Value, 0.0f, MaxHealth);
+		return BaseMaxHealth;
 	}
 
-	float GetMaxHealth() const
+	void SetBaseMaxHealth(const float Value);
+
+	float GetBonusMaxHealth() const
 	{
-		return MaxHealth;
+		return BonusMaxHealth;
 	}
 
-	void SetMaxHealth(const float Value)
+	void SetBonusMaxHealth(const float Value);
+	
+	float GetBaseHealthGenRate() const
 	{
-		MaxHealth = Value;
+		return BaseHealthGenRate;
 	}
 
-	float GetHealthGenRate() const
+	void SetBaseHealthGenRate(const float Value)
 	{
-		return HealthGenRate;
+		BaseHealthGenRate = Value;
 	}
 
-	void SetHealthGenRate(const float Value)
+	float GetBonusHealthGenRate() const
 	{
-		HealthGenRate = Value;
+		return BonusHealthGenRate;
+	}
+
+	void SetBonusHealthGenRate(const float Value)
+	{
+		BonusHealthGenRate = Value;
 	}
 
 	float GetStamina() const
@@ -58,49 +88,80 @@ public:
 		return Stamina;
 	}
 
-	void SetStamina(const float Value)
+	void SetStamina(const float Value);
+
+	float GetBaseMaxStamina() const
 	{
-		Stamina = FMath::Clamp(Value, 0.0f, MaxStamina);
+		return BaseMaxStamina;
 	}
 
-	float GetMaxStamina() const
+	void SetBaseMaxStamina(const float Value);
+
+	float GetBonusMaxStamina() const
 	{
-		return MaxStamina;
+		return BonusMaxStamina;
 	}
 
-	void SetMaxStamina(const float Value)
+	void SetBonusMaxStamina(const float Value);
+
+	float GetBaseStaminaGenRate() const
 	{
-		MaxStamina = Value;
+		return BaseStaminaGenRate;
 	}
 
-	float GetStaminaGenRate() const
+	void SetBaseStaminaGenRate(const float Value)
 	{
-		return StaminaGenRate;
+		BaseStaminaGenRate = Value;
 	}
 
-	void SetStaminaGenRate(const float Value)
+	float GetBonusStaminaGenRate() const
 	{
-		StaminaGenRate = Value;
+		return BonusStaminaGenRate;
 	}
 
-	float GetAttack() const
+	void SetBonusStaminaGenRate(const float Value)
 	{
-		return Attack;
+		BonusStaminaGenRate = Value;
 	}
 
-	void SetAttack(const float Value)
+	float GetBaseAttack() const
 	{
-		Attack = Value;
+		return BaseAttack;
 	}
 
-	float GetDefense() const
+	void SetBaseAttack(const float Value)
 	{
-		return Defense;
+		BaseAttack = Value;
 	}
 
-	void SetDefense(const float Value)
+	float GetBonusAttack() const
 	{
-		Defense = Value;
+		return BonusAttack;
+	}
+
+	void SetBonusAttack(const float Value)
+	{
+		BonusAttack = Value;
+	}
+
+	float GetBaseDefense() const
+	{
+		return BaseDefense;
+	}
+
+	void SetBaseDefense(const float Value)
+	{
+		BaseDefense = Value;
+	}
+
+	float GetBonusDefense() const
+	{
+		return BonusDefense;
+	}
+
+	void SetBonusDefense(const float Value)
+	{
+		BonusDefense = Value;
 	}
 	
 	float GetWeight() const
@@ -110,47 +171,72 @@ public:
 
 	void SetWeight(const float Value)
 	{
-		Weight = FMath::Clamp(Value, 0.f, MaxWeight);
+		Weight = FMath::Clamp(Value, 0.f, BaseMaxWeight + BonusMaxWeight);
 	}
 
-	float GetMaxWeight() const
+	float GetBaseMaxWeight() const
 	{
-		return MaxWeight;
+		return BaseMaxWeight;
 	}
 
-	void SetMaxWeight(const float Value)
+	void SetBaseMaxWeight(const float Value)
 	{
-		MaxWeight = Value;
+		BaseMaxWeight = Value;
 	}
 
-	float GetStaminaConsumption() const
+	float GetBonusMaxWeight() const
 	{
-		return StaminaConsumption;
+		return BonusMaxWeight;
 	}
 
-	void SetStaminaConsumption(const float Value)
+	void SetBonusMaxWeight(const float Value)
 	{
-		StaminaConsumption = Value;
+		BonusMaxWeight = Value;
 	}
 
-	float GetWalkSpeed() const
+	float GetBaseAttackSpeed() const
 	{
-		return WalkSpeed;
+		return BaseAttackSpeed;
 	}
 
-	void SetWalkSpeed(const float Value)
+	void SetBaseAttackSpeed(const float Value)
 	{
-		WalkSpeed = Value;
+		BaseAttackSpeed = Value;
+	}
+
+	float GetBonusAttackSpeed() const
+	{
+		return BonusAttackSpeed;
+	}
+
+	void SetBonusAttackSpeed(const float Value)
+	{
+		BonusAttackSpeed = Value;
+	}
+
+	float GetBaseWalkSpeed() const
+	{
+		return BaseWalkSpeed;
+	}
+
+	void SetBaseWalkSpeed(const float Value)
+	{
+		BaseWalkSpeed = Value;
+	}
+
+	float GetBonusWalkSpeed() const
+	{
+		return BonusWalkSpeed;
+	}
+
+	void SetBonusWalkSpeed(const float Value)
+	{
+		BonusWalkSpeed = Value;
 	}
 
 	float GetSprintSpeed() const
 	{
 		return SprintSpeed;
-	}
-
-	void SetSprintSpeed(const float Value)
-	{
-		SprintSpeed = Value;
 	}
 #pragma endregion
 	
@@ -164,50 +250,77 @@ protected:
 	float Health = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxHealth = 100.f;
+	float BaseMaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float HealthGenRate = 1.f;
+	float BonusMaxHealth = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bEnableHealthGen = true;
+	float BaseHealthGenRate = 0.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusHealthGenRate = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Stamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxStamina = 100.f;
+	float BaseMaxStamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaGenRate = 1.f;
+	float BonusMaxStamina = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	bool bEnableStaminaGen = true;
+	float BaseStaminaGenRate = 0.5f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float Attack = 10.f;
+	float BonusStaminaGenRate = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float Defense = 10.f;
+	float BaseAttack = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusAttack = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseDefense = 10.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusDefense = 0.f;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
 	float Weight = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float MaxWeight = 100.f;
+	float BaseMaxWeight = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float StaminaConsumption = 10.f;
+	float BonusMaxWeight = 0.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float WalkSpeed = 300.f;
+	float BaseAttackSpeed = 1.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
-	float SprintSpeed = 600.f;
+	float BonusAttackSpeed = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BaseWalkSpeed = 300.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float BonusWalkSpeed = 0.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat")
+	float SprintSpeed = 2 * (BaseWalkSpeed + BonusWalkSpeed);
 
 	UPROPERTY()
 	FTimerHandle HealthTimer;
 
 	UPROPERTY()
 	FTimerHandle StaminaTimer;
+
+	UPROPERTY()
+	ADW_CharacterBase* Character;
+
+	UPROPERTY()
+	TArray<FTimerHandle> BuffTimerHandles; // 여러 버프 타이머를 관리하기 위한 배열
 };

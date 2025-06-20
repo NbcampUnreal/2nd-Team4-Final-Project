@@ -1,9 +1,7 @@
 ﻿#include "Monster/DW_MonsterBase.h"
-
 #include "AIController.h"
 #include "NavigationInvokerComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "NiagaraSystem.h"
 #include "Character/DW_CharacterBase.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
@@ -14,7 +12,14 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Character/DW_PlayerController.h"
+#include "Monster/BossMonster/DW_BossMonsterBase.h"
+#include "UI/Widget/BossHUDWidget.h"
+#include "DW_GmBase.h"
 #include "Engine/DamageEvents.h"
+#include "Monster/MonsterDropTable.h"
+
+struct FDropItemData;
 
 ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable(nullptr),
                                     AttackSoundComponent(nullptr), HitSoundComponent(nullptr), bIsAttacking(false), bCanParried(false),
@@ -44,9 +49,10 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 
 	Tags.Add(TEXT("Monster"));
 	
-	bUseControllerRotationYaw = true;
+	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 30.f, 0.f); // 회전 속도 조절
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
 	
 }
 
@@ -60,9 +66,6 @@ void ADW_MonsterBase::BeginPlay()
 	}
 
 	CastPlayerCharacter();
-
-	SetStats(DataTable);
-	
 }
 
 void ADW_MonsterBase::Tick(float DeltaTime)
@@ -112,7 +115,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
 
 		const FString ContextString(TEXT("Monster Stat Lookup"));
-		FMonsterStatsTable* StatRow = DataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
+		FMonsterStatsTable* StatRow = NewDataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
 
 		if (StatRow)
 		{
@@ -133,6 +136,11 @@ FName ADW_MonsterBase::GetMonsterName() const
 {
 	return FName("");
 	//이 함수는 더미 함수임.
+}
+
+float ADW_MonsterBase::GetMonsterMaxHP() const
+{
+	return MonsterMaxHP;
 }
 
 float ADW_MonsterBase::GetMonsterHP() const
@@ -241,7 +249,9 @@ int32 ADW_MonsterBase::GetRandomMontage()
 	}
 	else
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("Montage가 없삼"));
+#endif
 		return 0;
 	}
 }
@@ -257,7 +267,7 @@ int32 ADW_MonsterBase::GetRandomMontage()
 // 	}
 // }
 
-void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
+void ADW_MonsterBase::PlayAttackSound(const int32 SoundIndex)
 {
 	if (AttackSoundComponent && AttackSounds[SoundIndex])
 	{
@@ -266,11 +276,12 @@ void ADW_MonsterBase::PlayAttackSound(int32 SoundIndex)
 	}
 }
 
-void ADW_MonsterBase::PlayHitSound(int32 SoundIndex)
+void ADW_MonsterBase::PlayHitSound()
 {
-	if (AttackSoundComponent && HitSounds[SoundIndex])
+	if (AttackSoundComponent && HitSounds.Num() > 0)
 	{
-		AttackSoundComponent->SetSound(HitSounds[SoundIndex]);
+		const int32 RandomValue = FMath::RandRange(0, HitSounds.Num() - 1);
+		AttackSoundComponent->SetSound(HitSounds[RandomValue]);
 		AttackSoundComponent->Play();
 	}
 }
@@ -312,34 +323,70 @@ void ADW_MonsterBase::PerformAttackTrace()
 	const FVector CurrEnd = TraceEnd->GetComponentLocation();
 
 	const int NumSteps = 5;
+	const float CapsuleRadius = 40.f;
+
 	for (int i = 0; i < NumSteps; ++i)
 	{
 		float Alpha = static_cast<float>(i) / (NumSteps - 1);
 		FVector Prev = FMath::Lerp(PrevTraceStartVector, PrevTraceEndVector, Alpha);
 		FVector Curr = FMath::Lerp(CurrStart, CurrEnd, Alpha);
 
+		FVector Segment = Curr - Prev;
+		float Length = Segment.Size();
+		if (Length < KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
+
+		FVector Direction = Segment / Length;
+		FQuat Rotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Direction);
+
+		FVector Center = (Prev + Curr) / 2.0f;
+		float CapsuleHalfHeight = Length / 2.0f;
+
 		FHitResult Hit;
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
 
 		if (bDrawDebugTrace)
 		{
-			DrawDebugLine(GetWorld(), Prev, Curr, FColor::Red, false, DebugDrawTime, 0, 2.f);
-			DrawDebugSphere(GetWorld(), Curr, 5.f, 12, FColor::Yellow, false, DebugDrawTime);
+#if WITH_EDITOR
+			DrawDebugCapsule(GetWorld(), Center, CapsuleHalfHeight, CapsuleRadius, Rotation, FColor::Green, false, DebugDrawTime);
+#endif
 		}
 
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Prev, Curr, ECC_Pawn, Params))
+		if (GetWorld()->SweepSingleByChannel(Hit, Prev, Curr, Rotation, ECC_Pawn, FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight), Params))
 		{
 			if (AActor* HitActor = Hit.GetActor())
 			{
-				if (!AlreadyAttackingActors.Contains(HitActor) && !HitActor->IsA(ADW_MonsterBase::StaticClass()))
+				if (!AlreadyAttackingActors.Contains(HitActor) && HitActor->IsA(ADW_CharacterBase::StaticClass()))
 				{
 					AlreadyAttackingActors.Add(HitActor);
 
-					// 데미지 처리
-					UGameplayStatics::ApplyDamage(HitActor, MonsterDamage * MonsterDamageMultiplier, nullptr, this, nullptr);
+					const float DamageAmount = MonsterDamage * MonsterDamageMultiplier;
+					const FVector HitFromDirection = -GetActorForwardVector();
+					const FVector HitLocation = Hit.ImpactPoint;
+					const FHitResult HitResult = Hit;
 
-					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitActor->GetName());
+					UGameplayStatics::ApplyPointDamage(
+						HitActor,
+						DamageAmount,
+						HitFromDirection,
+						HitResult,
+						nullptr,
+						this,
+						nullptr
+					);
+
+					if (IsValid(HitImpactNS))
+					{
+						UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+							GetWorld(),
+							HitImpactNS,
+							HitLocation,
+							GetActorRotation(),
+							FVector(1.f)
+						);
+					}
 				}
 			}
 		}
@@ -348,7 +395,9 @@ void ADW_MonsterBase::PerformAttackTrace()
 
 void ADW_MonsterBase::Parried()
 {
+#if WITH_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Parry"));
+#endif
 
 	bIsAttacking = false;
 	bCanParried = false;
@@ -366,6 +415,13 @@ void ADW_MonsterBase::Parried()
 
 void ADW_MonsterBase::Dead()
 {
+
+	if (bIsDead) return;
+	
+	bIsDead = true;
+
+	DropItem(DropTable);
+	
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;
@@ -383,8 +439,6 @@ void ADW_MonsterBase::Dead()
 					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
-
-			
 		}
 	}
 }
@@ -396,34 +450,73 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	
+	if (bIsGuard)
+	{
+		if (GuardHitNS)
+		{
+			if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+			{
+				const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+				const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+
+				const FVector SpawnLocation = HitLocation;
+				const FRotator SpawnRotation = GetActorRotation();
+
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					GuardHitNS,
+					SpawnLocation,
+					SpawnRotation,
+					FVector(1.f),
+					true,
+					true
+				);
+			}
+		}
+	}
+	else
+	{
+		if (HitNS)
+		{
+			if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+			{
+				const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
+				const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+
+				const FVector SpawnLocation = HitLocation;
+				const FRotator SpawnRotation = GetActorRotation();
+
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					HitNS,
+					SpawnLocation,
+					SpawnRotation,
+					FVector(1.f),
+					true,
+					true
+				);
+			}
+		}
+	}
+
+	if (bIsDead) return 0;
+
+	if (bIsInvincible)
+	{
+		DamageAmount = 0;
+	}
+	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
-	if (HitNS)
-	{
-		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
-		{
-			const FPointDamageEvent& PointEvent = static_cast<const FPointDamageEvent&>(DamageEvent);
-			const FVector HitLocation = PointEvent.HitInfo.ImpactPoint;
+	PlayHitSound();
 
-			const FVector SpawnLocation = HitLocation;
-			const FRotator SpawnRotation = GetActorRotation();
-			
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				HitNS,
-				SpawnLocation,
-				SpawnRotation,
-				FVector(1.f),
-				true,
-				true
-			);
-		}
-
-	}
+	bIsGuard = false;
 
 	if (MonsterHP <= 0)
 	{
 		Dead();
+
+		return 0;
 	}
 
 	if (DamageAmount >= MonsterMaxHP * 0.3f)
@@ -472,7 +565,9 @@ float ADW_MonsterBase::GetPlayerDistance()
 {
 	if (!IsValid(PlayerCharacter))
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("GetPlayerDistance: PlayerCharacter 참조 실패, -1.0f 반환"));
+#endif
 		return -1.0f; // 유효하지 않으면 음수 리턴
 	}
 
@@ -482,4 +577,43 @@ float ADW_MonsterBase::GetPlayerDistance()
 bool ADW_MonsterBase::CanBeCut_Implementation(const FHitResult& Hit)
 {
 	return true;
+}
+
+void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
+{
+	if (!IsValid(NewDataTable)) return;
+
+	FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+	const FString ContextString(TEXT("Monster Stat Lookup"));
+
+	FMonsterDropTable* DropData = NewDataTable->FindRow<FMonsterDropTable>(RowName, ContextString);
+	if (!DropData) return;
+
+	for (const FDropItemData& ItemData : DropData->DropItems)
+	{
+		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
+		{
+			FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
+			FVector SpawnLocation = GetActorLocation() + RandOffset;
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = GetInstigator();
+
+			AWorldItemActor* ItemActor = GetWorld()->SpawnActor<AWorldItemActor>(
+				ItemData.DropItem,
+				SpawnLocation,
+				FRotator::ZeroRotator,
+				SpawnParams
+			);
+
+			ItemActor->SetItemCode(ItemData.ItemCode);
+		}
+	}
+}
+
+void ADW_MonsterBase::ResetAttakingActors()
+{
+	AlreadyAttackingActors.Empty();
 }
