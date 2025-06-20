@@ -19,7 +19,24 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void RotationEnable(bool Value);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangingAttackTrace(int32 Value	);
+
+protected:
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	float InterpSpeed = 5.0f;
+
+protected:
+	bool bCanRotate = true;
+
+	bool bIsPhaseTwo = false;
+	bool bCanBurrow = false;
 };
