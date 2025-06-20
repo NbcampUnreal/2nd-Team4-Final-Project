@@ -3,16 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "NPC_TownFolk.generated.h"
+#include "DW_NpcBase.h"
+#include "DW_NPC_TownFolk.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
-class DW_DALWONDER_API ANPC_TownFolk : public ACharacter
+class DW_DALWONDER_API ADW_NPC_TownFolk : public ADW_NpcBase
 {
 	GENERATED_BODY()
-
+	
 public:
-	ANPC_TownFolk();
+	ADW_NPC_TownFolk();
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI")
 	TArray<AActor*> PatrolPoints;

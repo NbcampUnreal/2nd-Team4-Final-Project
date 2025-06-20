@@ -1,19 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "DW_NpcBase.h"
-#include "DW_BlacksmithNpc.generated.h"
+#include "DW_NPC_Blacksmith.generated.h"
 
 class UAnimMontage;
 
 UCLASS()
-class DW_DALWONDER_API ADW_BlacksmithNpc : public ADW_NpcBase
+class DW_DALWONDER_API ADW_NPC_Blacksmith : public ADW_NpcBase
 {
 	GENERATED_BODY()
 public:
-	ADW_BlacksmithNpc();
+	ADW_NPC_Blacksmith();
 	void BeginPlay();
 
 protected:

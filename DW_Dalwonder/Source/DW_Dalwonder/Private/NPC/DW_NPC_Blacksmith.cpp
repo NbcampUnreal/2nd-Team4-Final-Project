@@ -1,23 +1,23 @@
-#include "NeutralityNPC/DW_BlacksmithNpc.h"
+#include "NPC/DW_NPC_Blacksmith.h"
 #include "Animation/AnimInstance.h"
-#include "Components/SkeletalMeshComponent.h"
 
-ADW_BlacksmithNpc::ADW_BlacksmithNpc()
+ADW_NPC_Blacksmith::ADW_NPC_Blacksmith()
 {
 }
 
-void ADW_BlacksmithNpc::BeginPlay()
+void ADW_NPC_Blacksmith::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayIdleAnimation();
+	// PlayIdleAnimation();
+	HandleEnhancementAction();
 }
 
-void ADW_BlacksmithNpc::HandleEnhancementAction()
+void ADW_NPC_Blacksmith::HandleEnhancementAction()
 {
 	PlayEnhanceAnimation();
 }
 
-void ADW_BlacksmithNpc::PlayEnhanceAnimation()
+void ADW_NPC_Blacksmith::PlayEnhanceAnimation()
 {
 	USkeletalMeshComponent* MeshComp = FindComponentByClass<USkeletalMeshComponent>();
 	if (!MeshComp || !EnhanceMontage) return;
@@ -38,7 +38,7 @@ void ADW_BlacksmithNpc::PlayEnhanceAnimation()
 	AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, EnhanceMontage);
 }
 
-void ADW_BlacksmithNpc::PlayIdleAnimation()
+void ADW_NPC_Blacksmith::PlayIdleAnimation()
 {
 	USkeletalMeshComponent* MeshComp = GetNpcMesh();
 	if (!MeshComp || !IdleMontage) return;
