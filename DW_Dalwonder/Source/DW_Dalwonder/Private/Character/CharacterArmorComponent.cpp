@@ -17,33 +17,29 @@ void UCharacterArmorComponent::BeginPlay()
 
 }
 
-bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
+void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
 	ECharacterArmor ItemType = StaticCast<ECharacterArmor>(Item->ItemCode);
 
 	if (ItemType == ECharacterArmor::Helmet)
 	{
 		Helmet = Item;
-		GetArmorSkeletalMesh(Helmet);
-		return true;
+		Character->Helmet->SetSkeletalMeshAsset(GetArmorSkeletalMesh(Helmet));
 	}
 	if (ItemType == ECharacterArmor::Armor)
 	{
 		Armor = Item;
 		GetArmorSkeletalMesh(Armor);
-		return true;
 	}
 	if (ItemType == ECharacterArmor::Glove)
 	{
 		Glove = Item;
 		GetArmorSkeletalMesh(Glove);
-		return true;
 	}
 	if (ItemType == ECharacterArmor::Boots)
 	{
 		Boots = Item;
 		GetArmorSkeletalMesh(Boots);
-		return true;
 	}
 	if (ItemType == ECharacterArmor::Weapon)
 	{
@@ -55,10 +51,9 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 		{
 			Warrior->SetWeaponType(WeaponType);
 		}
-		return true;
 	}
 
-	return false;
+	Character->UpdateSkeletalMesh();
 }
 
 USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) const
