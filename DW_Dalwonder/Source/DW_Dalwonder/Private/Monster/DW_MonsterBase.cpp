@@ -12,10 +12,6 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
-#include "Character/DW_PlayerController.h"
-#include "Monster/BossMonster/DW_BossMonsterBase.h"
-#include "UI/Widget/BossHUDWidget.h"
-#include "DW_GmBase.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
 
@@ -53,6 +49,12 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
+
+	static ConstructorHelpers::FClassFinder<UCameraShakeBase> ShakeClass(TEXT("/Game/BluePrint/Monster/Etc/CameraShakeBase"));
+	if (ShakeClass.Succeeded())
+	{
+		DefaultHitCameraShake = ShakeClass.Class;
+	}
 	
 }
 
@@ -134,8 +136,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 
 FName ADW_MonsterBase::GetMonsterName() const
 {
-	return FName("");
-	//이 함수는 더미 함수임.
+	return FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
 }
 
 float ADW_MonsterBase::GetMonsterMaxHP() const
@@ -216,13 +217,12 @@ void ADW_MonsterBase::PlayParryingMontage()
 
 void ADW_MonsterBase::PlayHitMontage()
 {
-	int32 RandomValue = 0;
-
 	bIsAttacking = false;
 	bCanParried = false;
 	
 	if (HitMontages.Num() > 0)
 	{
+		int32 RandomValue = 0;
 		int32 const MontageSize = HitMontages.Num();
 		RandomValue = FMath::RandRange(0, MontageSize - 1);
 
@@ -508,7 +508,14 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
+	HitStop(0.2f);
 	PlayHitSound();
+
+	if (DefaultHitCameraShake)
+	{
+		UGameplayStatics::GetPlayerController(this, 0)->ClientStartCameraShake(DefaultHitCameraShake);
+	}
+
 
 	bIsGuard = false;
 
@@ -616,4 +623,17 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 void ADW_MonsterBase::ResetAttakingActors()
 {
 	AlreadyAttackingActors.Empty();
+}
+
+void ADW_MonsterBase::HitStop(float StopTime)
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World)) return;
+
+	UGameplayStatics::SetGlobalTimeDilation(World, 0.001f);
+	
+	World->GetTimerManager().SetTimer(HitStopTimerHandle, [World]()
+	{
+		UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
+	}, 0.001f * StopTime, false);
 }

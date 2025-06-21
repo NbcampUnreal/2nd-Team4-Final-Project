@@ -7,11 +7,6 @@
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
 #include "Interface/BearableInterface.h"
-#include "Perception/AIPerceptionComponent.h"
-#include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "Perception/AISenseConfig_Damage.h"
-#include "Perception/AISenseConfig_Hearing.h"
-#include "Perception/AISenseConfig_Sight.h"
 #include "DW_MonsterBase.generated.h"
 
 
@@ -171,6 +166,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	FVector PrevTraceEndVector;
 
+	UPROPERTY(EditDefaultsOnly, Category = "HitReaction")
+	TSubclassOf<UCameraShakeBase> DefaultHitCameraShake;
+
+	FTimerHandle HitStopTimerHandle;
+
 	// NavInvoker 컴포넌트입니다.
 	UPROPERTY()
 	class UNavigationInvokerComponent* NavInvokerComp;
@@ -313,4 +313,6 @@ public:
 
 	// 트레이스 시 중복 액터 배열을 초기화합니다.
 	virtual void ResetAttakingActors() override;
+
+	virtual void HitStop(float StopTime) override;
 };

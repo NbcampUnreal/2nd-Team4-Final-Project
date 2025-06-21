@@ -5,13 +5,13 @@
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 
-void UBossHUDWidget::InitBossHUD(const FString& BossName, float MaxHP)
+void UBossHUDWidget::InitBossHUD(const FName& BossName, float MaxHP)
 {
 	MaxBossHP = MaxHP;
 	
 	if (BossNameText)
 	{
-		BossNameText->SetText(FText::FromString(BossName));
+		BossNameText->SetText(FText::FromName(BossName));
 	}
 
 	if (BossHPText)

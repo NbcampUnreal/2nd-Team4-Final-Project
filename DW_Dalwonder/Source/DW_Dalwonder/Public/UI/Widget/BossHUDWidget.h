@@ -16,7 +16,7 @@ class DW_DALWONDER_API UBossHUDWidget : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	void InitBossHUD(const FString& BossName, float MaxHP);
+	void InitBossHUD(const FName& BossName, float MaxHP);
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateHP(float NewHP);
