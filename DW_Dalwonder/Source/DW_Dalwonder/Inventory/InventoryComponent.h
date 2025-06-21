@@ -22,7 +22,7 @@ public:
 
     // 인벤토리 최대 슬롯 수
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 InventorySlotQuantity = 60;
+    int32 InventorySlotQuantity = 2;
 
     // 장착된 아이템들 (장비 슬롯 타입 -> 아이템 인스턴스)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory | Equipped")

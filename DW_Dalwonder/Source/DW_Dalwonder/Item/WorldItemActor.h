@@ -38,7 +38,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
     UWidgetComponent* InteractionWidget;
 
-    // **새로 추가된 부분**: 에디터에서 설정할 Blueprint 위젯 클래스
+    //에디터에서 설정할 Blueprint 위젯 클래스
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widget")
     TSubclassOf<UUserWidget> InteractionWidgetClass; // 여기에 UInteractionprompt의 Blueprint 클래스를 지정합니다.
     
