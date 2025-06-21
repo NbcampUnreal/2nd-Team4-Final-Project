@@ -957,7 +957,6 @@ void ADW_CharacterBase::Interact()
 			{
 				// 성공적으로 캐스팅되었다면 InitializeData 함수를 호출합니다.
 				PromptWidget->InitializeData();
-				PromptWidget->SoundPlay();
 			}
 		}
 	}
