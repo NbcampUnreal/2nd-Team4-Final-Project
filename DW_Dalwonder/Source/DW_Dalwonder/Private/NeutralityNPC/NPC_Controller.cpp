@@ -1,41 +1,44 @@
 #include "NeutralityNPC/NPC_Controller.h"
-#include "NeutralityNPC/NPC_TownFolk.h"
+
+#include "NavigationSystem.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "NPC/DW_NPC_TownFolk.h"
 
 void ANPC_Controller::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-}
-
-void ANPC_Controller::BeginPlay()
-{
-	Super::BeginPlay();
+	if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+	{
+		NavSys->RegisterNavigationInvoker(this, 300.0f, 500.0f);
+	}
 	MoveToCurrentPatrolPoint();
 }
 
 void ANPC_Controller::MoveToCurrentPatrolPoint()
 {
-	ANPC_TownFolk* MyNPCChar = Cast<ANPC_TownFolk>(GetPawn());
+	ADW_NPC_TownFolk* MyNPCChar = Cast<ADW_NPC_TownFolk>(GetPawn());
 	if (!MyNPCChar)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("MyNPCChar is null"));
 		return;
 	}
 
-	// 순찰 포인트가 하나도 없다면 이동할 필요 없음
 	if (MyNPCChar->PatrolPoints.Num() == 0)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("PatrolPoints is empty"));
 		return;
 	}
-    
-	MoveToActor(
-		MyNPCChar->PatrolPoints[CurrentPatrolIndex],
-		5.0f,   // AcceptanceRadius: 목표 지점 근처 몇 유닛 이내에 도달하면 멈출지
-		true,   // bStopOnOverlap
-		true,   // bUsePathfinding
-		false,  // bCanStrafe: 기본 이동 모드에서 좌우로 회전 없이 이동 가능 여부
-		nullptr,// FilterClass: 경로 필터. 디폴트 사용
-		true    // bAllowPartialPath: 부분 경로 허용 여부
-	);
+
+	AActor* Target = MyNPCChar->PatrolPoints[CurrentPatrolIndex];
+	if (!Target)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Target Patrol Point is null"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Moving to Patrol Point: %s"), *Target->GetName());
+
+	MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
 
 	CurrentPatrolIndex = (CurrentPatrolIndex + 1) % MyNPCChar->PatrolPoints.Num();
 }

@@ -75,11 +75,24 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	// 퀘스트 매니저
 	QuestManager = CreateDefaultSubobject<UQuestManagerComponent>(TEXT("QuestManager"));
+
+	Helmet = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Helmet"));
+	Helmet->SetupAttachment(GetMesh());
+	Armor = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Armor"));
+	Armor->SetupAttachment(GetMesh());
+	Pants = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Pants"));
+	Pants->SetupAttachment(GetMesh());
+	Glove = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Glove"));
+	Glove->SetupAttachment(GetMesh());
+	Boots = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Boot"));
+	Boots->SetupAttachment(GetMesh());
 }
 
 void ADW_CharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UpdateSkeletalMesh();
 
 	GetWorld()->GetTimerManager().SetTimer  //아이템 업그레이드 타이머
 	(
@@ -97,8 +110,6 @@ void ADW_CharacterBase::BeginPlay()
 		0.01f,   // 주기
 		true     // 반복 여부
 	);
-
-	InventoryComponent->InitializeSlots();	// 인벤토리 슬롯 초기화
 
 	// HUD 타이머 설정 (0.1초 간격)
 	GetWorld()->GetTimerManager().SetTimer(
@@ -510,6 +521,20 @@ void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
 	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
+void ADW_CharacterBase::UpdateSkeletalMesh()
+{
+	TArray<USkeletalMeshComponent*> SkeletalMeshComponents = { Helmet, Armor, Glove, Pants, Boots };
+
+	for (USkeletalMeshComponent* Part : SkeletalMeshComponents)
+	{
+		if (IsValid(Part))
+		{
+			Part->SetLeaderPoseComponent(GetMesh());
+			
+		}
+	}
+}
+
 void ADW_CharacterBase::SetCombatState(ECharacterCombatState NewState)
 {
 	CurrentCombatState = NewState;
@@ -911,16 +936,17 @@ void ADW_CharacterBase::Interact()
 	{
 
 		UItemBase* Data = CurrentItem->ItemBase; // 아이템 정보 가져오기
-		bool bAdded = InventoryComponent->AddItem(Data);
+		int32 ItemCount = CurrentItem->GetItemCount(); // 아이템 개수 가져오기
+		bool bAdded = InventoryComponent->AddItem(Data, ItemCount);
 		if (bAdded)
 		{
 			CurrentItem->Destroy();
 			CurrentItem = nullptr;
 		}
-	}
-	else
-	{
-		
+		else
+		{
+			CurrentItem->SetItemCount(ItemCount);
+		}
 	}
 }
 

@@ -1,5 +1,7 @@
 #include "Character/DW_Warrior.h"
 
+#include "MovieSceneTracksComponentTypes.h"
+
 ADW_Warrior::ADW_Warrior()
 {
 	Weapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("Weapon"));
@@ -44,5 +46,5 @@ void ADW_Warrior::SetWeaponType(int32 NewWeaponType)
 		WeaponSocketName = FName(TEXT("weapon_rSocket_Greatsword"));
 	}
 
-	Weapon->SetupAttachment(GetMesh(), WeaponSocketName);
+	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 }
