@@ -17,4 +17,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "MyEvents")
 	void InitializeData();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "MyEvents")
+	void SoundPlay();
 };
