@@ -24,6 +24,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "UI/Widget/LockOnWidget.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
+#include "Item/Interactionprompt.h"
+#include "Components/WidgetComponent.h"
 
 
 ADW_CharacterBase::ADW_CharacterBase()
@@ -946,6 +948,17 @@ void ADW_CharacterBase::Interact()
 		else
 		{
 			CurrentItem->SetItemCount(ItemCount);
+			UUserWidget* UserWidgetInstance = CurrentItem->InteractionWidget->GetUserWidgetObject();
+
+			// 가져온 위젯 객체를 UInteractionprompt* 타입으로 캐스팅합니다.
+			UInteractionprompt* PromptWidget = Cast<UInteractionprompt>(UserWidgetInstance);
+
+			if (PromptWidget)
+			{
+				// 성공적으로 캐스팅되었다면 InitializeData 함수를 호출합니다.
+				PromptWidget->InitializeData();
+				PromptWidget->SoundPlay();
+			}
 		}
 	}
 }
