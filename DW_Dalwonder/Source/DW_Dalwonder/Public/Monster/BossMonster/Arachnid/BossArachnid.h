@@ -26,17 +26,37 @@ public:
 	void RotationEnable(bool Value);
 
 	UFUNCTION(BlueprintCallable)
+	void DoTrunInPlace(bool Value);
+
+	UFUNCTION(BlueprintCallable)
 	void ChangingAttackTrace(int32 Value	);
+
+	UFUNCTION(BlueprintCallable)
+	void ArachnidJumpOn();
+
+	UFUNCTION(BlueprintCallable)
+	void ArachnidJumpOff();
 
 protected:
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	float InterpSpeed = 5.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float InterpSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float JumpXMultiplier = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float JumpZMultiplier = 1.f;
 
 protected:
 	bool bCanRotate = true;
+	bool bShouldTurn = false;
+	bool bIsJumping = false;
 
 	bool bIsPhaseTwo = false;
 	bool bCanBurrow = false;
+	
+	FVector CurrentVector;
+	float CurrentYaw;
+	
 };

@@ -4,6 +4,7 @@
 #include "Monster/AnimNotify/AnimNotify_SpawnTelegraph.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UAnimNotify_SpawnTelegraph::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
@@ -58,12 +59,20 @@ void UAnimNotify_SpawnTelegraph::Notify(USkeletalMeshComponent* MeshComp, UAnimS
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		MeshComp->GetWorld()->SpawnActor<ATelegraghActor>(
-			TelegraphActorClass,
-			SpawnLocation,
-			FRotator::ZeroRotator,
-			SpawnParams
-		);
+		ACharacter* Player = UGameplayStatics::GetPlayerCharacter(MeshComp->GetWorld(), 0);
+		if (Player)
+		{
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, Player->GetActorLocation());
+			LookAtRotation.Pitch = 0.f;
+			LookAtRotation.Roll = 0.f;
 
+			MeshComp->GetWorld()->SpawnActor<ATelegraghActor>(
+				TelegraphActorClass,
+				SpawnLocation,
+				LookAtRotation,
+				SpawnParams
+			);
+
+		}
 	}
 }

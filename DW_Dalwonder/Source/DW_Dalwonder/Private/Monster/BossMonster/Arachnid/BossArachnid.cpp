@@ -27,7 +27,7 @@ void ABossArachnid::Tick(float DeltaTime)
 	{
 		if (GetPlayerCharacter())
 		{
-			FRotator CurrentRot = GetActorRotation();
+			FRotator CurrentRot = GetControlRotation();
 			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
 			FVector MyLocation = GetActorLocation();
 
@@ -35,8 +35,57 @@ void ABossArachnid::Tick(float DeltaTime)
 
 			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
 
-			SetActorRotation(NewRot);
+			if (AController* MyController = GetController())
+			{
+				MyController->SetControlRotation(NewRot);
+			}
+			/*FRotator CurrentRot = GetActorRotation();
+			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+			FVector MyLocation = GetActorLocation();
+
+			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+
+			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+
+			SetActorRotation(NewRot);*/
 		}
+	}
+
+	if (bShouldTurn)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
+
+		float RotOffset = AnimInstance->GetCurveValue(FName("Rotate"));
+
+		FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+		FVector MyLocation = GetActorLocation();
+
+		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+
+		if (AController* MyController = GetController())
+		{
+			MyController->SetControlRotation(TargetRot);
+		}
+
+		FRotator Rotate = GetActorRotation();
+		Rotate.Yaw = CurrentYaw + RotOffset;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Yaw : %f"), RotOffset));
+		SetActorRotation(Rotate);
+	}
+
+	if (bIsJumping)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
+
+		float JumpZ = AnimInstance->GetCurveValue(FName("Arachnid_Jump_Z"));
+		float JumpX = AnimInstance->GetCurveValue(FName("Arachnid_Jump_X"));
+
+		FVector JumpingLocation = GetActorLocation();
+		JumpingLocation.Z = CurrentVector.Z + (JumpZ * JumpZMultiplier);
+		JumpingLocation.X = CurrentVector.X + (JumpX * JumpXMultiplier) * -GetActorForwardVector().X;
+		SetActorLocation(JumpingLocation);
 	}
 }
 
@@ -79,6 +128,12 @@ void ABossArachnid::RotationEnable(bool Value)
 	bCanRotate = Value;
 }
 
+void ABossArachnid::DoTrunInPlace(bool Value)
+{
+	bShouldTurn = Value;
+	CurrentYaw = GetActorRotation().Yaw;
+}
+
 void ABossArachnid::ChangingAttackTrace(int32 Value)
 {
 	switch (Value)
@@ -115,4 +170,15 @@ void ABossArachnid::ChangingAttackTrace(int32 Value)
 	default:
 		break;
 	}
+}
+
+void ABossArachnid::ArachnidJumpOn()
+{
+	CurrentVector = GetActorLocation();
+	bIsJumping = true;
+}
+
+void ABossArachnid::ArachnidJumpOff()
+{
+	bIsJumping = false;
 }
