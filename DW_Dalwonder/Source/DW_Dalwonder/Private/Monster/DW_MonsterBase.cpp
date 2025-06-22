@@ -12,6 +12,7 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
 
@@ -27,10 +28,24 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	AttackSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AttackSound"));
 	AttackSoundComponent->SetupAttachment(RootComponent);
 	AttackSoundComponent->bAutoActivate = false;
+	AttackSoundComponent->bOverrideAttenuation = true;
+	AttackSoundComponent->AttenuationOverrides.bAttenuate = true;
+	AttackSoundComponent->AttenuationOverrides.bSpatialize = true;
+	AttackSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
+	AttackSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
+	AttackSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
+	AttackSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+	HitSoundComponent->bOverrideAttenuation = true;
+	HitSoundComponent->AttenuationOverrides.bAttenuate = true;
+	HitSoundComponent->AttenuationOverrides.bSpatialize = true;
+	HitSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
+	HitSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
+	HitSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
+	HitSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 
 	NavInvokerComp = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
 	NavInvokerComp->SetGenerationRadii(5000.f, 6000.f);
@@ -510,6 +525,38 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 
 	HitStop(0.2f);
 	PlayHitSound();
+
+	
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		const FHitResult& Hit = PointEvent->HitInfo;
+
+		UMaterialInterface* DecalMaterial = Cast<UMaterialInterface>(
+			StaticLoadObject(UMaterialInterface::StaticClass(), nullptr, TEXT("/Game/BluePrint/Monster/Etc/M_HitDecal.M_HitDecal"))
+		);
+
+		if (DecalMaterial)
+		{
+			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAttached(
+				DecalMaterial,
+				FVector(50.f),
+				GetMesh(),
+				NAME_None,
+				GetMesh()->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint),
+				Hit.ImpactNormal.Rotation(),
+				EAttachLocation::KeepRelativeOffset,
+				0.0f
+			);
+
+			if (Decal)
+			{
+				Decal->SetFadeOut(0.5f, 1.0f, false);
+			}
+		}
+	}
+	
+
 
 	if (DefaultHitCameraShake)
 	{
