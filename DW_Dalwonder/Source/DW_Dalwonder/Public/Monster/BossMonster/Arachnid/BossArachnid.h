@@ -33,9 +33,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ArachnidJumpOn();
-
 	UFUNCTION(BlueprintCallable)
 	void ArachnidJumpOff();
+
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOn();
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOff();
 
 protected:
 	void Dead() override;
@@ -63,7 +67,10 @@ protected:
 
 	bool bIsPhaseTwo = false;
 	bool bCanBurrow = false;
-	
+
+	bool bShouldRush = false;
+	FVector CurrentVector_Rush;
+
 	FVector CurrentVector;
 	float CurrentYaw;
 	
