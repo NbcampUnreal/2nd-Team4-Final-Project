@@ -9,6 +9,7 @@ enum class ECharacterArmor : uint8
 {
 	Helmet	UMETA(DisplayName = "Helmet"),
 	Armor	UMETA(DisplayName = "Armor"),
+	Pants	UMETA(DisplayName = "Pants"),
 	Glove	UMETA(DisplayName = "Glove"),
 	Boots	UMETA(DisplayName = "Boots"),
 	Weapon	UMETA(DisplayName = "Weapon")
