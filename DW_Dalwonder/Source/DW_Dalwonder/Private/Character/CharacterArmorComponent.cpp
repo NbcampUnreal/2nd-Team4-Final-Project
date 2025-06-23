@@ -19,6 +19,7 @@ void UCharacterArmorComponent::BeginPlay()
 
 void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
+	//@TODO : ItemBase 의 코드를 통해 현재 장착하려는 아이템이 어느 부위인지 구분짓기
 	ECharacterArmor ItemType = StaticCast<ECharacterArmor>(Item->ItemCode);
 
 	if (ItemType == ECharacterArmor::Helmet)
@@ -45,7 +46,8 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	{
 		Weapon = Item;
 		Character->SetWeapon(GetWeaponActor(Item));
-		
+
+		//@TODO : 무기 종류를 ItemBase 를 통해 구분하여 캐릭터에게 현재 장착한 무기의 타입 지정해주기
 		int32 WeaponType = Item->ItemCode / 10000;
 		if (ADW_Warrior* Warrior = Cast<ADW_Warrior>(Character))
 		{
@@ -60,6 +62,7 @@ USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) c
 {
 	check(IsValid(ItemTable));
 
+	//@TODO : ItemTable 에서 SkeletalMesh 가져오는 로직 작성
 	FName RowName(FString::FromInt(Item->ItemCode / 10000));
 	const FString ContextString(TEXT("ItemTable	Lookup"));
 	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
@@ -75,6 +78,7 @@ AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
 {
 	check(IsValid(ItemTable));
 
+	//@TODO : ItemTable 에서 무기 액터 가져오는 로직 작성
 	FName RowName(FString::FromInt(Item->ItemCode / 10000));
 	const FString ContextString(TEXT("ItemTable	Lookup"));
 	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
