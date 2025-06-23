@@ -37,6 +37,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
 	int32 ItemCode = 1000;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
+	bool bUseMinDropCount = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
+	int32 DropCount = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
+	int32 MinDropCount = 1;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montage")
 	UAnimMontage* ChestMontage;
 	
