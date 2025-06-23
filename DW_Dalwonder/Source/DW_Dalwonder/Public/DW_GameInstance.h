@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "TmpSaveData.h"
 #include "UI/Component/QuestDatabase.h"
 #include "DW_GameInstance.generated.h"
 
@@ -38,6 +39,13 @@ public:
     UFUNCTION(BlueprintCallable)
     void StartLevelStreaming();
 
+    // 맵이동용 임시저장 데이터 저장
+    void CacheTempDataBeforeLevelChange();
+    // 맵 이동용 임시저장 데이터 캐릭터에 다시 부여
+    void ApplyTempDataAfterLevelLoad();
+    // 위치정보는 부여안하는 함수
+    void ApplyTempDataAfterLevelLoadSecond();
+
 public:
 
     UPROPERTY()
@@ -62,6 +70,10 @@ private:
     // 로딩 위젯 클래스 (블루프린트에서 세팅)
     UPROPERTY(EditAnywhere, Category = "Loading")
     TSubclassOf<ULoadingWidget> LoadingWidgetClass;
+
+    // 맵 이동용 임시저장데이터
+    UPROPERTY()
+    FTmpSaveData CachedTempSaveData;
 
 protected:
     UPROPERTY()

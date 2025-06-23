@@ -156,4 +156,123 @@ void UDW_GameInstance::StartLevelStreaming()
     LevelLoadSubsystem->StreamLevelAsync(PendingLevelName);
 }
 
+void UDW_GameInstance::CacheTempDataBeforeLevelChange()
+{
+    ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    if (!Player) return;
+    // 던전 들어갔다 나올때 위치?
+    CachedTempSaveData.PlayerLocation = Player->GetActorLocation();
+    CachedTempSaveData.PlayerRotation = Player->GetActorRotation();
 
+    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    {
+        Attr->SaveData(CachedTempSaveData.TempAttributes);
+    }
+
+    if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+    {
+        CachedTempSaveData.TempSkillStates = Skill->SkillStateMap;
+    }
+
+    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    {
+        CachedTempSaveData.TempAcceptedQuests = Quest->GetActiveQuests();
+        CachedTempSaveData.TempCompletedQuests = Quest->GetCompletedQuests();
+    }
+
+    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    {
+        CachedTempSaveData.TempInventory.TempInventorySlots = Inv->InventorySlots;
+        CachedTempSaveData.TempInventory.TempInventorySlotQuantity = Inv->InventorySlotQuantity;
+
+        // SoftObjectPtr로 변환
+        CachedTempSaveData.TempInventory.TempEquippedItems.Empty();
+        for (const auto& Pair : Inv->EquippedItems)
+        {
+            CachedTempSaveData.TempInventory.TempEquippedItems.Add(Pair.Key, TSoftObjectPtr<UItemBase>(Pair.Value));
+        }
+    }
+}
+
+void UDW_GameInstance::ApplyTempDataAfterLevelLoad()
+{
+    ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    if (!Player) return;
+
+    Player->SetActorLocation(CachedTempSaveData.PlayerLocation);
+    Player->SetActorRotation(CachedTempSaveData.PlayerRotation);
+
+    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    {
+        Attr->LoadData(CachedTempSaveData.TempAttributes);
+        if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+        {
+            Skill->SkillStateMap = CachedTempSaveData.TempSkillStates;
+            Skill->ApplyAllSkillBonuses(Attr);
+        }
+    }
+
+    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    {
+        Quest->AcceptedQuests = CachedTempSaveData.TempAcceptedQuests;
+        Quest->CompletedQuests = CachedTempSaveData.TempCompletedQuests;
+    }
+
+    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    {
+        Inv->InventorySlots = CachedTempSaveData.TempInventory.TempInventorySlots;
+        Inv->InventorySlotQuantity = CachedTempSaveData.TempInventory.TempInventorySlotQuantity;
+
+        Inv->EquippedItems.Empty();
+        for (const auto& Pair : CachedTempSaveData.TempInventory.TempEquippedItems)
+        {
+            if (Pair.Value.IsValid())
+            {
+                Inv->EquippedItems.Add(Pair.Key, Pair.Value.Get());
+            }
+        }
+
+        // 장비 스탯 반영
+        Inv->UpdateEquippedStats();
+    }
+}
+
+void UDW_GameInstance::ApplyTempDataAfterLevelLoadSecond()
+{
+    ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    if (!Player) return;
+
+    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    {
+        Attr->LoadData(CachedTempSaveData.TempAttributes);
+        if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+        {
+            Skill->SkillStateMap = CachedTempSaveData.TempSkillStates;
+            Skill->ApplyAllSkillBonuses(Attr);
+        }
+    }
+
+    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    {
+        Quest->AcceptedQuests = CachedTempSaveData.TempAcceptedQuests;
+        Quest->CompletedQuests = CachedTempSaveData.TempCompletedQuests;
+    }
+
+    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    {
+        Inv->InventorySlots = CachedTempSaveData.TempInventory.TempInventorySlots;
+        Inv->InventorySlotQuantity = CachedTempSaveData.TempInventory.TempInventorySlotQuantity;
+
+        Inv->EquippedItems.Empty();
+        for (const auto& Pair : CachedTempSaveData.TempInventory.TempEquippedItems)
+        {
+            if (Pair.Value.IsValid())
+            {
+                Inv->EquippedItems.Add(Pair.Key, Pair.Value.Get());
+            }
+        }
+
+        // 장비 스탯 반영
+        Inv->UpdateEquippedStats();
+    }
+}
