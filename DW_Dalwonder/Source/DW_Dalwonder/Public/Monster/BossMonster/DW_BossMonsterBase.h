@@ -35,7 +35,7 @@ public:
 	UAudioComponent* BGMSoundComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	bool bIsRealBoss = false;
+	bool bIsRealBoss = true;
 
 	virtual int32 GetCurrentPhase() override;
 

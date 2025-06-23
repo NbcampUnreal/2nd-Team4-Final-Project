@@ -39,7 +39,7 @@ void ADW_BossMonsterBase::BeginPlay()
 	{
 		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
 		{
-			DWPC->ShowBossHUD(TEXT("Sevarog"), MonsterMaxHP);
+			DWPC->ShowBossHUD(GetMonsterName(), MonsterMaxHP);
 		}
 	}
 }

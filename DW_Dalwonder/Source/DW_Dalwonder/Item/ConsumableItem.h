@@ -18,6 +18,6 @@ public:
 	UConsumableItem();
 
 	// UItemBase의 UseItem 함수를 오버라이드하여 소모품 고유의 동작을 구현합니다.
-	/*virtual bool UseItem(AActor* Instigator) override;*/
+	virtual bool UseItem(AActor* Instigator) override;
 	
 };

@@ -122,4 +122,6 @@ public:
 	virtual void DropItem(UDataTable* NewDataTable) = 0;
 
 	virtual void ResetAttakingActors() = 0;
+
+	virtual void HitStop(float StopTime) = 0;
 };

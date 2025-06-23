@@ -12,10 +12,7 @@
 #include "Monster/MonsterStatsTable.h"
 #include "Sound/SoundBase.h"
 #include "Components/CapsuleComponent.h"
-#include "Character/DW_PlayerController.h"
-#include "Monster/BossMonster/DW_BossMonsterBase.h"
-#include "UI/Widget/BossHUDWidget.h"
-#include "DW_GmBase.h"
+#include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
 
@@ -31,10 +28,24 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	AttackSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AttackSound"));
 	AttackSoundComponent->SetupAttachment(RootComponent);
 	AttackSoundComponent->bAutoActivate = false;
+	AttackSoundComponent->bOverrideAttenuation = true;
+	AttackSoundComponent->AttenuationOverrides.bAttenuate = true;
+	AttackSoundComponent->AttenuationOverrides.bSpatialize = true;
+	AttackSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
+	AttackSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
+	AttackSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
+	AttackSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+	HitSoundComponent->bOverrideAttenuation = true;
+	HitSoundComponent->AttenuationOverrides.bAttenuate = true;
+	HitSoundComponent->AttenuationOverrides.bSpatialize = true;
+	HitSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
+	HitSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
+	HitSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
+	HitSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
 
 	NavInvokerComp = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
 	NavInvokerComp->SetGenerationRadii(5000.f, 6000.f);
@@ -53,6 +64,12 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 180.f, 0.f); // 회전 속도 조절
+
+	static ConstructorHelpers::FClassFinder<UCameraShakeBase> ShakeClass(TEXT("/Game/BluePrint/Monster/Etc/CameraShakeBase"));
+	if (ShakeClass.Succeeded())
+	{
+		DefaultHitCameraShake = ShakeClass.Class;
+	}
 	
 }
 
@@ -134,8 +151,7 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 
 FName ADW_MonsterBase::GetMonsterName() const
 {
-	return FName("");
-	//이 함수는 더미 함수임.
+	return FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
 }
 
 float ADW_MonsterBase::GetMonsterMaxHP() const
@@ -216,13 +232,12 @@ void ADW_MonsterBase::PlayParryingMontage()
 
 void ADW_MonsterBase::PlayHitMontage()
 {
-	int32 RandomValue = 0;
-
 	bIsAttacking = false;
 	bCanParried = false;
 	
 	if (HitMontages.Num() > 0)
 	{
+		int32 RandomValue = 0;
 		int32 const MontageSize = HitMontages.Num();
 		RandomValue = FMath::RandRange(0, MontageSize - 1);
 
@@ -508,7 +523,46 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	
 	MonsterHP = FMath::Clamp(MonsterHP - DamageAmount, 0, MonsterMaxHP);
 
+	HitStop(0.2f);
 	PlayHitSound();
+
+	
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		const FHitResult& Hit = PointEvent->HitInfo;
+
+		UMaterialInterface* DecalMaterial = Cast<UMaterialInterface>(
+			StaticLoadObject(UMaterialInterface::StaticClass(), nullptr, TEXT("/Game/BluePrint/Monster/Etc/M_HitDecal.M_HitDecal"))
+		);
+
+		if (DecalMaterial)
+		{
+			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAttached(
+				DecalMaterial,
+				FVector(50.f),
+				GetMesh(),
+				NAME_None,
+				GetMesh()->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint),
+				Hit.ImpactNormal.Rotation(),
+				EAttachLocation::KeepRelativeOffset,
+				0.0f
+			);
+
+			if (Decal)
+			{
+				Decal->SetFadeOut(0.5f, 1.0f, false);
+			}
+		}
+	}
+	
+
+
+	if (DefaultHitCameraShake)
+	{
+		UGameplayStatics::GetPlayerController(this, 0)->ClientStartCameraShake(DefaultHitCameraShake);
+	}
+
 
 	bIsGuard = false;
 
@@ -616,4 +670,17 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 void ADW_MonsterBase::ResetAttakingActors()
 {
 	AlreadyAttackingActors.Empty();
+}
+
+void ADW_MonsterBase::HitStop(float StopTime)
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World)) return;
+
+	UGameplayStatics::SetGlobalTimeDilation(World, 0.001f);
+	
+	World->GetTimerManager().SetTimer(HitStopTimerHandle, [World]()
+	{
+		UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
+	}, 0.001f * StopTime, false);
 }

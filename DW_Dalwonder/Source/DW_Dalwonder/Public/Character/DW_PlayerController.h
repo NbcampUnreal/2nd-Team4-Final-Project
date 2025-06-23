@@ -35,7 +35,7 @@ public:
 	// ESC 메뉴 이벤트
 	UFUNCTION()
 	void ToggleESCMenu();
-	void ShowBossHUD(const FString& BossName, float MaxHP);
+	void ShowBossHUD(const FName& BossName, float MaxHP);
 	void HideBossHUD();
 
 public:
