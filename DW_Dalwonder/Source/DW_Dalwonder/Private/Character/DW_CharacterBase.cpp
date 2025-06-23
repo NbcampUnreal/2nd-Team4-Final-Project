@@ -51,6 +51,18 @@ ADW_CharacterBase::ADW_CharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
 
 	ArmorComponent = CreateDefaultSubobject<UCharacterArmorComponent>(TEXT("ArmorComponent"));
+
+	Vehicle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Horse"));
+	Vehicle->SetupAttachment(RootComponent);
+	Vehicle->SetVisibility(false);
+	Reins = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Reins"));
+	Reins->SetupAttachment(Vehicle);
+	Saddle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Saddle"));
+	Saddle->SetupAttachment(Vehicle);
+	SaddleBelts = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SaddleBelts"));
+	SaddleBelts->SetupAttachment(Vehicle);
+	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
+	Hair->SetupAttachment(Vehicle);
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -290,6 +302,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::UseActiveSkillSlot3);
 			}
 
+			if (PlayerController->RideAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->RideAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::Ride);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 #if WITH_EDITOR
@@ -460,6 +481,19 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 	if (Value.Get<bool>())
 	{
 		ToggleLockOn();
+	}
+}
+
+void ADW_CharacterBase::Ride(const FInputActionValue& Value)
+{
+	if (!bCanRideVehicle)
+	{
+		return;
+	}
+	
+	if (Value.Get<bool>())
+	{
+		RideVehicle(!bIsRidingVehicle);
 	}
 }
 
@@ -856,6 +890,7 @@ void ADW_CharacterBase::Dead()
 	DisableInput(Cast<APlayerController>(GetController()));
 	StatComponent->StopConsumeHealth();
 	StatComponent->StopConsumeStamina();
+	bCanRideVehicle = false;
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
@@ -1192,6 +1227,27 @@ AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
 	}
 
 	return ClosestTarget;
+}
+
+void ADW_CharacterBase::RideVehicle(bool bOnRiding)
+{
+	if (bIsRidingVehicle == bOnRiding)
+	{
+		return;
+	}
+
+	bIsRidingVehicle = bOnRiding;
+
+	if (bIsRidingVehicle)
+	{
+		Vehicle->SetVisibility(true);
+		PlayMontage(RidingMontage);
+	}
+	else
+	{
+		Vehicle->SetVisibility(false);
+		PlayMontage(GetOffMontage);
+	}
 }
 
 AActor* ADW_CharacterBase::FindBestLockOnTarget()

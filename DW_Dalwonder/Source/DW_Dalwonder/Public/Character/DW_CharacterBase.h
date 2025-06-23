@@ -102,6 +102,9 @@ public:
 	UFUNCTION()
 	void Lockon(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void Ride(const FInputActionValue& Value);
+
 	void PlayMontage(UAnimMontage* Montage, int32 SectionIndex = -1);
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
@@ -380,6 +383,40 @@ public:
 	UPROPERTY()
 	UUserWidget* LockOnWidgetInstance;
 
+#pragma endregion
+
+// 탈것 관련 시스템
+#pragma region Riding
+public:
+	UFUNCTION()
+	void RideVehicle(bool bOnRiding);
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	USkeletalMeshComponent* Vehicle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	USkeletalMeshComponent* Reins;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	USkeletalMeshComponent* Saddle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	USkeletalMeshComponent* SaddleBelts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	USkeletalMeshComponent* Hair;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimMontage* RidingMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimMontage* GetOffMontage;
+	
+	bool bCanRideVehicle = true;
+
+	bool bIsRidingVehicle = false;
 #pragma endregion
 	
 // Interaction 관련 시스템

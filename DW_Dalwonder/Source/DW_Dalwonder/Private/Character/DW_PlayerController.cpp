@@ -24,7 +24,8 @@ ADW_PlayerController::ADW_PlayerController()
 	SkillAction(nullptr),
 	UseSkill1Action(nullptr),
 	UseSkill2Action(nullptr),
-	UseSkill3Action(nullptr)
+	UseSkill3Action(nullptr),
+	RideAction(nullptr)
 {
 }
 
