@@ -27,7 +27,7 @@ void ABossArachnid::Tick(float DeltaTime)
 	{
 		if (GetPlayerCharacter())
 		{
-			FRotator CurrentRot = GetControlRotation();
+			/*FRotator CurrentRot = GetControlRotation();
 			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
 			FVector MyLocation = GetActorLocation();
 
@@ -38,8 +38,8 @@ void ABossArachnid::Tick(float DeltaTime)
 			if (AController* MyController = GetController())
 			{
 				MyController->SetControlRotation(NewRot);
-			}
-			/*FRotator CurrentRot = GetActorRotation();
+			}*/
+			FRotator CurrentRot = GetActorRotation();
 			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
 			FVector MyLocation = GetActorLocation();
 
@@ -47,31 +47,30 @@ void ABossArachnid::Tick(float DeltaTime)
 
 			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
 
-			SetActorRotation(NewRot);*/
+			SetActorRotation(NewRot);
 		}
 	}
 
 	if (bShouldTurn)
 	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		/*UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
-		float RotOffset = AnimInstance->GetCurveValue(FName("Rotate"));
+		float RotOffset = AnimInstance->GetCurveValue(FName("Rotate"));*/
 
 		FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
 		FVector MyLocation = GetActorLocation();
 
 		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
-
-		if (AController* MyController = GetController())
-		{
-			MyController->SetControlRotation(TargetRot);
-		}
-
 		FRotator Rotate = GetActorRotation();
-		Rotate.Yaw = CurrentYaw + RotOffset;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Yaw : %f"), RotOffset));
-		SetActorRotation(Rotate);
+
+		RotationDot = TargetRot.Yaw - Rotate.Yaw;
+
+		FRotator NewRot = FMath::RInterpTo(Rotate, TargetRot, DeltaTime, TurnInPlaceSpeed);
+
+		//Rotate.Yaw = CurrentYaw + RotOffset;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Yaw : %f"), RotOffset));
+		SetActorRotation(NewRot);
 	}
 
 	if (bIsJumping)
@@ -180,5 +179,14 @@ void ABossArachnid::ArachnidJumpOn()
 
 void ABossArachnid::ArachnidJumpOff()
 {
+	bIsJumping = false;
+}
+
+void ABossArachnid::Dead()
+{
+	Super::Dead();
+
+	bShouldTurn = false;
+	bCanRotate = false;
 	bIsJumping = false;
 }

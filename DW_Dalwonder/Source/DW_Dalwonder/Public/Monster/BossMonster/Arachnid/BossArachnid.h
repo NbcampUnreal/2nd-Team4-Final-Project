@@ -38,19 +38,27 @@ public:
 	void ArachnidJumpOff();
 
 protected:
+	void Dead() override;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	bool bShouldTurn = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float InterpSpeed = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float TurnInPlaceSpeed = 20.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float JumpXMultiplier = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float JumpZMultiplier = 1.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float RotationDot;
+
 protected:
 	bool bCanRotate = true;
-	bool bShouldTurn = false;
 	bool bIsJumping = false;
 
 	bool bIsPhaseTwo = false;
