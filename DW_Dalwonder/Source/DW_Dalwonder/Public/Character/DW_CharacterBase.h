@@ -407,16 +407,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	USkeletalMeshComponent* Hair;
 
+	bool bIsRidingVehicle = false;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	UAnimMontage* RidingMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	UAnimMontage* GetOffMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimationAsset* RidingVehicleAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimationAsset* GetOffVehicleAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	float VehicleSpeedMultiplier = 2.f;
 	
 	bool bCanRideVehicle = true;
-
-	bool bIsRidingVehicle = false;
 #pragma endregion
 	
 // Interaction 관련 시스템

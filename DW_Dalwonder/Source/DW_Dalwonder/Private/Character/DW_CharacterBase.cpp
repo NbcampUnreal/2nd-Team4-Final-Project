@@ -54,7 +54,6 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	Vehicle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Horse"));
 	Vehicle->SetupAttachment(RootComponent);
-	Vehicle->SetVisibility(false);
 	Reins = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Reins"));
 	Reins->SetupAttachment(Vehicle);
 	Saddle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Saddle"));
@@ -63,6 +62,7 @@ ADW_CharacterBase::ADW_CharacterBase()
 	SaddleBelts->SetupAttachment(Vehicle);
 	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
 	Hair->SetupAttachment(Vehicle);
+	Vehicle->SetVisibility(false);
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -419,12 +419,26 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	
 	if (bIsSprinting)
 	{
-		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		if (bIsRidingVehicle)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed() * VehicleSpeedMultiplier;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		}
 		GetCharacterStatComponent()->ConsumeStamina(2.f);
 	}
 	else
 	{
-		GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+		if (bIsRidingVehicle)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed()) * VehicleSpeedMultiplier;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+		}
 		GetCharacterStatComponent()->StopConsumeStamina();
 		GetCharacterStatComponent()->StartStaminaRegen();
 	}
@@ -486,6 +500,8 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Ride(const FInputActionValue& Value)
 {
+	if (!bCanControl) return;
+	
 	if (!bCanRideVehicle)
 	{
 		return;
@@ -1237,16 +1253,21 @@ void ADW_CharacterBase::RideVehicle(bool bOnRiding)
 	}
 
 	bIsRidingVehicle = bOnRiding;
+	float BaseWalkSpeed = StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed();
 
 	if (bIsRidingVehicle)
 	{
 		Vehicle->SetVisibility(true);
 		PlayMontage(RidingMontage);
+		Vehicle->PlayAnimation(RidingVehicleAnim, false);
+		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * VehicleSpeedMultiplier;
 	}
 	else
 	{
 		Vehicle->SetVisibility(false);
 		PlayMontage(GetOffMontage);
+		Vehicle->PlayAnimation(GetOffVehicleAnim, false);
+		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	}
 }
 
