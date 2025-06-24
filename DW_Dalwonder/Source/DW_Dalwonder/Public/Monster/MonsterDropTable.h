@@ -21,6 +21,15 @@ struct FDropItemData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DropChance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseMinDropCount = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 DropCount = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "bUseMinDropCount"))
+	int32 MinDropCount = 1;
+
 };
 
 USTRUCT(BlueprintType)

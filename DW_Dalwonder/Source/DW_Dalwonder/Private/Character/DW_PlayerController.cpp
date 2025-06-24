@@ -24,7 +24,8 @@ ADW_PlayerController::ADW_PlayerController()
 	SkillAction(nullptr),
 	UseSkill1Action(nullptr),
 	UseSkill2Action(nullptr),
-	UseSkill3Action(nullptr)
+	UseSkill3Action(nullptr),
+	RideAction(nullptr)
 {
 }
 
@@ -138,7 +139,7 @@ void ADW_PlayerController::ToggleESCMenu()
     }
 }
 
-void ADW_PlayerController::ShowBossHUD(const FString& BossName, float MaxHP)
+void ADW_PlayerController::ShowBossHUD(const FName& BossName, float MaxHP)
 {
 	if (CachedBossHUD) return;
 

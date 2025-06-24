@@ -36,4 +36,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Projectile Spawn")
 	TArray<UNiagaraSystem*> ConnectNiagaraSystemArray;
 
+	// 발사시 플레이어를 향할지 여부입니다. False일 경우 컴포넌트가 바라보고있는 정면으로 발사됩니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Spawn")
+	bool bUseLineTrace = true;
+	// bUseLineTrace가 false인 경우, 발사 방향을 전방으로 할지 여부입니다. False일 경우 반대로 발사됩니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "A_Niagara|Spawn")
+	bool bVectorReverse = false;
 };

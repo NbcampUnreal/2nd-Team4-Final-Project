@@ -36,4 +36,13 @@ public:
 
     const FItemData* GetItemData(int32 InRowID) const;
 
+    UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
+    FItemData GetItemDataFromCode(int32 ItemCode);
+
+    UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
+    EItemGrade GetItemGradeFromCode(int32 ItemCode);
+
+    UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
+	int32 GetEnchantLevelFromCode(int32 ItemCode);
+
 };
