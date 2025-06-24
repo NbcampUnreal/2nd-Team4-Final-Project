@@ -32,8 +32,24 @@ void UProjectileSpawnerComponent::SpawnProjectile(int32 Index)
 			FVector SpawnLocation = GetComponentLocation();
 			FRotator SpawnRotation = GetComponentRotation();
 
-			FVector ToPlayer = (PlayerPawn->GetActorLocation() - SpawnLocation).GetSafeNormal();
-			SpawnRotation = ToPlayer.Rotation();
+			if (bUseLineTrace)
+			{
+				FVector ToPlayer = (PlayerPawn->GetActorLocation() - SpawnLocation).GetSafeNormal();
+				SpawnRotation = ToPlayer.Rotation();
+			}
+			else
+			{
+				FVector ToForward = GetForwardVector();
+
+				if (bVectorReverse)
+				{
+					ToForward = -GetForwardVector();
+				}
+
+				ToForward.Z = 0.f;
+				ToForward.Normalize();
+				SpawnRotation = ToForward.Rotation();
+			}
 
 			AActor* SpawnedActor = World->SpawnActor<AActor>(NiagaraSystemArray[Index], SpawnLocation, SpawnRotation, SpawnParams);
 

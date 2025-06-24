@@ -33,29 +33,44 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ArachnidJumpOn();
-
 	UFUNCTION(BlueprintCallable)
 	void ArachnidJumpOff();
 
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOn();
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOff();
+
 protected:
+	void Dead() override;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	bool bShouldTurn = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float InterpSpeed = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float TurnInPlaceSpeed = 20.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float JumpXMultiplier = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float JumpZMultiplier = 1.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float RotationDot;
+
 protected:
 	bool bCanRotate = true;
-	bool bShouldTurn = false;
 	bool bIsJumping = false;
 
 	bool bIsPhaseTwo = false;
 	bool bCanBurrow = false;
-	
+
+	bool bShouldRush = false;
+	FVector CurrentVector_Rush;
+
 	FVector CurrentVector;
 	float CurrentYaw;
 	

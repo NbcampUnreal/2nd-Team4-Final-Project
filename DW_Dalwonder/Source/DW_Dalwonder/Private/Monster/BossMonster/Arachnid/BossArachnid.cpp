@@ -7,6 +7,7 @@
 #include "Character/DW_CharacterBase.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ABossArachnid::ABossArachnid()
 {
@@ -23,55 +24,55 @@ void ABossArachnid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bCanRotate)
-	{
-		if (GetPlayerCharacter())
-		{
-			FRotator CurrentRot = GetControlRotation();
-			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
-			FVector MyLocation = GetActorLocation();
+	//if (bCanRotate)
+	//{
+	//	if (GetPlayerCharacter())
+	//	{
+	//		/*FRotator CurrentRot = GetControlRotation();
+	//		FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+	//		FVector MyLocation = GetActorLocation();
 
-			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+	//		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
 
-			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+	//		FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
 
-			if (AController* MyController = GetController())
-			{
-				MyController->SetControlRotation(NewRot);
-			}
-			/*FRotator CurrentRot = GetActorRotation();
-			FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
-			FVector MyLocation = GetActorLocation();
+	//		if (AController* MyController = GetController())
+	//		{
+	//			MyController->SetControlRotation(NewRot);
+	//		}*/
 
-			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+	//		/*FRotator CurrentRot = GetActorRotation();
+	//		FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
+	//		FVector MyLocation = GetActorLocation();
 
-			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+	//		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
 
-			SetActorRotation(NewRot);*/
-		}
-	}
+	//		FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, InterpSpeed);
+
+	//		SetActorRotation(NewRot);*/
+	//	}
+	//}
 
 	if (bShouldTurn)
 	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		/*UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
-		float RotOffset = AnimInstance->GetCurveValue(FName("Rotate"));
+		float RotOffset = AnimInstance->GetCurveValue(FName("Rotate"));*/
 
 		FVector TargetLocation = GetPlayerCharacter()->GetActorLocation();
 		FVector MyLocation = GetActorLocation();
 
 		FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
-
-		if (AController* MyController = GetController())
-		{
-			MyController->SetControlRotation(TargetRot);
-		}
-
 		FRotator Rotate = GetActorRotation();
-		Rotate.Yaw = CurrentYaw + RotOffset;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Yaw : %f"), RotOffset));
-		SetActorRotation(Rotate);
+
+		RotationDot = TargetRot.Yaw - Rotate.Yaw;
+
+		FRotator NewRot = FMath::RInterpTo(Rotate, TargetRot, DeltaTime, TurnInPlaceSpeed);
+
+		//Rotate.Yaw = CurrentYaw + RotOffset;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Yaw : %f"), RotOffset));
+		SetActorRotation(NewRot);
 	}
 
 	if (bIsJumping)
@@ -86,6 +87,26 @@ void ABossArachnid::Tick(float DeltaTime)
 		JumpingLocation.Z = CurrentVector.Z + (JumpZ * JumpZMultiplier);
 		JumpingLocation.X = CurrentVector.X + (JumpX * JumpXMultiplier) * -GetActorForwardVector().X;
 		SetActorLocation(JumpingLocation);
+	}
+
+	if (bShouldRush)
+	{
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!AnimInstance) return;
+
+		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rush"));
+
+		FVector RushDirection = GetActorForwardVector();
+		FVector RushOffset = RushDirection * Dash;
+
+		FVector RushLocation = GetActorLocation();
+		RushLocation = CurrentVector_Rush + RushOffset;
+		//RushLocation.X = CurrentVector_Rush.X + Dash * GetActorForwardVector().X;
+		//RushLocation.Y = CurrentVector_Rush.Y + Dash * GetActorForwardVector().Y;
+		SetActorLocation(RushLocation);
+
+		UE_LOG(LogTemp, Warning, TEXT("RushLocation : (%f, %f, %f)"), RushLocation.X, RushLocation.Y, RushLocation.Z);
 	}
 }
 
@@ -125,7 +146,16 @@ float ABossArachnid::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 
 void ABossArachnid::RotationEnable(bool Value)
 {
-	bCanRotate = Value;
+	//bCanRotate = Value;
+
+	if (Value)
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	}
+	else
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
 }
 
 void ABossArachnid::DoTrunInPlace(bool Value)
@@ -180,5 +210,26 @@ void ABossArachnid::ArachnidJumpOn()
 
 void ABossArachnid::ArachnidJumpOff()
 {
+	bIsJumping = false;
+}
+
+void ABossArachnid::ArachnidRushOn()
+{
+	CurrentVector_Rush = GetActorLocation();
+	bShouldRush = true;
+
+}
+
+void ABossArachnid::ArachnidRushOff()
+{
+	bShouldRush = false;
+}
+
+void ABossArachnid::Dead()
+{
+	Super::Dead();
+
+	bShouldTurn = false;
+	bCanRotate = false;
 	bIsJumping = false;
 }

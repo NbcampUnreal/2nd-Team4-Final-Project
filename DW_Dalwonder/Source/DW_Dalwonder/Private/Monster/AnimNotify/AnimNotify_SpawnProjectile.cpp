@@ -10,6 +10,9 @@ void UAnimNotify_SpawnProjectile::Notify(USkeletalMeshComponent* MeshComp, UAnim
 	{
 		if (UProjectileSpawnerComponent* Spawner = Owner->FindComponentByClass<UProjectileSpawnerComponent>())
 		{
+			Spawner->bUseLineTrace = bUsePlayerLineTrace;
+			Spawner->bVectorReverse = bReverseVecter;
+
 			Spawner->SpawnProjectile(ProjectileIndex);
 		}
 	}
