@@ -13,13 +13,16 @@ class DW_DALWONDER_API ADW_NPC_Blacksmith : public ADW_NpcBase
 public:
 	ADW_NPC_Blacksmith();
 	void BeginPlay();
-
+	virtual void Interact_Implementation(AActor* Interactor) override;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blacksmith|Animation")
 	UAnimMontage* EnhanceMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blacksmith|Animation")
 	UAnimMontage* IdleMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> SmiteWidgetClass;
 
 public:
 	/** 강화 실행 시 호출될 함수 (UI 버튼에서 호출) */
