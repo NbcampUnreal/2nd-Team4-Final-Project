@@ -37,6 +37,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	bool bIsRealBoss = true;
 
+
 	virtual int32 GetCurrentPhase() override;
 
 	// C++, Blackboard의 CurrentPhase 값을 바꿈

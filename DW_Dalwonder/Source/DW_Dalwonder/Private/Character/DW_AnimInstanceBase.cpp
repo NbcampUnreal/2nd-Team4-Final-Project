@@ -32,4 +32,5 @@ void UDW_AnimInstanceBase::NativeUpdateAnimation(float DeltaSeconds)
 	bShouldCombat = OwnerCharacter->bIsOnCombat;
 	bIsLockOn = OwnerCharacter->bIsLockOn;
 	bIsDodging = OwnerCharacter->CurrentCombatState == ECharacterCombatState::Dodging;
+	bIsRiding = OwnerCharacter->bIsRidingVehicle;
 }

@@ -135,6 +135,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsGuard = false;
 
+	// 트레이스 공격이 넉백을 유발합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bCanKnockbackByAttack = false;
+
 	// 몬스터의 공격 상태입니다.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	bool bIsAttacking;
