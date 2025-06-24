@@ -18,6 +18,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
 #include "DW_InteractInterface.h"
+#include "HeadMountedDisplayTypes.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/CharacterArmorComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -54,15 +55,19 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	Vehicle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Horse"));
 	Vehicle->SetupAttachment(RootComponent);
+	Vehicle->SetVisibility(false);
 	Reins = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Reins"));
 	Reins->SetupAttachment(Vehicle);
+	Reins->SetVisibility(false);
 	Saddle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Saddle"));
 	Saddle->SetupAttachment(Vehicle);
+	Saddle->SetVisibility(false);
 	SaddleBelts = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SaddleBelts"));
 	SaddleBelts->SetupAttachment(Vehicle);
+	SaddleBelts->SetVisibility(false);
 	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
 	Hair->SetupAttachment(Vehicle);
-	Vehicle->SetVisibility(false);
+	Hair->SetVisibility(false);
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -1258,15 +1263,21 @@ void ADW_CharacterBase::RideVehicle(bool bOnRiding)
 	if (bIsRidingVehicle)
 	{
 		Vehicle->SetVisibility(true);
+		Reins->SetVisibility(true);
+		Saddle->SetVisibility(true);
+		SaddleBelts->SetVisibility(true);
+		Hair->SetVisibility(true);
 		PlayMontage(RidingMontage);
-		Vehicle->PlayAnimation(RidingVehicleAnim, false);
 		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * VehicleSpeedMultiplier;
 	}
 	else
 	{
 		Vehicle->SetVisibility(false);
+		Reins->SetVisibility(false);
+		Saddle->SetVisibility(false);
+		SaddleBelts->SetVisibility(false);
+		Hair->SetVisibility(false);
 		PlayMontage(GetOffMontage);
-		Vehicle->PlayAnimation(GetOffVehicleAnim, false);
 		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	}
 }

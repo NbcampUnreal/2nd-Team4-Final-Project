@@ -417,12 +417,6 @@ protected:
 	UAnimMontage* GetOffMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
-	UAnimationAsset* RidingVehicleAnim;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
-	UAnimationAsset* GetOffVehicleAnim;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	float VehicleSpeedMultiplier = 2.f;
 	
 	bool bCanRideVehicle = true;
