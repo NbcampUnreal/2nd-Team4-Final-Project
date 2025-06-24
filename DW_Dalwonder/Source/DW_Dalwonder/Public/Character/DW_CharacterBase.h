@@ -390,6 +390,10 @@ public:
 public:
 	UFUNCTION()
 	void RideVehicle(bool bOnRiding);
+
+	void SetVehicleVisibility(bool bOnRiding);
+
+	void PlayVehicleMontage(UAnimMontage* Montage);
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
@@ -414,7 +418,13 @@ protected:
 	UAnimMontage* RidingMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimMontage* RidingHorseMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	UAnimMontage* GetOffMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
+	UAnimMontage* GetOffHorseMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
 	float VehicleSpeedMultiplier = 2.f;

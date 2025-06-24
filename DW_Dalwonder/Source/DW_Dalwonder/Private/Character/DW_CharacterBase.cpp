@@ -55,19 +55,14 @@ ADW_CharacterBase::ADW_CharacterBase()
 
 	Vehicle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Horse"));
 	Vehicle->SetupAttachment(RootComponent);
-	Vehicle->SetVisibility(false);
 	Reins = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Reins"));
 	Reins->SetupAttachment(Vehicle);
-	Reins->SetVisibility(false);
 	Saddle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Saddle"));
 	Saddle->SetupAttachment(Vehicle);
-	Saddle->SetVisibility(false);
 	SaddleBelts = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SaddleBelts"));
 	SaddleBelts->SetupAttachment(Vehicle);
-	SaddleBelts->SetVisibility(false);
 	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
 	Hair->SetupAttachment(Vehicle);
-	Hair->SetVisibility(false);
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -186,6 +181,7 @@ void ADW_CharacterBase::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	AnimInstance = GetMesh()->GetAnimInstance();
+	SetVehicleVisibility(false);
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -1262,23 +1258,46 @@ void ADW_CharacterBase::RideVehicle(bool bOnRiding)
 
 	if (bIsRidingVehicle)
 	{
-		Vehicle->SetVisibility(true);
-		Reins->SetVisibility(true);
-		Saddle->SetVisibility(true);
-		SaddleBelts->SetVisibility(true);
-		Hair->SetVisibility(true);
+		SetVehicleVisibility(true);
 		PlayMontage(RidingMontage);
+		PlayVehicleMontage(RidingHorseMontage);
 		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * VehicleSpeedMultiplier;
 	}
 	else
 	{
-		Vehicle->SetVisibility(false);
-		Reins->SetVisibility(false);
-		Saddle->SetVisibility(false);
-		SaddleBelts->SetVisibility(false);
-		Hair->SetVisibility(false);
 		PlayMontage(GetOffMontage);
+		PlayVehicleMontage(GetOffHorseMontage);
 		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	}
+}
+
+void ADW_CharacterBase::SetVehicleVisibility(bool bOnRiding)
+{
+	FName TagName(TEXT("Vehicle"));
+	TArray<UActorComponent*> Components = GetComponentsByTag(UActorComponent::StaticClass(), TagName);
+
+	for (UActorComponent* Component : Components)
+	{
+		USkeletalMeshComponent* SkelComponent = Cast<USkeletalMeshComponent>(Component);
+		if (IsValid(SkelComponent))
+		{
+			SkelComponent->SetVisibility(bOnRiding, true);
+		}
+	}
+}
+
+void ADW_CharacterBase::PlayVehicleMontage(UAnimMontage* Montage)
+{
+	FName TagName(TEXT("Vehicle"));
+	TArray<UActorComponent*> Components = GetComponentsByTag(UActorComponent::StaticClass(), TagName);
+
+	for (UActorComponent* Component : Components)
+	{
+		USkeletalMeshComponent* SkelComponent = Cast<USkeletalMeshComponent>(Component);
+		if (IsValid(SkelComponent))
+		{
+			SkelComponent->GetAnimInstance()->Montage_Play(Montage);
+		}
 	}
 }
 
