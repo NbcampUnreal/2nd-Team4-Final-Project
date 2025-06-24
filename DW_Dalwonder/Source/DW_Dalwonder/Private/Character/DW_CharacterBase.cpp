@@ -18,6 +18,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Item/ItemDataManager.h"
 #include "DW_InteractInterface.h"
+#include "HeadMountedDisplayTypes.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/CharacterArmorComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -51,6 +52,17 @@ ADW_CharacterBase::ADW_CharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
 
 	ArmorComponent = CreateDefaultSubobject<UCharacterArmorComponent>(TEXT("ArmorComponent"));
+
+	Vehicle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Horse"));
+	Vehicle->SetupAttachment(RootComponent);
+	Reins = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Reins"));
+	Reins->SetupAttachment(Vehicle);
+	Saddle = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Saddle"));
+	Saddle->SetupAttachment(Vehicle);
+	SaddleBelts = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SaddleBelts"));
+	SaddleBelts->SetupAttachment(Vehicle);
+	Hair = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hair"));
+	Hair->SetupAttachment(Vehicle);
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -169,6 +181,7 @@ void ADW_CharacterBase::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	AnimInstance = GetMesh()->GetAnimInstance();
+	SetVehicleVisibility(false);
 }
 
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -290,6 +303,15 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::UseActiveSkillSlot3);
 			}
 
+			if (PlayerController->RideAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->RideAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::Ride);
+			}
+
 			if (PlayerController->InteractAction)
 			{
 #if WITH_EDITOR
@@ -398,12 +420,26 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	
 	if (bIsSprinting)
 	{
-		GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		if (bIsRidingVehicle)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed() * VehicleSpeedMultiplier;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
+		}
 		GetCharacterStatComponent()->ConsumeStamina(2.f);
 	}
 	else
 	{
-		GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+		if (bIsRidingVehicle)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed()) * VehicleSpeedMultiplier;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+		}
 		GetCharacterStatComponent()->StopConsumeStamina();
 		GetCharacterStatComponent()->StartStaminaRegen();
 	}
@@ -460,6 +496,21 @@ void ADW_CharacterBase::Lockon(const FInputActionValue& Value)
 	if (Value.Get<bool>())
 	{
 		ToggleLockOn();
+	}
+}
+
+void ADW_CharacterBase::Ride(const FInputActionValue& Value)
+{
+	if (!bCanControl) return;
+	
+	if (!bCanRideVehicle)
+	{
+		return;
+	}
+	
+	if (Value.Get<bool>())
+	{
+		RideVehicle(!bIsRidingVehicle);
 	}
 }
 
@@ -856,6 +907,7 @@ void ADW_CharacterBase::Dead()
 	DisableInput(Cast<APlayerController>(GetController()));
 	StatComponent->StopConsumeHealth();
 	StatComponent->StopConsumeStamina();
+	bCanRideVehicle = false;
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
@@ -1192,6 +1244,61 @@ AActor* ADW_CharacterBase::FindClosestTarget(float MaxDistance)
 	}
 
 	return ClosestTarget;
+}
+
+void ADW_CharacterBase::RideVehicle(bool bOnRiding)
+{
+	if (bIsRidingVehicle == bOnRiding)
+	{
+		return;
+	}
+
+	bIsRidingVehicle = bOnRiding;
+	float BaseWalkSpeed = StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed();
+
+	if (bIsRidingVehicle)
+	{
+		SetVehicleVisibility(true);
+		PlayMontage(RidingMontage);
+		PlayVehicleMontage(RidingHorseMontage);
+		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed * VehicleSpeedMultiplier;
+	}
+	else
+	{
+		PlayMontage(GetOffMontage);
+		PlayVehicleMontage(GetOffHorseMontage);
+		GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	}
+}
+
+void ADW_CharacterBase::SetVehicleVisibility(bool bOnRiding)
+{
+	FName TagName(TEXT("Vehicle"));
+	TArray<UActorComponent*> Components = GetComponentsByTag(UActorComponent::StaticClass(), TagName);
+
+	for (UActorComponent* Component : Components)
+	{
+		USkeletalMeshComponent* SkelComponent = Cast<USkeletalMeshComponent>(Component);
+		if (IsValid(SkelComponent))
+		{
+			SkelComponent->SetVisibility(bOnRiding, true);
+		}
+	}
+}
+
+void ADW_CharacterBase::PlayVehicleMontage(UAnimMontage* Montage)
+{
+	FName TagName(TEXT("Vehicle"));
+	TArray<UActorComponent*> Components = GetComponentsByTag(UActorComponent::StaticClass(), TagName);
+
+	for (UActorComponent* Component : Components)
+	{
+		USkeletalMeshComponent* SkelComponent = Cast<USkeletalMeshComponent>(Component);
+		if (IsValid(SkelComponent))
+		{
+			SkelComponent->GetAnimInstance()->Montage_Play(Montage);
+		}
+	}
 }
 
 AActor* ADW_CharacterBase::FindBestLockOnTarget()
