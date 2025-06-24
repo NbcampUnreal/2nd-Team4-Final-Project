@@ -83,6 +83,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SpawnTeleportNS();
 
+	virtual void Dead() override;
+
+	void DoRagDoll();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
