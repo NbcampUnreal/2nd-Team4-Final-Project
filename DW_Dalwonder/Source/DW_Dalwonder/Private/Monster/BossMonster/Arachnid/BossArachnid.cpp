@@ -91,6 +91,7 @@ void ABossArachnid::Tick(float DeltaTime)
 
 	if (bShouldRush)
 	{
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
@@ -99,9 +100,13 @@ void ABossArachnid::Tick(float DeltaTime)
 		FVector RushDirection = GetActorForwardVector();
 		FVector RushOffset = RushDirection * Dash;
 
-		FVector RushLocation = CurrentVector_Rush + RushOffset;
+		FVector RushLocation = GetActorLocation();
+		RushLocation = CurrentVector_Rush + RushOffset;
 		//RushLocation.X = CurrentVector_Rush.X + Dash * GetActorForwardVector().X;
+		//RushLocation.Y = CurrentVector_Rush.Y + Dash * GetActorForwardVector().Y;
 		SetActorLocation(RushLocation);
+
+		UE_LOG(LogTemp, Warning, TEXT("RushLocation : (%f, %f, %f)"), RushLocation.X, RushLocation.Y, RushLocation.Z);
 	}
 }
 
@@ -212,6 +217,7 @@ void ABossArachnid::ArachnidRushOn()
 {
 	CurrentVector_Rush = GetActorLocation();
 	bShouldRush = true;
+
 }
 
 void ABossArachnid::ArachnidRushOff()

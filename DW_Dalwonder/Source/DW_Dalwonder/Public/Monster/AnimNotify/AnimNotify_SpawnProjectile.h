@@ -18,5 +18,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Projectile")
 	int32 ProjectileIndex = 0;
 
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	bool bUsePlayerLineTrace = true;
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	bool bReverseVecter = false;
+
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };
