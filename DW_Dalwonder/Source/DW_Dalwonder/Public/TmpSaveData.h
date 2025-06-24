@@ -8,6 +8,8 @@
 #include "UI/Component/Struct/QuestData.h"
 #include "Inventory/InventoryComponent.h"
 #include "TmpInventoryData.h"
+#include "TmpArmorData.h"
+#include "TmpCharacterStatData.h"
 #include "TmpSaveData.generated.h"
 
 /**
@@ -29,6 +31,10 @@ struct FTmpSaveData
     UPROPERTY()
     FAttributeSaveData TempAttributes;
 
+	// 스탯 데이터 (CharacterStatComponent)
+    UPROPERTY()
+    FTmpCharacterStatData TempStatData;
+
     // 스킬 트리 상태 (SkillComponent)
     UPROPERTY()
     TMap<FName, FSkillState> TempSkillStates;
@@ -40,9 +46,12 @@ struct FTmpSaveData
     UPROPERTY()
     TMap<FName, FQuestData> TempCompletedQuests;
 
-
     //인벤토리
     UPROPERTY()
     FTmpInventoryData TempInventory;
-    // 여기에 추가항목들
+
+    //방어구/무기 추가
+    UPROPERTY()
+    FTmpArmorData TempArmor;
+    // 여기 아래에 추가항목들 계속 추가가능...
 };

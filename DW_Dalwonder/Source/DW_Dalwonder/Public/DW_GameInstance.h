@@ -9,6 +9,7 @@
 class UDW_SaveGame;
 class UDW_LevelLoadSubsystem;
 class ULoadingWidget;
+class ADW_CharacterBase;
 
 /** GameInstance: OpenLevel + MoviePlayer �ε� ��ũ�� ���� */
 UCLASS()
@@ -44,7 +45,9 @@ public:
     // 맵 이동용 임시저장 데이터 캐릭터에 다시 부여
     void ApplyTempDataAfterLevelLoad();
     // 위치정보는 부여안하는 함수
-    void ApplyTempDataAfterLevelLoadSecond();
+    void ApplyTempDataAfterLevelLoadWithLocation();
+    // 캐릭터 Component들 복원 함수
+	void ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Player);
 
 public:
 
