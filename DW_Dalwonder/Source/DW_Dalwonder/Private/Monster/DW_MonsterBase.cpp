@@ -404,6 +404,12 @@ void ADW_MonsterBase::PerformAttackTrace()
 							FVector(1.f)
 						);
 					}
+
+					if (bCanKnockbackByAttack)
+					{
+						if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(HitActor))
+						Character->KnockBackCharacter();
+					}
 				}
 			}
 		}
