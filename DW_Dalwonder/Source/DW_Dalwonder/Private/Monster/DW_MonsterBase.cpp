@@ -28,24 +28,26 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	AttackSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AttackSound"));
 	AttackSoundComponent->SetupAttachment(RootComponent);
 	AttackSoundComponent->bAutoActivate = false;
+	AttackSoundComponent->SetVolumeMultiplier(0.7f);
 	AttackSoundComponent->bOverrideAttenuation = true;
 	AttackSoundComponent->AttenuationOverrides.bAttenuate = true;
 	AttackSoundComponent->AttenuationOverrides.bSpatialize = true;
 	AttackSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
-	AttackSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
-	AttackSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
-	AttackSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
+	AttackSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(200.f, 0.f, 0.f);
+	AttackSoundComponent->AttenuationOverrides.FalloffDistance = 3000.0f;
+	AttackSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Linear;
 
 	HitSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("HitSound"));
 	HitSoundComponent->SetupAttachment(RootComponent);
 	HitSoundComponent->bAutoActivate = false;
+	HitSoundComponent->SetVolumeMultiplier(0.7f);
 	HitSoundComponent->bOverrideAttenuation = true;
 	HitSoundComponent->AttenuationOverrides.bAttenuate = true;
 	HitSoundComponent->AttenuationOverrides.bSpatialize = true;
 	HitSoundComponent->AttenuationOverrides.AttenuationShape = EAttenuationShape::Sphere;
-	HitSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(400.f, 0.f, 0.f);
-	HitSoundComponent->AttenuationOverrides.FalloffDistance = 3200.0f;
-	HitSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Logarithmic;
+	HitSoundComponent->AttenuationOverrides.AttenuationShapeExtents = FVector(200.f, 0.f, 0.f);
+	HitSoundComponent->AttenuationOverrides.FalloffDistance = 3000.0f;
+	HitSoundComponent->AttenuationOverrides.DistanceAlgorithm = EAttenuationDistanceModel::Linear;
 
 	NavInvokerComp = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
 	NavInvokerComp->SetGenerationRadii(5000.f, 6000.f);
@@ -402,6 +404,12 @@ void ADW_MonsterBase::PerformAttackTrace()
 							FVector(1.f)
 						);
 					}
+
+					if (bCanKnockbackByAttack)
+					{
+						if (ADW_CharacterBase* Character = Cast<ADW_CharacterBase>(HitActor))
+						Character->KnockBackCharacter();
+					}
 				}
 			}
 		}
@@ -663,6 +671,17 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			);
 
 			ItemActor->SetItemCode(ItemData.ItemCode);
+			
+			int32 ItemCount;
+			if (ItemData.bUseMinDropCount)
+			{
+				ItemCount = FMath::RandRange(ItemData.MinDropCount, ItemData.DropCount);
+			}
+			else
+			{
+				ItemCount = ItemData.DropCount;
+			}
+			ItemActor->SetItemCount(ItemCount);
 		}
 	}
 }

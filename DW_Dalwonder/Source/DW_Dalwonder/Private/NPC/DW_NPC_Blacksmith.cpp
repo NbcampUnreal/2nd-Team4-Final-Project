@@ -1,5 +1,8 @@
 #include "NPC/DW_NPC_Blacksmith.h"
+
+#include "DW_GmBase.h"
 #include "Animation/AnimInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 ADW_NPC_Blacksmith::ADW_NPC_Blacksmith()
 {
@@ -8,8 +11,7 @@ ADW_NPC_Blacksmith::ADW_NPC_Blacksmith()
 void ADW_NPC_Blacksmith::BeginPlay()
 {
 	Super::BeginPlay();
-	// PlayIdleAnimation();
-	HandleEnhancementAction();
+	PlayIdleAnimation();
 }
 
 void ADW_NPC_Blacksmith::HandleEnhancementAction()
@@ -47,5 +49,21 @@ void ADW_NPC_Blacksmith::PlayIdleAnimation()
 	if (AnimInstance && !AnimInstance->Montage_IsPlaying(IdleMontage))
 	{
 		AnimInstance->Montage_Play(IdleMontage);
+	}
+}
+
+void ADW_NPC_Blacksmith::Interact_Implementation(AActor* Interactor)
+{
+	Super::Interact_Implementation(Interactor);
+	UE_LOG(LogTemp, Warning, TEXT("Blacksmith Interacted"));
+	// 1. 카메라 포커스
+	FocusCameraOnNPC(Interactor);
+
+	// 2. UI 보여주기
+	if (!SmiteWidgetClass) return;
+
+	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->ShowPopupUI(SmiteWidgetClass);
 	}
 }

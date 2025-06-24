@@ -84,4 +84,15 @@ void ADW_Chest::DropItem()
 	);
 	
 	ItemActor->SetItemCode(ItemCode);
+
+	int32 ItemCount;
+	if (bUseMinDropCount)
+	{
+		ItemCount = FMath::RandRange(MinDropCount, DropCount);
+	}
+	else
+	{
+		ItemCount = DropCount;
+	}
+	ItemActor->SetItemCount(ItemCount);
 }

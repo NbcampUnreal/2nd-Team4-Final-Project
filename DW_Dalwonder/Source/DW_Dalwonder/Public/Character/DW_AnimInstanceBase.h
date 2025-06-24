@@ -51,4 +51,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIsDodging = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bIsRiding = false;
 };

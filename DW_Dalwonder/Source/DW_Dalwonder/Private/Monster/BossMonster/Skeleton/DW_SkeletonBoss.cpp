@@ -185,3 +185,22 @@ void ADW_SkeletonBoss::SpawnTeleportNS()
 		true);
 	}
 }
+
+void ADW_SkeletonBoss::Dead()
+{
+	Super::Dead();
+
+	SetActorTickEnabled(false);
+	GetCharacterMovement()->DisableMovement();
+
+	FTimerHandle RagdollTimerHandle;
+	GetWorldTimerManager().SetTimer(RagdollTimerHandle, this, &ADW_SkeletonBoss::DoRagDoll, 2.5f, false);
+	
+}
+
+void ADW_SkeletonBoss::DoRagDoll()
+{
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetSimulatePhysics(true);
+}

@@ -19,7 +19,59 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	float InterpSpeed = 5.0f;
+	UFUNCTION(BlueprintCallable)
+	void RotationEnable(bool Value);
+
+	UFUNCTION(BlueprintCallable)
+	void DoTrunInPlace(bool Value);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangingAttackTrace(int32 Value	);
+
+	UFUNCTION(BlueprintCallable)
+	void ArachnidJumpOn();
+	UFUNCTION(BlueprintCallable)
+	void ArachnidJumpOff();
+
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOn();
+	UFUNCTION(BlueprintCallable)
+	void ArachnidRushOff();
+
+protected:
+	void Dead() override;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	bool bShouldTurn = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float InterpSpeed = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float TurnInPlaceSpeed = 20.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float JumpXMultiplier = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float JumpZMultiplier = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
+	float RotationDot;
+
+protected:
+	bool bCanRotate = true;
+	bool bIsJumping = false;
+
+	bool bIsPhaseTwo = false;
+	bool bCanBurrow = false;
+
+	bool bShouldRush = false;
+	FVector CurrentVector_Rush;
+
+	FVector CurrentVector;
+	float CurrentYaw;
+	
 };
