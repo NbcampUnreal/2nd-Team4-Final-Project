@@ -5,12 +5,13 @@
 #include "DW_GameInstance.h"
 #include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
+#include "GameFramework/Character.h"
 
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
-    // 자동 Pawn 스폰 막기
-    bStartPlayersAsSpectators = true;
+    // // 자동 Pawn 스폰 막기
+    // bStartPlayersAsSpectators = false;
 }
 
 void ADW_GmBase::BeginPlay()
@@ -21,6 +22,29 @@ void ADW_GmBase::BeginPlay()
     {
         GI->ApplyLoadedData();
     }*/
+
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>();
+    if (!GI) return;
+
+    ACharacter* Player = UGameplayStatics::GetPlayerCharacter(World, 0);
+    if (!Player) return;
+
+    TArray<AActor*> FoundPortals;
+    UGameplayStatics::GetAllActorsOfClass(World, ADW_Portal::StaticClass(), FoundPortals);
+
+    for (AActor* Actor : FoundPortals)
+    {
+        ADW_Portal* Portal = Cast<ADW_Portal>(Actor);
+        if (Portal && Portal->PortalType == GI->LastPortalType)
+        {
+            Player->SetActorLocation(Portal->GetActorLocation());
+            Player->SetActorRotation(Portal->GetActorRotation());
+            break;
+        }
+    }
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DW_Portal.h"
 #include "Engine/GameInstance.h"
 #include "TmpSaveData.h"
 #include "UI/Component/QuestDatabase.h"
@@ -65,6 +66,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest")
     UQuestDatabase* QuestDatabase;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal")
+    EPortalType LastPortalType = EPortalType::None;
 
 private:
 
