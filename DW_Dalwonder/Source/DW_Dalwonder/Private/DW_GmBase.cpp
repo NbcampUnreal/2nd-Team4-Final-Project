@@ -3,6 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "DW_GameInstance.h"
+#include "DW_PortalArrivalActor.h"
 #include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
 #include "GameFramework/Character.h"
@@ -33,11 +34,11 @@ void ADW_GmBase::BeginPlay()
     if (!Player) return;
 
     TArray<AActor*> FoundPortals;
-    UGameplayStatics::GetAllActorsOfClass(World, ADW_Portal::StaticClass(), FoundPortals);
+    UGameplayStatics::GetAllActorsOfClass(World, ADW_PortalArrivalActor::StaticClass(), FoundPortals);
 
     for (AActor* Actor : FoundPortals)
     {
-        ADW_Portal* Portal = Cast<ADW_Portal>(Actor);
+        ADW_PortalArrivalActor* Portal = Cast<ADW_PortalArrivalActor>(Actor);
         if (Portal && Portal->PortalType == GI->LastPortalType)
         {
             Player->SetActorLocation(Portal->GetActorLocation());
@@ -45,6 +46,8 @@ void ADW_GmBase::BeginPlay()
             break;
         }
     }
+
+    GI->LastPortalType = EPortalType::None;
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
