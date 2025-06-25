@@ -47,7 +47,6 @@ void ADW_NpcBase::BeginPlay()
 void ADW_NpcBase::Interact_Implementation(AActor* Interactor)
 {
 	if (!DialogueUIClass || !Interactor || !DialogueDataTable) return;
-	UE_LOG(LogTemp, Error, TEXT("Check1"));
 	APlayerController* PC = Cast<APlayerController>(Interactor->GetInstigatorController());
 	if (PC)
 	{
