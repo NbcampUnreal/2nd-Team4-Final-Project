@@ -1,6 +1,6 @@
 #include "NPC/DW_NPC_Blacksmith.h"
-
 #include "DW_GmBase.h"
+#include "DW_SmiteUI.h"
 #include "Animation/AnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -11,11 +11,34 @@ ADW_NPC_Blacksmith::ADW_NPC_Blacksmith()
 void ADW_NPC_Blacksmith::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (HammerStaticMesh)
+	{
+		HammerComponent = NewObject<UStaticMeshComponent>(this, TEXT("HammerComponent"));
+		HammerComponent->RegisterComponent();
+		HammerComponent->SetStaticMesh(HammerStaticMesh);
+		HammerComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r"));
+	}
+	
 	PlayIdleAnimation();
 }
 
 void ADW_NPC_Blacksmith::HandleEnhancementAction()
 {
+	// 기존 부착 메시 제거
+	if (TargetItemComponent)
+	{
+		TargetItemComponent->DestroyComponent();
+		TargetItemComponent = nullptr;
+	}
+
+	// 새 메시 생성
+
+	TargetItemComponent = NewObject<UStaticMeshComponent>(this, TEXT("ItemComponent"));
+	TargetItemComponent->RegisterComponent();
+	TargetItemComponent->SetStaticMesh(ItemStaticMesh);
+	TargetItemComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_l"));
+	
 	PlayEnhanceAnimation();
 }
 
@@ -55,15 +78,17 @@ void ADW_NPC_Blacksmith::PlayIdleAnimation()
 void ADW_NPC_Blacksmith::Interact_Implementation(AActor* Interactor)
 {
 	Super::Interact_Implementation(Interactor);
-	UE_LOG(LogTemp, Warning, TEXT("Blacksmith Interacted"));
-	// 1. 카메라 포커스
-	FocusCameraOnNPC(Interactor);
 
-	// 2. UI 보여주기
-	if (!SmiteWidgetClass) return;
+	FocusCameraOnNPC(Interactor);
 
 	if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
 	{
-		GM->ShowPopupUI(SmiteWidgetClass);
+		if (UUserWidget* Popup = GM->ShowPopupUI(SmiteWidgetClass))
+		{
+			if (UDW_SmiteUI* SmiteUI = Cast<UDW_SmiteUI>(Popup))
+			{
+				SmiteUI->RelatedNPC = this;
+			}
+		}
 	}
 }

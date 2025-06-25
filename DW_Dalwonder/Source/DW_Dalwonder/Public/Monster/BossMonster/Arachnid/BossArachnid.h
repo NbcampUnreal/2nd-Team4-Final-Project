@@ -74,4 +74,6 @@ protected:
 	FVector CurrentVector;
 	float CurrentYaw;
 	
+	
+
 };

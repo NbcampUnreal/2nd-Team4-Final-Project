@@ -16,6 +16,10 @@ class DW_DALWONDER_API ADW_NPC_TownFolk : public ADW_NpcBase
 	
 public:
 	ADW_NPC_TownFolk();
+	void BeginPlay();
+
+	UPROPERTY()
+	class UNavigationInvokerComponent* NavInvokerComp;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="AI")
 	TArray<AActor*> PatrolPoints;
