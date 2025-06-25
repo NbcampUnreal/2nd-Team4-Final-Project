@@ -4,6 +4,7 @@
 #include "LevelSequenceActor.h"
 #include "TimerManager.h"
 #include "DW_GmBase.h"
+#include "NPC/DW_NPC_Blacksmith.h"
 
 void UDW_SmiteUI::NativeConstruct()
 {
@@ -21,10 +22,16 @@ void UDW_SmiteUI::NativeConstruct()
 
 void UDW_SmiteUI::OnSmiteButtonClicked()
 {
-	// UI ¼û±â±â
+	// UI ï¿½ï¿½ï¿½ï¿½ï¿½
 	this->SetVisibility(ESlateVisibility::Hidden);
 
-	// °­È­ ¼º°ø/½ÇÆĞ ·£´ı ÆÇÁ¤
+	// ê°•í™” ì• ë‹ˆë©”ì´ì…˜ ì‹¤í–‰
+	if (ADW_NPC_Blacksmith* Blacksmith = Cast<ADW_NPC_Blacksmith>(RelatedNPC))
+	{
+		Blacksmith->HandleEnhancementAction();
+	}
+	
+	// ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	const bool bSuccess = FMath::RandBool();
 	if (bSuccess && SuccessSequence)
 	{
@@ -35,7 +42,7 @@ void UDW_SmiteUI::OnSmiteButtonClicked()
 		PlaySequence(FailSequence);
 	}
 
-	// 2.5ÃÊ ÈÄ UI º¹±¸
+	// 2.5ï¿½ï¿½ ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½
 	GetWorld()->GetTimerManager().SetTimer(UnhideUITimerHandle, this, &UDW_SmiteUI::UnhideUI, 2.5f, false);
 }
 
