@@ -16,6 +16,8 @@ class DW_DALWONDER_API UDW_SmiteUI : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
+	UPROPERTY()
+	AActor* RelatedNPC;
 protected:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button_Smite;
@@ -25,6 +27,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enhance")
 	ULevelSequence* FailSequence;
+
 
 	UFUNCTION()
 	void OnSmiteButtonClicked();

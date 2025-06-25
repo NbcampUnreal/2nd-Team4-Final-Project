@@ -14,7 +14,22 @@ public:
 	ADW_NPC_Blacksmith();
 	void BeginPlay();
 	virtual void Interact_Implementation(AActor* Interactor) override;
+	
 protected:
+	UPROPERTY()
+	UStaticMeshComponent* HammerComponent;
+
+	UPROPERTY()
+	UStaticMeshComponent* TargetItemComponent;
+
+	// 오른손용 망치 메시
+	UPROPERTY(EditDefaultsOnly, Category = "Enhancement")
+	UStaticMesh* HammerStaticMesh;
+
+	// 왼손용 강화 대상 아이템 메시
+	UPROPERTY(EditDefaultsOnly, Category = "Enhancement")
+	UStaticMesh* ItemStaticMesh;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blacksmith|Animation")
 	UAnimMontage* EnhanceMontage;
 
