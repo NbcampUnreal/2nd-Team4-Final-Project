@@ -96,17 +96,26 @@ void ABossArachnid::Tick(float DeltaTime)
 		if (!AnimInstance) return;
 
 		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rush"));
+		//float Dash = AnimInstance->GetCurveValue(FName("TestCurve"));
 
-		FVector RushDirection = GetActorForwardVector();
+		/*FVector RushDirection = GetActorForwardVector();
 		FVector RushOffset = RushDirection * Dash;
 
-		FVector RushLocation = GetActorLocation();
-		RushLocation = CurrentVector_Rush + RushOffset;
+		FVector RushLocation = GetActorLocation();*/
+
 		//RushLocation.X = CurrentVector_Rush.X + Dash * GetActorForwardVector().X;
 		//RushLocation.Y = CurrentVector_Rush.Y + Dash * GetActorForwardVector().Y;
-		SetActorLocation(RushLocation);
+		//SetActorLocation(CurrentVector_Rush + RushOffset);
 
-		UE_LOG(LogTemp, Warning, TEXT("RushLocation : (%f, %f, %f)"), RushLocation.X, RushLocation.Y, RushLocation.Z);
+		
+			SetActorLocation(CurrentVector_Rush + GetActorForwardVector() * Dash);
+		
+			if (Dash > 1000.f)
+				bShouldRush = false;
+
+		//UE_LOG(LogTemp, Warning, TEXT("Dash : (%f)"), Dash);
+
+		//UE_LOG(LogTemp, Warning, TEXT("RushLocation : (%f, %f, %f)"), RushLocation.X, RushLocation.Y, RushLocation.Z);
 	}
 }
 
@@ -211,6 +220,7 @@ void ABossArachnid::ArachnidJumpOn()
 void ABossArachnid::ArachnidJumpOff()
 {
 	bIsJumping = false;
+
 }
 
 void ABossArachnid::ArachnidRushOn()
