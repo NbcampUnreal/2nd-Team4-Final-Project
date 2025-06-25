@@ -902,6 +902,24 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 	}
 }
 
+void ADW_CharacterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (!GetCharacterMovement()->IsFalling()) return;
+	
+	float Velocity = GetVelocity().Z * -1.f;
+	
+	if (Velocity <= FallVelocityLimit)
+	{
+		return;
+	}
+
+	float FallDamage = Velocity / 100.f;
+
+	UGameplayStatics::ApplyDamage(this, FallDamage, GetController(), this, UDamageType::StaticClass());
+}
+
 void ADW_CharacterBase::Dead()
 {
 	DisableInput(Cast<APlayerController>(GetController()));

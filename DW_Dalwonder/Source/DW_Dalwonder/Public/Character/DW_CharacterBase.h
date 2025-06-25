@@ -231,6 +231,9 @@ public:
 	void BlockCharacterControl(bool bShouldBlock, float Length = 0.f);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
+	virtual void Landed(const FHitResult& Hit) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Dead();
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -307,6 +310,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentComboIndex = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float FallVelocityLimit = 1000.f;
 	
 	// 달리기 중 여부
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
