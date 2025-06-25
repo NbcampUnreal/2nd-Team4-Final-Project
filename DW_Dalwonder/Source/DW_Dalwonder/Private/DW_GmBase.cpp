@@ -10,17 +10,17 @@ ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
     // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = true;
+    bStartPlayersAsSpectators = true;
 }
 
 void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    /*if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
     {
         GI->ApplyLoadedData();
-    }
+    }*/
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
