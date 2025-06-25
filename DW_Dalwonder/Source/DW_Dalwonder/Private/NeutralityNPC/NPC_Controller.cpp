@@ -37,32 +37,18 @@ void ANPC_Controller::MoveToCurrentPatrolPoint()
 {
 	ADW_NPC_TownFolk* MyNPCChar = Cast<ADW_NPC_TownFolk>(GetPawn());
 	if (!MyNPCChar)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("MyNPCChar is null"));
 		return;
-	}
 
 	if (MyNPCChar->PatrolPoints.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PatrolPoints is empty"));
 		return;
-	}
 
 	AActor* Target = MyNPCChar->PatrolPoints[CurrentPatrolIndex];
 	if (!Target)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Target Patrol Point is null"));
 		return;
-	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Moving to Patrol Point: %s"), *Target->GetName());
-
-	EPathFollowingRequestResult::Type MoveRes = MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
-	UE_LOG(LogTemp, Warning, TEXT("MoveToActor result: %d"), (int32)MoveRes);
-
+	MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
 	CurrentPatrolIndex = (CurrentPatrolIndex + 1) % MyNPCChar->PatrolPoints.Num();
 }
-
 	
 void ANPC_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
