@@ -6,6 +6,12 @@
 #include "GameFramework/SaveGame.h"
 #include "DW_AttributeSaveData.h"
 #include "DW_SkillState.h"
+#include "UI/Component/Struct/QuestData.h"
+#include "Inventory/InventoryComponent.h"
+#include "InventorySlotSaveData.h"
+#include "TmpCharacterStatData.h"
+#include "QuestProgressSaveData.h"
+#include "EquippedArmorSaveData.h"
 #include "DW_SaveGame.generated.h"
 
 /**
@@ -17,19 +23,43 @@ class DW_DALWONDER_API UDW_SaveGame : public USaveGame
 	GENERATED_BODY()
 	
 public:
-	// 캐릭터 위치를 저장할 변수
-	UPROPERTY(VisibleAnywhere, Category = "SaveData")
-	FVector SavedPlayerLocation;
 
-	// 캐릭터 회전값
-	UPROPERTY(VisibleAnywhere, Category = "SaveData")
-	FRotator SavedPlayerRotation;
+    // 위치 정보
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    FVector SavedPlayerLocation;
 
-	// 캐릭터 기본 스탯 저장 변수(스킬트리 값을 불러와서 올려줄꺼임)
-	UPROPERTY(VisibleAnywhere, Category = "SaveData")
-	FAttributeSaveData SavedAttributes;
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    FRotator SavedPlayerRotation;
 
-	// 스킬 트리 데이터 저장
-	UPROPERTY(VisibleAnywhere, Category = "SaveData")
-	TMap<FName, FSkillState> SavedSkillStates;
+    // 속성 데이터 (AttributeComponent)
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    FAttributeSaveData SavedAttributes;
+
+    // 스탯 데이터 (CharacterStatComponent)
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    FTmpCharacterStatData SaveStatData;
+
+    // 스킬 트리 상태 (SkillComponent)
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    TMap<FName, FSkillState> SavedSkillStates;
+
+    // 진행 중인 퀘스트
+    UPROPERTY()
+    TArray<FQuestProgressSaveData> SaveAcceptedQuests;
+
+    // 완료된 퀘스트 ID만 저장
+    UPROPERTY()
+    TArray<FName> SaveCompletedQuestIDs;
+
+	//인벤토리(ItemCode와 수량 저장)
+    UPROPERTY()
+    TArray<FInventorySlotSaveData> TempInventorySlotSaveDatas;
+
+	// 인벤토리 슬롯 수
+    UPROPERTY()
+    int32 SavedInventorySlotQuantity = 0;
+
+    //방어구/무기 추가
+    UPROPERTY(VisibleAnywhere, Category = "SaveData")
+    FEquippedArmorSaveData SavedArmorData;
 };
