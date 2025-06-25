@@ -7,11 +7,30 @@
 void ANPC_Controller::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	if (UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+	
+	TryMoveToPatrol();
+}
+
+void ANPC_Controller::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void ANPC_Controller::TryMoveToPatrol()
+{
+	if (GetPawn() == nullptr) return;
+
+	FNavLocation Projected;
+	if (UNavigationSystemV1::GetCurrent(GetWorld())->ProjectPointToNavigation(GetPawn()->GetActorLocation(), Projected))
 	{
-		NavSys->RegisterNavigationInvoker(this, 300.0f, 500.0f);
+		// NavMesh 위에 있으므로 이동 시도
+		MoveToCurrentPatrolPoint();
 	}
-	MoveToCurrentPatrolPoint();
+	else
+	{
+		// NavMesh 아직 없음 → 다음 프레임에 재시도
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ANPC_Controller::TryMoveToPatrol);
+	}
 }
 
 void ANPC_Controller::MoveToCurrentPatrolPoint()
@@ -36,12 +55,14 @@ void ANPC_Controller::MoveToCurrentPatrolPoint()
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Moving to Patrol Point: %s"), *Target->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("Moving to Patrol Point: %s"), *Target->GetName());
 
-	MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
+	EPathFollowingRequestResult::Type MoveRes = MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
+	UE_LOG(LogTemp, Warning, TEXT("MoveToActor result: %d"), (int32)MoveRes);
 
 	CurrentPatrolIndex = (CurrentPatrolIndex + 1) % MyNPCChar->PatrolPoints.Num();
 }
+
 	
 void ANPC_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
@@ -49,6 +70,6 @@ void ANPC_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowi
 	
 	if (Result.Code == EPathFollowingResult::Success)
 	{
-		MoveToCurrentPatrolPoint();
+		TryMoveToPatrol();
 	}
 }

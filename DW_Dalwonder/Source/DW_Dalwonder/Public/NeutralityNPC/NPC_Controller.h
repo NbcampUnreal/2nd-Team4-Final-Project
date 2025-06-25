@@ -11,11 +11,16 @@ class DW_DALWONDER_API ANPC_Controller : public AAIController
 public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+	void BeginPlay();
 
 protected:
-	// 현재 순찰 지점 인덱스
-	int32 CurrentPatrolIndex = 0;
-		
-	// 현재 순찰 지점으로 이동하는 공통 함수
+	void TryMoveToPatrol();
 	void MoveToCurrentPatrolPoint();
+
+	UPROPERTY()
+	TArray<AActor*> PatrolPoints;
+
+	int32 CurrentPatrolIndex = 0;
+
+	FTimerHandle PatrolRetryHandle;
 };
