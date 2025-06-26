@@ -268,7 +268,7 @@ void ABossArachnid::Dead()
 	bShouldTurn = false;
 	bCanRotate = false;
 	bIsJumping = false;
-	bIsUndead = false
+	bIsUndead = false;
 }
 
 void ABossArachnid::Undead()
