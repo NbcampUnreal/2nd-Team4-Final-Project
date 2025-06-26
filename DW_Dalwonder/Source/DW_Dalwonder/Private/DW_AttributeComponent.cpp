@@ -22,6 +22,13 @@ void UDW_AttributeComponent::ClearAllBonuses()
     BonusLongswordXPMod = 0.f;
     BonusGreatswordXPMod = 0.f;
     BonusDefense = 0.f;
+	BonusLongswordDamageMod = 0.f;
+	BonusGreatswordDamageMod = 0.f;
+	BonusDamageToLowHPEnemies = 0.f;
+	BonusDamageToHighHPEnemies = 0.f;
+	BonusDamageToNormalEnemies = 0.f;
+	BonusDamageToBoss = 0.f;
+	bHasLastStandSkill = false; // 마지막 저항 스킬 초기화
 }
 
 void UDW_AttributeComponent::SaveData(FAttributeSaveData& OutData) const
@@ -35,6 +42,15 @@ void UDW_AttributeComponent::SaveData(FAttributeSaveData& OutData) const
     OutData.BaseLongswordXPMod = BaseLongswordXPMod;
     OutData.BaseGreatswordXPMod = BaseGreatswordXPMod;
     OutData.BaseDefense = BaseDefense;
+	OutData.BaseLongswordDamageMod = BaseLongswordDamageMod;
+	OutData.BaseGreatswordDamageMod = BaseGreatswordDamageMod;
+	OutData.BaseDamageToLowHPEnemies = BaseDamageToLowHPEnemies;
+	OutData.BaseDamageToHighHPEnemies = BaseDamageToHighHPEnemies;
+	OutData.BaseDamageToNormalEnemies = BaseDamageToNormalEnemies;
+	OutData.BaseDamageToBoss = BaseDamageToBoss;
+
+	// 스킬 관련 데이터 저장
+	OutData.bHasLastStandSkill = bHasLastStandSkill;
 }
 
 void UDW_AttributeComponent::LoadData(const FAttributeSaveData& InData)
@@ -48,4 +64,15 @@ void UDW_AttributeComponent::LoadData(const FAttributeSaveData& InData)
     BaseLongswordXPMod = InData.BaseLongswordXPMod;
     BaseGreatswordXPMod = InData.BaseGreatswordXPMod;
     BaseDefense = InData.BaseDefense;
+	BaseLongswordDamageMod = InData.BaseLongswordDamageMod;
+	BaseGreatswordDamageMod = InData.BaseGreatswordDamageMod;
+	BaseDamageToLowHPEnemies = InData.BaseDamageToLowHPEnemies;
+	BaseDamageToHighHPEnemies = InData.BaseDamageToHighHPEnemies;
+	BaseDamageToNormalEnemies = InData.BaseDamageToNormalEnemies;
+	BaseDamageToBoss = InData.BaseDamageToBoss;
+
+	// 스킬 관련 데이터 로드
+	bHasLastStandSkill = InData.bHasLastStandSkill;
+	// 보너스 초기화 따로 로드를 해주기때문
+	ClearAllBonuses();
 }
