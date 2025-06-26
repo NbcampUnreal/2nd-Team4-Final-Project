@@ -6,7 +6,7 @@
 
 UEquippableItem::UEquippableItem()
 {
-    // 생성자
+	ItemBaseData.ItemType = EItemType::Equipment;
 }
 
 bool UEquippableItem::EquipItem(AActor* Instigator)
@@ -59,14 +59,18 @@ bool UEquippableItem::UnequipItem(AActor* Instigator)
 {
 	if (!Instigator)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Warning, TEXT("UEquippableItem::UnequipItem - Instigator is null."));
+#endif
 		return false;
 	}
 
 	UCharacterStatComponent* CharacterStats = Instigator->FindComponentByClass<UCharacterStatComponent>();
 	if (!CharacterStats)
 	{
+#if WITH_EDITOR
 		UE_LOG(LogTemp, Error, TEXT("UEquippableItem::UnequipItem - CharacterStatComponent not found on Instigator."));
+#endif
 		return false;
 	}
 
