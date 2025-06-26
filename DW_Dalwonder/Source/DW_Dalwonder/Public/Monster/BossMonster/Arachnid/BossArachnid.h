@@ -41,8 +41,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ArachnidRushOff();
 
+	UFUNCTION(BlueprintCallable)
+	void UndeadOn();
+	UFUNCTION(BlueprintCallable)
+	void UndeadOff();
+
 protected:
 	void Dead() override;
+
+protected:
+	void Undead();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
@@ -68,12 +76,14 @@ protected:
 	bool bIsPhaseTwo = false;
 	bool bCanBurrow = false;
 
+	bool bIsUndead = false;
+
 	bool bShouldRush = false;
 	FVector CurrentVector_Rush;
 
 	FVector CurrentVector;
 	float CurrentYaw;
 	
-	
+	FTimerHandle UndeadTimerHandle;
 
 };
