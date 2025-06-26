@@ -95,7 +95,7 @@ void ABossArachnid::Tick(float DeltaTime)
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
-		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rush"));
+		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rushhh"));
 		//float Dash = AnimInstance->GetCurveValue(FName("TestCurve"));
 
 		/*FVector RushDirection = GetActorForwardVector();
@@ -111,7 +111,12 @@ void ABossArachnid::Tick(float DeltaTime)
 			SetActorLocation(CurrentVector_Rush + GetActorForwardVector() * Dash);
 		
 			if (Dash > 1000.f)
+			{
 				bShouldRush = false;
+				return;
+			}
+
+
 
 		//UE_LOG(LogTemp, Warning, TEXT("Dash : (%f)"), Dash);
 
