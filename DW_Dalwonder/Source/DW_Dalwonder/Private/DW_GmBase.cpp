@@ -6,7 +6,9 @@
 #include "DW_PortalArrivalActor.h"
 #include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
+#include "Components/Image.h"
 #include "GameFramework/Character.h"
+#include "UI/Widget/FogOfWarManager.h"
 
 ADW_GmBase::ADW_GmBase()
 {
@@ -48,6 +50,48 @@ void ADW_GmBase::BeginPlay()
     }
 
     GI->LastPortalType = EPortalType::None;
+
+
+    //안개
+
+    // FogManager = GetWorld()->SpawnActor<AFogOfWarManager>();
+    //
+    // APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    // if (PC && PC->GetPawn())
+    // {
+    //     FVector Location = PC->GetPawn()->GetActorLocation();
+    //     FogManager->InitFog();
+    // }
+    //
+    // FogMaterialInstance = UMaterialInstanceDynamic::Create(FogMaterialBase, this);
+    // if (!FogMaterialInstance)
+    // {
+    //     return;
+    // }
+    //
+    // FogMaterialInstance->SetTextureParameterValue("FogTexture", FogManager->GetFogTexture());
+    //
+    // if (FogOverlayWidgetClass)
+    // {
+    //     FogWidget = CreateWidget<UUserWidget>(GetWorld(), FogOverlayWidgetClass);
+    //     if (FogWidget)
+    //     {
+    //         FogWidget->AddToViewport();
+    //
+    //         UImage* FogImage = Cast<UImage>(FogWidget->GetWidgetFromName(TEXT("FogImage")));
+    //         if (FogImage && FogMaterialInstance)
+    //         {
+    //             FogImage->SetBrushFromMaterial(FogMaterialInstance);
+    //         }
+    //     }
+    // }
+
+    //안개
+}
+
+void ADW_GmBase::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)
