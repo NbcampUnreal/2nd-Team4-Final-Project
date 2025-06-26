@@ -111,8 +111,7 @@ void UDW_SkillIcon::UpdateIcon()
     if (SkillButton)
     {
 		UE_LOG(LogTemp, Warning, TEXT("SkillID: %s, Level: %d"), *SkillID.ToString(), Level);
-
-		UE_LOG(LogTemp, Warning, TEXT("SkillData: %s"), SkillData ? *SkillData->ToString() : TEXT("없음"));
+        
         if (SkillData && Level >= SkillData->MaxLevel)
         {
             SkillButton->SetIsEnabled(false);
