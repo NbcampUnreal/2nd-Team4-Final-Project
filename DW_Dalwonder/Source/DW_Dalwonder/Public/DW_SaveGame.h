@@ -32,4 +32,24 @@ public:
 	// 스킬 트리 데이터 저장
 	UPROPERTY(VisibleAnywhere, Category = "SaveData")
 	TMap<FName, FSkillState> SavedSkillStates;
+
+
+	// UI
+	UPROPERTY(BlueprintReadWrite)
+	int32 SavedWindowMode;
+
+	UPROPERTY(BlueprintReadWrite)
+	FIntPoint SavedResolution;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bSavedVSync;
+	
+	UPROPERTY()
+	float SavedFrameRate;
+
+	UPROPERTY()
+	bool bSavedMotionBlur;
+
+	UPROPERTY()
+	bool bSavedShadow;
 };
