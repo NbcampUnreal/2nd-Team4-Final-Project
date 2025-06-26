@@ -22,7 +22,7 @@ struct FSkillData : public FTableRowBase
     int32 Cost = 1;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    FName PrerequisiteSkillID;
+    FName PrerequisiteSkillID = "None";
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 MaxLevel = 1;
@@ -31,11 +31,14 @@ struct FSkillData : public FTableRowBase
     int32 Increase;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    int32 IncreaseType; // 1: 퍼센트, 2: 절댓값
+    int32 IncreaseType; // 1: %, 2: 고정값
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     UTexture2D* Icon;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     UTexture2D* IconActivated;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float CoolTime = 0.f; // 새로 추가된 열
 };

@@ -1,9 +1,40 @@
 #include "Character/CharacterStatComponent.h"
 #include "Character/DW_CharacterBase.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 UCharacterStatComponent::UCharacterStatComponent()
 {
 	Character = nullptr;
+}
+
+void UCharacterStatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Character = Cast<ADW_CharacterBase>(GetOwner());
+
+	// 초기 스탯 계산
+	RecalculateAllTotalStats();
+
+	// Health와 Stamina를 TotalMaxHealth/TotalMaxStamina로 초기화
+	Health = TotalMaxHealth;
+	Stamina = TotalMaxStamina;
+
+    // UI 업데이트를 위해 초기 값 브로드캐스트
+    OnHealthChanged.Broadcast(Health, TotalMaxHealth);
+    OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
+    OnTotalStatsRecalculated.Broadcast();
+}
+
+void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	// 모든 타이머 클리어
+	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+	ClearAllBuffTimers(); // 버프 타이머들도 클리어
 }
 
 void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
@@ -17,8 +48,12 @@ void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
 				return;
 			}
 		
-			Health = FMath::Clamp(Health - ConsumeRate, 0.f, BaseMaxHealth + BonusMaxHealth);
+			Health = FMath::Clamp(Health - ConsumeRate, 0.f, GetTotalMaxHealth());
+            OnHealthChanged.Broadcast(Health, TotalMaxHealth);
 		}), 0.5f, true);
+#if WITH_EDITOR
+    UE_LOG(LogTemp, Log, TEXT("Health consume started. Rate: %f"), ConsumeRate);
+#endif
 }
 
 void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
@@ -26,15 +61,14 @@ void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
 		{
-		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
-		
 			if (FMath::IsNearlyZero(Stamina) || Character->CurrentCombatState == ECharacterCombatState::Dead)
 			{
 				StopConsumeStamina();
 				return;
 			}
 		
-			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, BaseMaxStamina + BonusMaxStamina);
+			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, GetTotalMaxStamina());
+            OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
 		}), 0.5f, true);
 }
 
@@ -47,15 +81,19 @@ void UCharacterStatComponent::StopConsumeStamina()
 {
 	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 
-	if (Character->bIsGuarding)
-	{
-		Character->SetGuarding(false);
-	}
+    if (Character) // Character가 유효한지 확인
+    {
+        if (Character->bIsGuarding)
+        {
+            Character->SetGuarding(false);
+        }
 
-	if (Character->bIsSprinting)
-	{
-		Character->Sprint(false);
-	}
+        if (Character->bIsSprinting)
+        {
+            Character->Sprint(false);
+        }
+    }
+
 }
 
 void UCharacterStatComponent::StartHealthRegen()
@@ -65,167 +103,465 @@ void UCharacterStatComponent::StartHealthRegen()
 		return;
 	}
 
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
-	GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
-		{
-			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
-			{
-				StopConsumeHealth();
-				return;
-			}
-		
-			if (Health >= BaseMaxHealth + BonusMaxHealth)
-			{
-				StopConsumeHealth();
-				return;
-			}
-		
-			Health = FMath::Clamp(Health + BaseHealthGenRate + BonusHealthGenRate, 0.f, BaseMaxHealth + BonusMaxHealth);
-		}), 0.5f, true);
+	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);  
+
+    // 이미 최대 체력이면 재생 시작하지 않음
+    if (Health >= GetTotalMaxHealth())
+    {
+        return;
+    }
+
+    GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
+        {
+            // 재생 중 캐릭터가 죽으면 중지
+            if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
+            {
+                StopConsumeHealth(); // 재생 타이머를 중지
+                return;
+            }
+
+            // 체력이 최대치에 도달하면 재생 중지
+            if (FMath::IsNearlyEqual(Health, GetTotalMaxHealth())) // 부동 소수점 비교는 IsNearlyEqual 사용
+            {
+                StopConsumeHealth(); // 재생 타이머를 중지
+                return;
+            }
+
+            // 체력 재생, GetTotalHealthGenRate() 사용
+            Health = FMath::Clamp(Health + GetTotalHealthGenRate(), 0.f, GetTotalMaxHealth());
+            OnHealthChanged.Broadcast(Health, TotalMaxHealth); // 체력 변경 UI 업데이트
+        }), 0.5f, true);
 }
 
 void UCharacterStatComponent::StartStaminaRegen()
 {
-	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
-	{
-		return;
-	}
+    if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
+    {
+        return;
+    }
 
-	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
-		{
-		//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Stamina : %f"), GetStamina()));
+    // 기존 타이머가 있다면 중지
+    GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
 
-			if (Character->CurrentCombatState == ECharacterCombatState::Dead)
-			{
-				StopConsumeStamina();
-				return;
-			}
-		
-			if (Stamina >= BaseMaxStamina + BonusMaxStamina)
-			{
-				StopConsumeStamina();
-				return;
-			}
-		
-			Stamina = FMath::Clamp(Stamina + BaseStaminaGenRate + BonusStaminaGenRate, 0.f, BaseMaxStamina + BonusMaxStamina);
-		}), 0.5f, true);
+    // 이미 최대 스태미너면 재생 시작하지 않음
+    if (Stamina >= GetTotalMaxStamina())
+    {
+        return;
+    }
+
+    GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
+        {
+            // 재생 중 캐릭터가 죽으면 중지
+            if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
+            {
+                StopConsumeStamina(); // 재생 타이머를 중지
+                return;
+            }
+
+            // 스태미나가 최대치에 도달하면 재생 중지
+            if (FMath::IsNearlyEqual(Stamina, GetTotalMaxStamina()))
+            {
+                StopConsumeStamina(); // 재생 타이머를 중지
+                return;
+            }
+
+            // 스태미너 재생, GetTotalStaminaGenRate() 사용
+            Stamina = FMath::Clamp(Stamina + GetTotalStaminaGenRate(), 0.f, GetTotalMaxStamina());
+            OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina); // 스태미나 변경 UI 업데이트
+        }), 0.5f, true);
 }
 
+#pragma region GetterSetter
+// --- 현재 체력/스태미나 Setter ---
 void UCharacterStatComponent::SetHealth(const float Value)
 {
-	Health = FMath::Clamp(Value, 0.0f, BaseMaxHealth + BonusMaxHealth);
-
-	if (Health < BaseMaxHealth + BonusMaxHealth)
-	{
-		StartHealthRegen();
-	}
-}
-
-void UCharacterStatComponent::SetBaseMaxHealth(const float Value)
-{
-	BaseMaxHealth = Value;
-
-	SetHealth(Health);
-}
-
-void UCharacterStatComponent::SetBonusMaxHealth(const float Value)
-{
-	BonusMaxHealth = Value;
-
-	SetHealth(Health);
+    // TotalMaxHealth를 사용
+    Health = FMath::Clamp(Value, 0.f, TotalMaxHealth);
+    OnHealthChanged.Broadcast(Health, TotalMaxHealth);
 }
 
 void UCharacterStatComponent::SetStamina(const float Value)
 {
-	Stamina = FMath::Clamp(Value, 0.0f, BaseMaxStamina + BonusMaxStamina);
-
-	if (Stamina < BaseMaxStamina + BonusMaxStamina)
-	{
-		StartStaminaRegen();
-	}
+    // TotalMaxStamina를 사용
+    Stamina = FMath::Clamp(Value, 0.f, TotalMaxStamina);
+    OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
 }
 
+void UCharacterStatComponent::SetCurrentWeight(const float Value)
+{
+    CurrentWeight = FMath::Clamp(Value, 0.f, TotalMaxWeight);
+}
+
+
+// --- Base 스탯 Setter ---
+void UCharacterStatComponent::SetBaseMaxHealth(const float Value)
+{
+    BaseMaxHealth = Value;
+    RecalculateTotalMaxHealth(); 
+}
+void UCharacterStatComponent::SetBaseHealthGenRate(const float Value)
+{
+    BaseHealthGenRate = Value;
+    RecalculateTotalHealthGenRate(); // 구현 예정
+}
 void UCharacterStatComponent::SetBaseMaxStamina(const float Value)
 {
 	BaseMaxStamina = Value;
-
-	SetStamina(Stamina);
+	RecalculateTotalMaxStamina(); 
+}
+void UCharacterStatComponent::SetBaseStaminaGenRate(const float Value)
+{
+	BaseStaminaGenRate = Value;
+	RecalculateTotalStaminaGenRate(); // 구현 예정
+}
+void UCharacterStatComponent::SetBaseAttack(const float Value)
+{
+	BaseAttack = Value;
+	RecalculateTotalAttack(); 
+}
+void UCharacterStatComponent::SetBaseDefense(const float Value)
+{
+	BaseDefense = Value;
+	RecalculateTotalDefense(); 
+}
+void UCharacterStatComponent::SetBaseMaxWeight(const float Value)
+{
+	BaseMaxWeight = Value;
+	RecalculateTotalMaxWeight(); 
+}
+void UCharacterStatComponent::SetBaseAttackSpeed(const float Value)
+{
+	BaseAttackSpeed = Value;
+	RecalculateTotalAttackSpeed(); 
+}
+void UCharacterStatComponent::SetBaseWalkSpeed(const float Value)
+{
+	BaseWalkSpeed = Value;
+	RecalculateTotalWalkSpeed(); 
 }
 
-void UCharacterStatComponent::SetBonusMaxStamina(const float Value)
-{
-	BonusMaxStamina = Value;
 
-	SetStamina(Stamina);
+// --- EquipmentBonus 스탯 Setter ---
+void UCharacterStatComponent::SetEquipmentBonusMaxHealth(const float Value)
+{
+    EquipmentBonusMaxHealth = Value;
+    RecalculateTotalMaxHealth();
+}
+void UCharacterStatComponent::AddEquipmentBonusMaxHealth(const float Value)
+{
+    EquipmentBonusMaxHealth += Value;
+    RecalculateTotalMaxHealth();
+}
+void UCharacterStatComponent::SetEquipmentBonusHealthGenRate(const float Value)
+{
+	EquipmentBonusHealthGenRate = Value;
+	RecalculateTotalHealthGenRate();
+}
+void UCharacterStatComponent::AddEquipmentBonusHealthGenRate(const float Value)
+{
+	EquipmentBonusHealthGenRate += Value;
+	RecalculateTotalHealthGenRate();
+}
+void UCharacterStatComponent::SetEquipmentBonusMaxStamina(const float Value)
+{
+	EquipmentBonusMaxStamina = Value;
+	RecalculateTotalMaxStamina();
+}
+void UCharacterStatComponent::AddEquipmentBonusMaxStamina(const float Value)
+{
+	EquipmentBonusMaxStamina += Value;
+	RecalculateTotalMaxStamina();
+}
+void UCharacterStatComponent::SetEquipmentBonusStaminaGenRate(const float Value)
+{
+	EquipmentBonusStaminaGenRate = Value;
+	RecalculateTotalStaminaGenRate();
+}
+void UCharacterStatComponent::AddEquipmentBonusStaminaGenRate(const float Value)
+{
+	EquipmentBonusStaminaGenRate += Value;
+	RecalculateTotalStaminaGenRate();
+}
+void UCharacterStatComponent::SetEquipmentBonusAttack(const float Value)
+{
+	EquipmentBonusAttack = Value;
+	RecalculateTotalAttack();
+}
+void UCharacterStatComponent::AddEquipmentBonusAttack(const float Value)
+{
+	EquipmentBonusAttack += Value;
+	RecalculateTotalAttack();
+}
+void UCharacterStatComponent::SetEquipmentBonusDefense(const float Value)
+{
+	EquipmentBonusDefense = Value;
+	RecalculateTotalDefense();
+}
+void UCharacterStatComponent::AddEquipmentBonusDefense(const float Value)
+{
+	EquipmentBonusDefense += Value;
+	RecalculateTotalDefense();
+}
+void UCharacterStatComponent::SetEquipmentBonusMaxWeight(const float Value)
+{
+	EquipmentBonusMaxWeight = Value;
+	RecalculateTotalMaxWeight();
+}
+void UCharacterStatComponent::AddEquipmentBonusMaxWeight(const float Value)
+{
+	EquipmentBonusMaxWeight += Value;
+	RecalculateTotalMaxWeight();
+}
+void UCharacterStatComponent::SetEquipmentBonusAttackSpeed(const float Value)
+{
+	EquipmentBonusAttackSpeed = Value;
+	RecalculateTotalAttackSpeed();
+}
+void UCharacterStatComponent::AddEquipmentBonusAttackSpeed(const float Value)
+{
+	EquipmentBonusAttackSpeed += Value;
+	RecalculateTotalAttackSpeed();
+}
+void UCharacterStatComponent::SetEquipmentBonusWalkSpeed(const float Value)
+{
+	EquipmentBonusWalkSpeed = Value;
+	RecalculateTotalWalkSpeed();
+}
+void UCharacterStatComponent::AddEquipmentBonusWalkSpeed(const float Value)
+{
+	EquipmentBonusWalkSpeed += Value;
+	RecalculateTotalWalkSpeed();
 }
 
-void UCharacterStatComponent::BeginPlay()
-{
-	Super::BeginPlay();
+#pragma endregion
 
-	Character = Cast<ADW_CharacterBase>(GetOwner());
+// --- 총합 스탯 재계산 함수들 ---
+void UCharacterStatComponent::RecalculateAllTotalStats()
+{
+    RecalculateTotalMaxHealth();
+    RecalculateTotalMaxStamina();
+    RecalculateTotalAttack();
+    RecalculateTotalDefense();
+    RecalculateTotalAttackSpeed();
+    RecalculateTotalWalkSpeed();
+    RecalculateTotalMaxWeight();
+	RecalculateTotalHealthGenRate();
+	RecalculateTotalStaminaGenRate();
+	// 모든 총합 스탯 변경 알림
+	OnTotalStatsRecalculated.Broadcast();
 }
 
-void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void UCharacterStatComponent::RecalculateTotalMaxHealth()
 {
-	Super::EndPlay(EndPlayReason);
+    float OldTotalMaxHealth = TotalMaxHealth;
+    TotalMaxHealth = BaseMaxHealth + EquipmentBonusMaxHealth + BuffBonusMaxHealth;
 
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
-	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-	HealthTimer.Invalidate();
-	StaminaTimer.Invalidate();
+    // 캐릭터가 버프 등으로 최대 체력이 낮아질 때 현재 체력이 갑자기 줄어드는 것을 방지
+    SetHealth(Health);
 
-	// 모든 버프 타이머도 클리어
-	for (FTimerHandle Handle : BuffTimerHandles)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(Handle);
-	}
-	BuffTimerHandles.Empty();
+    if (TotalMaxHealth != OldTotalMaxHealth)
+    {
+        OnHealthChanged.Broadcast(Health, TotalMaxHealth); // 최대 체력 변경 알림
+    }
 }
 
-void UCharacterStatComponent::ApplyAttackBuff(float Amount, float Duration)
+void UCharacterStatComponent::RecalculateTotalHealthGenRate()
 {
-	SetBonusAttack(GetBonusAttack() + Amount); // 보너스 공격력 증가
-
-	if (Duration > 0.0f)
-	{
-		FTimerHandle BuffTimerHandle;
-		FTimerDelegate TimerDelegate;
-		TimerDelegate.BindLambda([this, Amount]()
-			{
-				RemoveAttackBuff(Amount);
-			});
-		GetWorld()->GetTimerManager().SetTimer(BuffTimerHandle, TimerDelegate, Duration, false);
-		BuffTimerHandles.Add(BuffTimerHandle); // 타이머 핸들 저장
-	}
+	TotalHealthGenRate = BaseHealthGenRate + EquipmentBonusHealthGenRate + BuffBonusHealthGenRate;
 }
 
-void UCharacterStatComponent::RemoveAttackBuff(float Amount)
+void UCharacterStatComponent::RecalculateTotalMaxStamina()
 {
-	SetBonusAttack(GetBonusAttack() - Amount); // 보너스 공격력 감소
-	// TODO: BuffTimerHandles에서 해당 타이머 핸들을 제거하는 로직 추가 (복잡하면 생략 가능)
+    float OldTotalMaxStamina = TotalMaxStamina;
+    TotalMaxStamina = BaseMaxStamina + EquipmentBonusMaxStamina + BuffBonusMaxStamina;
+    SetStamina(Stamina); // SetStamina 내부에서 클램프 처리
+
+    if (TotalMaxStamina != OldTotalMaxStamina)
+    {
+        OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
+    }
 }
 
-void UCharacterStatComponent::ApplyDefenseBuff(float Amount, float Duration)
+void UCharacterStatComponent::RecalculateTotalStaminaGenRate()
 {
-	SetBonusDefense(GetBonusDefense() + Amount); // 보너스 방어력 증가
-
-	if (Duration > 0.0f)
-	{
-		FTimerHandle BuffTimerHandle;
-		FTimerDelegate TimerDelegate;
-		TimerDelegate.BindLambda([this, Amount]()
-			{
-				RemoveDefenseBuff(Amount);
-			});
-		GetWorld()->GetTimerManager().SetTimer(BuffTimerHandle, TimerDelegate, Duration, false);
-		BuffTimerHandles.Add(BuffTimerHandle);
-	}
+    TotalStaminaGenRate = BaseStaminaGenRate + EquipmentBonusStaminaGenRate + BuffBonusStaminaGenRate;
 }
 
-void UCharacterStatComponent::RemoveDefenseBuff(float Amount)
+void UCharacterStatComponent::RecalculateTotalAttack()
 {
-	SetBonusDefense(GetBonusDefense() - Amount); // 보너스 방어력 감소
-	// TODO: BuffTimerHandles에서 해당 타이머 핸들을 제거하는 로직 추가
+    TotalAttack = BaseAttack + EquipmentBonusAttack + BuffBonusAttack;
+}
+
+void UCharacterStatComponent::RecalculateTotalDefense()
+{
+    TotalDefense = BaseDefense + EquipmentBonusDefense + BuffBonusDefense;
+}
+
+void UCharacterStatComponent::RecalculateTotalAttackSpeed()
+{
+    TotalAttackSpeed = BaseAttackSpeed + EquipmentBonusAttackSpeed + BuffBonusAttackSpeed;
+}
+
+void UCharacterStatComponent::RecalculateTotalWalkSpeed()
+{
+    TotalWalkSpeed = BaseWalkSpeed + EquipmentBonusWalkSpeed + BuffBonusWalkSpeed;
+}
+
+void UCharacterStatComponent::RecalculateTotalMaxWeight()
+{
+    TotalMaxWeight = BaseMaxWeight + EquipmentBonusMaxWeight + BuffBonusMaxWeight; // 버프 무게는 보통 없음
+    SetCurrentWeight(CurrentWeight); // 현재 무게를 새로운 최대 무게에 클램프
+}
+
+// --- 버프 적용/제거 함수 ---
+void UCharacterStatComponent::ApplyStatBuff(EConsumableEffectType EffectType, float Amount, float Duration)
+{
+    if (EffectType == EConsumableEffectType::HealHealth || EffectType == EConsumableEffectType::RestoreStamina)
+    {
+        return;
+    }
+
+    // 해당 EffectType에 대한 기존 타이머가 있다면 클리어
+    if (BuffTimerHandlesMap.Contains(EffectType))
+    {
+        GetWorld()->GetTimerManager().ClearTimer(BuffTimerHandlesMap[EffectType]);
+        BuffTimerHandlesMap.Remove(EffectType);
+    }
+
+    // 스탯에 Amount 추가
+    switch (EffectType)
+    {
+    case EConsumableEffectType::BuffAttack:
+        BuffBonusAttack += Amount;
+        RecalculateTotalAttack();
+        break;
+    case EConsumableEffectType::BuffDefense:
+        BuffBonusDefense += Amount;
+        RecalculateTotalDefense();
+        break;
+    case EConsumableEffectType::BuffMaxHealth:
+        BuffBonusMaxHealth += Amount;
+        RecalculateTotalMaxHealth();
+        break;
+    case EConsumableEffectType::BuffMaxStamina:
+        BuffBonusMaxStamina += Amount;
+        RecalculateTotalMaxStamina();
+        break;
+    case EConsumableEffectType::BuffHealthGenRate:
+        BuffBonusHealthGenRate += Amount;
+        RecalculateTotalHealthGenRate();
+        break;
+    case EConsumableEffectType::BuffStaminaGenRate:
+        BuffBonusStaminaGenRate += Amount;
+        RecalculateTotalStaminaGenRate();
+        break;
+    case EConsumableEffectType::BuffWalkSpeed:
+        BuffBonusWalkSpeed += Amount;
+        RecalculateTotalWalkSpeed();
+        break;
+    case EConsumableEffectType::BuffMaxWeight:
+        BuffBonusMaxWeight += Amount;
+        RecalculateTotalMaxWeight();
+        break;
+    case EConsumableEffectType::BuffAttackSpeed:
+        BuffBonusAttackSpeed += Amount;
+        RecalculateTotalAttackSpeed();
+        break;
+    default:
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("UCharacterStatComponent::ApplyStatBuff - Unhandled effect type: %s"), *UEnum::GetValueAsString(EffectType));
+#endif
+        return; // 처리되지 않는 효과는 타이머 설정 안 함
+    }
+
+#if WITH_EDITOR
+    UE_LOG(LogTemp, Log, TEXT("Buff Applied: %s +%f for %f seconds."), *UEnum::GetValueAsString(EffectType), Amount, Duration);
+#endif
+
+    // 타이머 설정 (Duration이 0보다 커야 함)
+    if (Duration > 0.0f)
+    {
+        FTimerHandle NewTimerHandle;
+        FTimerDelegate TimerDelegate;
+        // UFunction 바인딩 시 Enum과 Amount를 인자로 전달
+        TimerDelegate.BindUFunction(this, FName("RemoveStatBuff"), EffectType, Amount);
+        GetWorld()->GetTimerManager().SetTimer(NewTimerHandle, TimerDelegate, Duration, false);
+        BuffTimerHandlesMap.Add(EffectType, NewTimerHandle);
+    }
+
+    // 모든 총합 스탯이 변경될 수 있으므로 다시 알림
+    OnTotalStatsRecalculated.Broadcast();
+}
+
+void UCharacterStatComponent::RemoveStatBuff(EConsumableEffectType EffectType, float Amount)
+{
+    if (EffectType == EConsumableEffectType::HealHealth || EffectType == EConsumableEffectType::RestoreStamina)
+    {
+        return;
+    }
+
+    // 스탯에서 Amount 감소
+    switch (EffectType)
+    {
+    case EConsumableEffectType::BuffAttack:
+        BuffBonusAttack -= Amount;
+        RecalculateTotalAttack();
+        break;
+    case EConsumableEffectType::BuffDefense:
+        BuffBonusDefense -= Amount;
+        RecalculateTotalDefense();
+        break;
+    case EConsumableEffectType::BuffMaxHealth:
+        BuffBonusMaxHealth -= Amount;
+        RecalculateTotalMaxHealth();
+        break;
+    case EConsumableEffectType::BuffMaxStamina:
+        BuffBonusMaxStamina -= Amount;
+        RecalculateTotalMaxStamina();
+        break;
+    case EConsumableEffectType::BuffHealthGenRate:
+        BuffBonusHealthGenRate -= Amount;
+        RecalculateTotalHealthGenRate();
+        break;
+    case EConsumableEffectType::BuffStaminaGenRate:
+        BuffBonusStaminaGenRate -= Amount;
+        RecalculateTotalStaminaGenRate();
+        break;
+    case EConsumableEffectType::BuffWalkSpeed:
+        BuffBonusWalkSpeed -= Amount;
+        RecalculateTotalWalkSpeed();
+        break;
+    case EConsumableEffectType::BuffMaxWeight:
+        BuffBonusMaxWeight -= Amount;
+        RecalculateTotalMaxWeight();
+        break;
+    case EConsumableEffectType::BuffAttackSpeed:
+        BuffBonusAttackSpeed -= Amount;
+        RecalculateTotalAttackSpeed();
+        break;
+    default:
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("UCharacterStatComponent::RemoveStatBuff - Unhandled effect type: %s"), *UEnum::GetValueAsString(EffectType));
+#endif
+        return;
+    }
+
+#if WITH_EDITOR
+    UE_LOG(LogTemp, Log, TEXT("Buff Removed: %s -%f. Current BuffBonus%s: %f"), *UEnum::GetValueAsString(EffectType), Amount, *UEnum::GetValueAsString(EffectType), Amount);
+#endif
+
+    // 맵에서 타이머 핸들 제거
+    BuffTimerHandlesMap.Remove(EffectType);
+
+    // 모든 총합 스탯이 변경될 수 있으므로 다시 알림
+    OnTotalStatsRecalculated.Broadcast();
+}
+
+void UCharacterStatComponent::ClearAllBuffTimers()
+{
+    for (auto& Elem : BuffTimerHandlesMap)
+    {
+        GetWorld()->GetTimerManager().ClearTimer(Elem.Value);
+    }
+    BuffTimerHandlesMap.Empty(); // 맵 비우기
 }

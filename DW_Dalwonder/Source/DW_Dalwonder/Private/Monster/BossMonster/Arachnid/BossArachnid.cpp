@@ -8,6 +8,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 
 ABossArachnid::ABossArachnid()
 {
@@ -95,7 +96,7 @@ void ABossArachnid::Tick(float DeltaTime)
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (!AnimInstance) return;
 
-		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rush"));
+		float Dash = AnimInstance->GetCurveValue(FName("Arachnid_Rushhh"));
 		//float Dash = AnimInstance->GetCurveValue(FName("TestCurve"));
 
 		/*FVector RushDirection = GetActorForwardVector();
@@ -111,7 +112,12 @@ void ABossArachnid::Tick(float DeltaTime)
 			SetActorLocation(CurrentVector_Rush + GetActorForwardVector() * Dash);
 		
 			if (Dash > 1000.f)
+			{
 				bShouldRush = false;
+				return;
+			}
+
+
 
 		//UE_LOG(LogTemp, Warning, TEXT("Dash : (%f)"), Dash);
 
@@ -121,6 +127,11 @@ void ABossArachnid::Tick(float DeltaTime)
 
 float ABossArachnid::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (bIsUndead)
+	{
+		DamageAmount /= 3.f;
+	}
+
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	if(bIsPhaseTwo == false && MonsterHP <= MonsterMaxHP / 2)
@@ -235,6 +246,21 @@ void ABossArachnid::ArachnidRushOff()
 	bShouldRush = false;
 }
 
+void ABossArachnid::UndeadOn()
+{
+	bIsUndead = true;
+
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(UndeadTimerHandle, this, &ABossArachnid::Undead, 3.f, false);
+	}
+}
+
+void ABossArachnid::UndeadOff()
+{
+	bIsUndead = false;
+}
+
 void ABossArachnid::Dead()
 {
 	Super::Dead();
@@ -242,4 +268,17 @@ void ABossArachnid::Dead()
 	bShouldTurn = false;
 	bCanRotate = false;
 	bIsJumping = false;
+	bIsUndead = false;
+}
+
+void ABossArachnid::Undead()
+{
+	if (!bIsUndead) return;
+
+	MonsterHP += MonsterMaxHP / 20.f;
+
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(UndeadTimerHandle, this, &ABossArachnid::Undead, 1.f, false);
+	}
 }
