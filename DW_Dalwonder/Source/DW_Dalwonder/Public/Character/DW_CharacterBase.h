@@ -453,9 +453,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "FootStep")
 	TMap<TEnumAsByte<EPhysicalSurface>, UNiagaraSystem*> FootstepVFXMap;
 
-	UPROPERTY(EditDefaultsOnly, Category = "FootStep")
-	TMap<TEnumAsByte<EPhysicalSurface>, USoundBase*> FootstepSoundMap;
-
 	// 현재 감지된 SurfaceType (0.01초마다 업데이트됨)
 	EPhysicalSurface CurrentSurfaceType = SurfaceType_Default;
 

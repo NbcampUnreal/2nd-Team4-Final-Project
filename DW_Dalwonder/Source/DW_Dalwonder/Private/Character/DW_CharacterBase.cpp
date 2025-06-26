@@ -1548,11 +1548,6 @@ void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 			}
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());
-
-			if (USoundBase* const* FoundSound = FootstepSoundMap.Find(CurrentSurfaceType))
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), *FoundSound, FootLocation);
-			}
 		}
 	}
 }
