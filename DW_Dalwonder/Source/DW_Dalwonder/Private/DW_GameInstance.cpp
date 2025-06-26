@@ -428,7 +428,7 @@ void UDW_GameInstance::CacheTempDataBeforeLevelChange()
         CachedTempSaveData.TempInventory.TempEquippedItems.Empty();
         for (const auto& Pair : Inv->EquippedItems)
         {
-            CachedTempSaveData.TempInventory.TempEquippedItems.Add(Pair.Key, TSoftObjectPtr<UItemBase>(Pair.Value));
+            CachedTempSaveData.TempInventory.TempEquippedItems.Add(Pair.Key, TSoftObjectPtr<UEquippableItem>(Pair.Value));
         }
     }
 

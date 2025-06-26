@@ -309,8 +309,10 @@ bool UInventoryComponent::UnequipItemFromSlot(EEquipSlotType EquipSlotType)
         return false;
     }
 
-    if (ItemToUnequip->UnequipItem(GetOwner())) // 아이템의 UnequipItem 호출 (외형 복구)
+    // 1. 아이템의 UnequipItem 호출 (스탯 제거 및 외형 복구)
+    if (ItemToUnequip->UnequipItem(GetOwner()))
     {
+        // 2. 인벤토리에 다시 돌려놓기 (1개만 해제하므로 수량 1 전달)
         int temp = 1;
         if (AddItem(ItemToUnequip, temp)) // 1개만 해제하므로 수량 1 전달
         {
@@ -318,6 +320,7 @@ bool UInventoryComponent::UnequipItemFromSlot(EEquipSlotType EquipSlotType)
 #if WITH_EDITOR
             UE_LOG(LogTemp, Log, TEXT("UInventoryComponent::UnequipItemFromSlot - Unequipped %s from %s slot and moved to inventory."), *ItemToUnequip->ItemBaseData.ItemName.ToString(), *UEnum::GetValueAsString(EquipSlotType));
 #endif 
+            EquippedItems.Add(EquipSlotType, ItemToUnequip);
             //UI 업데이트 이벤트 디스패치
             return true;
         }
@@ -328,6 +331,8 @@ bool UInventoryComponent::UnequipItemFromSlot(EEquipSlotType EquipSlotType)
 #if WITH_EDITOR
             UE_LOG(LogTemp, Error, TEXT("UInventoryComponent::UnequipItemFromSlot - Inventory is full! Failed to re-add unequipped item %s. Item remains equipped."), *ItemToUnequip->ItemBaseData.ItemName.ToString());
 #endif 
+            EquippedItems.Add(EquipSlotType, ItemToUnequip); // 장착 맵에 다시 추가
+			ItemToUnequip->EquipItem(GetOwner()); // 아이템을 다시 장착 상태로 유지
             return false; // 인벤토리 부족으로 인해 해제 실패
         }
     }
@@ -338,13 +343,17 @@ bool UInventoryComponent::DropItemInSlot(int32 SlotIndex, int32 QuantityToDrop)
 {
     if (!InventorySlots.IsValidIndex(SlotIndex) || InventorySlots[SlotIndex].IsEmpty())
     {
+#if WITH_EDITOR
         UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::DropItemInSlot - Invalid slot index or slot is empty: %d"), SlotIndex);
+#endif
         return false;
     }
 
     if (QuantityToDrop <= 0 || QuantityToDrop > InventorySlots[SlotIndex].Quantity)
     {
-        UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::DropItemInSlot - Invalid quantity to drop for slot %d: %d"), SlotIndex, QuantityToDrop);
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::DropItemInSlot - Invalid quantity to drop for slot %d: %d (Current: %d)"), SlotIndex, QuantityToDrop, InventorySlots[SlotIndex].Quantity);
+#endif
         return false;
     }
 

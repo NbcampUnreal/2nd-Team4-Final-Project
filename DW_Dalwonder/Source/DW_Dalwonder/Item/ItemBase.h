@@ -55,8 +55,31 @@ public:
     UFUNCTION(BlueprintPure, Category = "Item")
     bool IsStackable() const { return ItemBaseData.MaxStackSize > 1; }
 
-    // 아이템 타입 확인을 위한 헬퍼 함수
+
+
+    // --- 아이템 정보 획득 헬퍼 함수 ---
+    // 아이템이 스택 가능한지 확인하는 함수
     UFUNCTION(BlueprintPure, Category = "Item")
     EItemType GetItemType() const { return ItemBaseData.ItemType; }
+
+    // 아이템의 이름 텍스트를 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    FText GetItemName() const { return ItemBaseData.ItemName; }
+
+    // 아이템의 설명을 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    FText GetItemDescription() const { return ItemBaseData.Description; }
+
+    // 아이템의 아이콘 텍스처를 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    UTexture2D* GetItemIcon() const { return ItemBaseData.Icon.Get(); }
+
+    // 아이템의 무게를 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    float GetItemWeight() const { return ItemBaseData.Weight; }
+
+    // 아이템의 최대 스택 사이즈를 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    int32 GetMaxStackSize() const { return ItemBaseData.MaxStackSize; }
    
 };
