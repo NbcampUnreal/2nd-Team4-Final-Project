@@ -15,21 +15,46 @@ struct FTmpCharacterStatData
 
     UPROPERTY() float Health;
     UPROPERTY() float Stamina;
+    UPROPERTY() float CurrentWeight;
+
+    UPROPERTY() float TotalMaxHealth;
+    UPROPERTY() float TotalHealthGenRate;
+    UPROPERTY() float TotalMaxStamina;
+    UPROPERTY() float TotalStaminaGenRate;
+    UPROPERTY() float TotalAttack;
+	UPROPERTY() float TotalDefense;
+	UPROPERTY() float TotalAttackSpeed;
+	UPROPERTY() float TotalWalkSpeed;
+	UPROPERTY() float TotalMaxWeight;
 
     UPROPERTY() float BaseMaxHealth;
-    UPROPERTY() float BonusMaxHealth;
-
+	UPROPERTY() float BaseHealthGenRate;
+	UPROPERTY() float BaseMaxStamina;
+	UPROPERTY() float BaseStaminaGenRate;
     UPROPERTY() float BaseAttack;
-    UPROPERTY() float BonusAttack;
-
     UPROPERTY() float BaseDefense;
-    UPROPERTY() float BonusDefense;
-
-    UPROPERTY() float Weight;
-    UPROPERTY() float BaseMaxWeight;
-    UPROPERTY() float BonusMaxWeight;
-
+    UPROPERTY() float BaseAttackSpeed;
     UPROPERTY() float BaseWalkSpeed;
-    UPROPERTY() float BonusWalkSpeed;
-    UPROPERTY() float SprintSpeed;
+    UPROPERTY() float BaseMaxWeight;
+
+    UPROPERTY() float BuffBonusMaxHealth;
+	UPROPERTY() float BuffBonusHealthGenRate;
+	UPROPERTY() float BuffBonusMaxStamina;
+	UPROPERTY() float BuffBonusStaminaGenRate;
+	UPROPERTY() float BuffBonusAttack;
+	UPROPERTY() float BuffBonusDefense;
+	UPROPERTY() float BuffBonusAttackSpeed;
+	UPROPERTY() float BuffBonusWalkSpeed;
+	UPROPERTY() float BuffBonusMaxWeight;
+
+	UPROPERTY() float EquipmentBonusMaxHealth;
+	UPROPERTY() float EquipmentBonusHealthGenRate;
+	UPROPERTY() float EquipmentBonusMaxStamina;
+	UPROPERTY() float EquipmentBonusStaminaGenRate;
+	UPROPERTY() float EquipmentBonusAttack;
+	UPROPERTY() float EquipmentBonusDefense;
+	UPROPERTY() float EquipmentBonusAttackSpeed;
+	UPROPERTY() float EquipmentBonusWalkSpeed;
+	UPROPERTY() float EquipmentBonusMaxWeight;
+
 };

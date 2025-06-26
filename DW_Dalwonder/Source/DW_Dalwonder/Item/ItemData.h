@@ -30,6 +30,40 @@ struct FConsumableEffectData
 };
 
 USTRUCT(BlueprintType)
+struct FEquipmentStats
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float MaxHealthBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float HealthGenRateBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float MaxStaminaBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float StaminaGenRateBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float AttackBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float DefenseBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float MaxWeightBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float AttackSpeedBonus = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment Stats")
+    float WalkSpeedBonus = 0.f;
+};
+
+
+USTRUCT(BlueprintType)
 struct FItemData : public FTableRowBase
 {
     GENERATED_BODY()
@@ -62,21 +96,15 @@ struct FItemData : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Consumable")
     TArray<FConsumableEffectData> ConsumableEffects;
 
+    // 장비 스탯 (EquippableItem에만 관련)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Equipment")
+    FEquipmentStats EquipmentStats;
+
     // 장착 아이템 전용: 어떤 슬롯에 장착되는지
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Equipment")
     EEquipSlotType EquipSlot;
-
+    
     // 무기 전용: 캐릭터 스켈레톤에 부착될 소켓 이름
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Equipment")
     FName AttachSocketName;
-
-    // --- 아이템 스탯: 장착 장비일 때만 보이도록 EditCondition 추가 ---
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Stats")
-    float AttackPower;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Stats")
-    float DefensePower;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
-    int32 Value;
 };

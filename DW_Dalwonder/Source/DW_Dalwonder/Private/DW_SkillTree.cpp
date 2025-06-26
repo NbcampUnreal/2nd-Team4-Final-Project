@@ -32,31 +32,24 @@ void UDW_SkillTree::NativeConstruct()
 
 void UDW_SkillTree::CreateSkillIcons()
 {
-    if (!SkillCanvasPanel || !SkillIconClass)
-        return;
-
-    // 자동으로 캐릭터에서 SkillComponent 가져오기
-    if (!SkillComponent || !SkillComponent->SkillDataTable)
-    {
-        return;
-    }
+    if (!SkillCanvasPanel || !SkillIconClass) return;
+    if (!SkillComponent || !SkillComponent->SkillDataTable) return;
 
     UDataTable* SkillDataTable = SkillComponent->SkillDataTable;
-    static const FString ContextString(TEXT("CreateSkillIcons"));
+    TMap<FName, const FSkillData*> SkillDataMap;
 
     // -------------------------------
     // Step 1: SkillData 맵 구성
     // -------------------------------
-    TMap<FName, const FSkillData*> SkillDataMap;
-    for (const auto& RowPair : SkillDataTable->GetRowMap())
+    for (const auto& Row : SkillDataTable->GetRowMap())
     {
-        const FSkillData* SkillData = reinterpret_cast<const FSkillData*>(RowPair.Value);
-        if (!SkillData) continue;
-        SkillDataMap.FindOrAdd(SkillData->SkillID) = SkillData;
+        const FSkillData* Data = reinterpret_cast<const FSkillData*>(Row.Value);
+        if (!Data) continue;
+        SkillDataMap.Add(Row.Key, Data);
     }
 
     // -------------------------------
-    // Step 2: 포인터 기반 트리 구조
+    // Step 2: Node 트리 구조체
     // -------------------------------
     struct FSkillTreeNode
     {
@@ -65,132 +58,203 @@ void UDW_SkillTree::CreateSkillIcons()
     };
 
     TMap<FName, FSkillTreeNode*> NodeMap;
-
     for (const auto& Pair : SkillDataMap)
     {
-        FSkillTreeNode* NewNode = new FSkillTreeNode();
-        NewNode->SkillID = Pair.Key;
-        NodeMap.Add(Pair.Key, NewNode);
+        FSkillTreeNode* Node = new FSkillTreeNode();
+        Node->SkillID = Pair.Key;
+        NodeMap.Add(Pair.Key, Node);
     }
 
+    // 부모 → 자식 연결 (복수 부모 지원: "A or B" 형식)
     for (const auto& Pair : SkillDataMap)
     {
         const FSkillData* Data = Pair.Value;
-        FName ChildID = Data->SkillID;
-        FName ParentID = Data->PrerequisiteSkillID;
+        FName ChildID = Pair.Key;
+        FString Raw = Data->PrerequisiteSkillID.ToString();
+        TArray<FString> Parents;
 
-        if (!ParentID.IsNone() && NodeMap.Contains(ParentID))
+        if (Raw.Contains(" or "))
+            Raw.ParseIntoArray(Parents, TEXT(" or "), true);
+        else if (!Raw.IsEmpty())
+            Parents.Add(Raw);
+
+        for (const FString& P : Parents)
         {
-            NodeMap[ParentID]->Children.Add(NodeMap[ChildID]);
+            FName ParentID(*P.TrimStartAndEnd());
+            if (NodeMap.Contains(ParentID))
+                NodeMap[ParentID]->Children.Add(NodeMap[ChildID]);
         }
     }
 
-    FSkillTreeNode* RootNode = NodeMap.Contains("Sta001") ? NodeMap["Sta001"] : nullptr;
-    if (!RootNode) return;
+    // -------------------------------
+    // Step 3: 루트 노드 지정
+    // -------------------------------
+    TArray<FSkillTreeNode*> RootNodes;
+    for (const auto& Pair : SkillDataMap)
+    {
+        const FSkillData* Data = Pair.Value;
+        FString Raw = Data->PrerequisiteSkillID.ToString().TrimStartAndEnd();
 
-    // -------------------------------
-    // Step 3: 트리 너비 계산
-    // -------------------------------
-    int32 TreeWidth = 0;
-    TFunction<void(FSkillTreeNode*)> CountNodes;
-    CountNodes = [&](FSkillTreeNode* Node)
+		// 선행조건 "None" 또는 "Null"인 경우 루트 노드로 간주
+        if (Raw.IsEmpty() || Raw.Equals("None", ESearchCase::IgnoreCase) || Raw.Equals("Null", ESearchCase::IgnoreCase))
         {
-            TreeWidth++;
-            for (FSkillTreeNode* Child : Node->Children)
-            {
-                CountNodes(Child);
-            }
-        };
-    CountNodes(RootNode);
-
+            RootNodes.Add(NodeMap[Pair.Key]);
+        }
+    }
+	// 루트 노드가 없으면 종료
+    if (RootNodes.Num() == 0) return;
+	
     // -------------------------------
-    // Step 4: 위치 배치 지그재그 위치 계산
+    // Step 4: 트리형 배치 계산
     // -------------------------------
     TMap<FName, FVector2D> CalculatedPositions;
+    TMap<FName, FVector2D> TrueParentPosition; // 기준 부모 위치
 
-    int32 ZigzagIndex = 0;
-    FVector2D CanvasCenter = FVector2D(960.f, 540.f);
-
-    constexpr float HorizontalSpacing = 140.f;      // 오른쪽으로 이동 간격
-    constexpr float VerticalAmplitude = 200.f;      // 위아래 흔들림
-    constexpr float ZigZagFrequency = PI / 3.f;     // 파도 주기
-
-    TFunction<void(FSkillTreeNode*)> TraverseZigZagHorizontal;
-    TraverseZigZagHorizontal = [&](FSkillTreeNode* Node)
+	// 재귀 함수로 트리 구조를 순회하며 위치 계산
+    TFunction<void(FSkillTreeNode*, FVector2D)> AssignPosition;
+    AssignPosition = [&](FSkillTreeNode* Node, FVector2D Pos)
         {
-            float X = ZigzagIndex * HorizontalSpacing;
-            float Y = CanvasCenter.Y + FMath::Sin(ZigzagIndex * ZigZagFrequency) * VerticalAmplitude;
-
-            FVector2D Pos = FVector2D(X + 100, Y); // 살짝 오른쪽 쉬프트
             CalculatedPositions.Add(Node->SkillID, Pos);
 
-            ZigzagIndex++;
+            int32 Count = Node->Children.Num();
+            float VerticalSpacing = 150.f;
+            float XOffset = 240.f;
+            float YStart = Pos.Y - ((Count - 1) * VerticalSpacing) / 2.f;
 
-            for (FSkillTreeNode* Child : Node->Children)
+            for (int32 i = 0; i < Count; ++i)
             {
-                TraverseZigZagHorizontal(Child);
+				// 선제 조건이 두개가 아니라면 기준 부모 위치를 사용
+                FVector2D UsePos = TrueParentPosition.Contains(Node->SkillID)
+                    ? TrueParentPosition[Node->SkillID]
+                    : Pos;
+
+                FVector2D ChildPos = FVector2D(UsePos.X + XOffset, YStart + i * VerticalSpacing);
+                AssignPosition(Node->Children[i], ChildPos);
             }
         };
 
-    TraverseZigZagHorizontal(RootNode);
+	// 루트 노드 위치 할당
+    FVector2D Start = FVector2D(200, 540);
+    for (int32 i = 0; i < RootNodes.Num(); ++i)
+    {
+        FVector2D RootPos = Start + FVector2D(0.f, i * 200.f);
+        AssignPosition(RootNodes[i], RootPos);
+    }
 
+    // --------------------------------------------------
+    // 5. 다중 부모 노드의 위치 보정 (부모 평균 + 오른쪽)
+    // --------------------------------------------------
+    for (const auto& Pair : SkillDataMap)
+    {
+        const FSkillData* Data = Pair.Value;
+        FString Raw = Data->PrerequisiteSkillID.ToString();
+        TArray<FString> Parents;
+        Raw.ParseIntoArray(Parents, TEXT(" or "), true);
+
+        if (Parents.Num() >= 2)
+        {
+            FVector2D Sum = FVector2D::ZeroVector;
+            int32 Valid = 0;
+
+            for (const FString& P : Parents)
+            {
+                FName PID(*P.TrimStartAndEnd());
+                if (CalculatedPositions.Contains(PID))
+                {
+                    Sum += CalculatedPositions[PID];
+                    Valid++;
+                }
+            }
+
+            if (Valid > 0)
+            {
+                FVector2D Mid = Sum / Valid;
+                FVector2D Final = Mid + FVector2D(240.f, 0.f); // 오른쪽 이동
+                CalculatedPositions[Pair.Key] = Final;
+
+                // 기준 좌표도 별도 저장 → 이후 흐름 유지
+                TrueParentPosition.Add(Pair.Key, Final);
+            }
+        }
+    }
 
     // -------------------------------
     // Step 5: 아이콘 생성
     // -------------------------------
-    TSet<FName> SpawnedIcons;
-
-    for (const auto& Pair : CalculatedPositions)
+    TSet<FName> Spawned;
+    for (const auto& PosPair : CalculatedPositions)
     {
-        FName RealID = Pair.Key;
+        FName ID = PosPair.Key;
+        if (Spawned.Contains(ID)) continue;
 
-        
-        FName DisplayID = RealID;
-        // UI 대검 중검 구분... 흠...
-        /*if (RealID == "Lon001" || RealID == "Gre001")
+        const FSkillData* Data = SkillDataMap[ID];
+        UDW_SkillIcon* Icon = CreateWidget<UDW_SkillIcon>(this, SkillIconClass);
+        if (!Icon || !Data) continue;
+
+        Icon->SkillID = ID;
+        Icon->SkillComponent = SkillComponent;
+        SkillCanvasPanel->AddChild(Icon);
+
+        if (UCanvasPanelSlot* CanSlot = Cast<UCanvasPanelSlot>(Icon->Slot))
         {
-            DisplayID = "MeleeSkill";
-            if (SpawnedIcons.Contains(DisplayID))
-                continue;
-        }*/
-
-        UDW_SkillIcon* SkillIcon = CreateWidget<UDW_SkillIcon>(this, SkillIconClass);
-        if (!SkillIcon) continue;
-
-        SkillIcon->SkillID = DisplayID;
-        SkillIcon->SkillComponent = SkillComponent;
-
-        SkillCanvasPanel->AddChild(SkillIcon);
-
-        if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(SkillIcon->Slot))
-        {
-            CanvasSlot->SetAutoSize(true);
-            CanvasSlot->SetPosition(Pair.Value);
+            CanSlot->SetAutoSize(true);
+            CanSlot->SetPosition(PosPair.Value);
         }
 
-        // 아이콘 텍스처 설정
-        const FSkillData* SkillData = SkillDataMap.Contains(RealID) ? SkillDataMap[RealID] : nullptr;
-        if (SkillData && SkillData->Icon && SkillIcon->GetIconImage())
-        {
-            SkillIcon->GetIconImage()->SetBrushFromTexture(SkillData->Icon);
-        }
+        if (Data->Icon && Icon->GetIconImage())
+            Icon->GetIconImage()->SetBrushFromTexture(Data->Icon);
 
-        // 선행 조건에 따른 버튼 활성화 여부 설정
-        if (SkillData)
-        {
-            bool bShouldEnable = true;
+        // 활성화 조건
+        bool bEnable = true;
+        FString Raw = Data->PrerequisiteSkillID.ToString();
+        TArray<FString> Prereqs;
 
-            if (!SkillData->PrerequisiteSkillID.IsNone())
+        if (Raw.Contains(" or "))
+            Raw.ParseIntoArray(Prereqs, TEXT(" or "), true);
+        else if (!Raw.IsEmpty() && !Raw.Equals("None", ESearchCase::IgnoreCase) && !Raw.Equals("Null", ESearchCase::IgnoreCase))
+            Prereqs.Add(Raw);
+
+        if (Prereqs.Num() > 0)
+        {
+            bEnable = false;
+            for (const FString& P : Prereqs)
             {
-                int32 PrereqLevel = SkillComponent->GetSkillLevel(SkillData->PrerequisiteSkillID);
-                bShouldEnable = PrereqLevel > 0;
+                FName PID(*P.TrimStartAndEnd());
+                if (SkillComponent->GetSkillLevel(PID) > 0)
+                {
+                    bEnable = true;
+                    break;
+                }
             }
-
-            SkillIcon->SetIsEnabled(bShouldEnable);
         }
 
-        SkillIcon->UpdateIcon();
-        SpawnedIcons.Add(DisplayID);
+        Icon->SetIsEnabled(bEnable);
+        Icon->UpdateIcon();
+        Spawned.Add(ID);
+    }
+
+    // 선 연결
+    for (const auto& Pair : SkillDataMap)
+    {
+        const FSkillData* Data = Pair.Value;
+        FString Raw = Data->PrerequisiteSkillID.ToString();
+
+        TArray<FString> Parents;
+        if (Raw.Contains(" or "))
+            Raw.ParseIntoArray(Parents, TEXT(" or "), true);
+        else if (!Raw.IsEmpty())
+            Parents.Add(Raw);
+
+        for (const FString& P : Parents)
+        {
+            FName PID(*P.TrimStartAndEnd());
+            if (CalculatedPositions.Contains(PID) && CalculatedPositions.Contains(Pair.Key))
+            {
+                FVector2D StartPos = CalculatedPositions[PID] + FVector2D(32.f, 32.f);
+                FVector2D EndPos = CalculatedPositions[Pair.Key] + FVector2D(32.f, 32.f);
+                CreateLineBetweenPoints(StartPos, EndPos);
+            }
+        }
     }
 }
 
@@ -226,4 +290,62 @@ void UDW_SkillTree::UpdateSkillActivationStates()
             }
         }
     }
+}
+
+UImage* UDW_SkillTree::CreateLineBetweenPoints(const FVector2D& Start, const FVector2D& End)
+{
+    UImage* Line = NewObject<UImage>(this);
+    if (!Line) return nullptr;
+
+    FVector2D Dir = End - Start;
+    float Length = Dir.Size();
+    float AngleDeg = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
+
+    FSlateBrush Brush;
+    Brush.TintColor = FLinearColor::White;
+    Brush.ImageSize = FVector2D(Length, 2.f);
+
+    Line->SetBrush(Brush);
+    Line->SetRenderTransformPivot(FVector2D(0.f, 0.5f));
+    Line->SetRenderTransform(FWidgetTransform(FVector2D::ZeroVector, FVector2D(1.f, 1.f), FVector2D::ZeroVector, AngleDeg));
+
+    SkillCanvasPanel->AddChild(Line);
+    if (UCanvasPanelSlot* CanSlot = Cast<UCanvasPanelSlot>(Line->Slot))
+    {
+        CanSlot->SetAutoSize(true);
+        CanSlot->SetPosition(Start);
+        CanSlot->SetZOrder(-1);
+    }
+
+    return Line;
+}
+
+FReply UDW_SkillTree::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        bIsDragging = true;
+        DragStartPosition = InMouseEvent.GetScreenSpacePosition();
+        OriginalCanvasPosition = SkillCanvasPanel->RenderTransform.Translation;
+        return FReply::Handled();
+    }
+    return FReply::Unhandled();
+}
+
+FReply UDW_SkillTree::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    if (bIsDragging)
+    {
+        FVector2D CurrentPos = InMouseEvent.GetScreenSpacePosition();
+        FVector2D Delta = CurrentPos - DragStartPosition;
+        SkillCanvasPanel->SetRenderTranslation(OriginalCanvasPosition + Delta);
+        return FReply::Handled();
+    }
+    return FReply::Unhandled();
+}
+
+FReply UDW_SkillTree::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    bIsDragging = false;
+    return FReply::Handled().ReleaseMouseCapture();
 }
