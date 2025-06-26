@@ -60,6 +60,7 @@ void ADW_GmBase::BeginPlay()
     // if (PC && PC->GetPawn())
     // {
     //     FVector Location = PC->GetPawn()->GetActorLocation();
+    //     FogManager->GridOrigin = FVector2d(Location.X, Location.Y);
     //     FogManager->InitFog();
     // }
     //

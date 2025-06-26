@@ -14,7 +14,9 @@ AFogOfWarManager::AFogOfWarManager()
     RevealRadius = 5.0f;
     TextureSize = 512;
     PixelSize = 100.0f;
-    GridOrigin = FVector2D(5000, 3000);
+
+    //Origin 값은 GameMode BeginPlay에서 Player의 위치를 참조하여 정해짐
+    GridOrigin = FVector2D(0, 0);
 }
 
 void AFogOfWarManager::BeginPlay()
