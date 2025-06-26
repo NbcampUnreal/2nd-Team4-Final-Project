@@ -91,18 +91,48 @@ void UDW_GameInstance::SaveGameData()
 		FTmpCharacterStatData& Out = SaveGameInstance->SaveStatData;
 		Out.Health = StatComp->GetHealth();
 		Out.Stamina = StatComp->GetStamina();
-            
+        Out.CurrentWeight = StatComp->GetCurrentWeight();
+
+		Out.TotalMaxHealth = StatComp->GetTotalMaxHealth();
+		Out.TotalHealthGenRate = StatComp->GetTotalHealthGenRate();
+		Out.TotalMaxStamina = StatComp->GetTotalMaxStamina();
+		Out.TotalStaminaGenRate = StatComp->GetTotalStaminaGenRate();
+		Out.TotalAttack = StatComp->GetTotalAttack();
+		Out.TotalDefense = StatComp->GetTotalDefense();
+		Out.TotalAttackSpeed = StatComp->GetTotalAttackSpeed();
+		Out.TotalWalkSpeed = StatComp->GetTotalWalkSpeed();
+		Out.TotalMaxWeight = StatComp->GetTotalMaxWeight();
+
 		Out.BaseMaxHealth = StatComp->GetBaseMaxHealth();
-		Out.BonusMaxHealth = StatComp->GetBonusMaxHealth();
+		Out.BaseHealthGenRate = StatComp->GetBaseHealthGenRate();
+		Out.BaseMaxStamina = StatComp->GetBaseMaxStamina();
+		Out.BaseStaminaGenRate = StatComp->GetBaseStaminaGenRate();
 		Out.BaseAttack = StatComp->GetBaseAttack();
-		Out.BonusAttack = StatComp->GetBonusAttack();
 		Out.BaseDefense = StatComp->GetBaseDefense();
-		Out.BonusDefense = StatComp->GetBonusDefense();
-		Out.Weight = StatComp->GetWeight();
-		Out.BaseMaxWeight = StatComp->GetBaseMaxWeight();
-		Out.BonusMaxWeight = StatComp->GetBonusMaxWeight();
+		Out.BaseAttackSpeed = StatComp->GetBaseAttackSpeed();
 		Out.BaseWalkSpeed = StatComp->GetBaseWalkSpeed();
-		Out.BonusWalkSpeed = StatComp->GetBonusWalkSpeed();
+		Out.BaseMaxWeight = StatComp->GetBaseMaxWeight();
+
+		Out.BuffBonusMaxHealth = StatComp->GetBuffBonusMaxHealth();
+		Out.BuffBonusHealthGenRate = StatComp->GetBuffBonusHealthGenRate();
+		Out.BuffBonusMaxStamina = StatComp->GetBuffBonusMaxStamina();
+		Out.BuffBonusStaminaGenRate = StatComp->GetBuffBonusStaminaGenRate();
+		Out.BuffBonusAttack = StatComp->GetBuffBonusAttack();
+		Out.BuffBonusDefense = StatComp->GetBuffBonusDefense();
+		Out.BuffBonusAttackSpeed = StatComp->GetBuffBonusAttackSpeed();
+		Out.BuffBonusMaxWeight = StatComp->GetBuffBonusMaxWeight();
+		Out.BuffBonusWalkSpeed = StatComp->GetBuffBonusWalkSpeed();
+
+		Out.EquipmentBonusMaxHealth = StatComp->GetEquipmentBonusMaxHealth();
+		Out.EquipmentBonusHealthGenRate = StatComp->GetEquipmentBonusHealthGenRate();
+		Out.EquipmentBonusMaxStamina = StatComp->GetEquipmentBonusMaxStamina();
+		Out.EquipmentBonusStaminaGenRate = StatComp->GetEquipmentBonusStaminaGenRate();
+		Out.EquipmentBonusAttack = StatComp->GetEquipmentBonusAttack();
+		Out.EquipmentBonusDefense = StatComp->GetEquipmentBonusDefense();
+		Out.EquipmentBonusAttackSpeed = StatComp->GetEquipmentBonusAttackSpeed();
+		Out.EquipmentBonusMaxWeight = StatComp->GetEquipmentBonusMaxWeight();
+		Out.EquipmentBonusWalkSpeed = StatComp->GetEquipmentBonusWalkSpeed();
+
 	}
 
     // 5. 스킬 트리 저장
@@ -211,17 +241,27 @@ void UDW_GameInstance::ApplyLoadedData()
 		const FTmpCharacterStatData& In = LoadedSaveGame->SaveStatData;
 		StatComp->SetHealth(In.Health);
 		StatComp->SetStamina(In.Stamina);
+		StatComp->SetCurrentWeight(In.CurrentWeight);
+
 		StatComp->SetBaseMaxHealth(In.BaseMaxHealth);
-		StatComp->SetBonusMaxHealth(In.BonusMaxHealth);
+		StatComp->SetBaseHealthGenRate(In.BaseHealthGenRate);
+		StatComp->SetBaseMaxStamina(In.BaseMaxStamina);
+		StatComp->SetBaseStaminaGenRate(In.BaseStaminaGenRate);
 		StatComp->SetBaseAttack(In.BaseAttack);
-		StatComp->SetBonusAttack(In.BonusAttack);
 		StatComp->SetBaseDefense(In.BaseDefense);
-		StatComp->SetBonusDefense(In.BonusDefense);
-		StatComp->SetWeight(In.Weight);
-		StatComp->SetBaseMaxWeight(In.BaseMaxWeight);
-		StatComp->SetBonusMaxWeight(In.BonusMaxWeight);
+		StatComp->SetBaseAttackSpeed(In.BaseAttackSpeed);
 		StatComp->SetBaseWalkSpeed(In.BaseWalkSpeed);
-		StatComp->SetBonusWalkSpeed(In.BonusWalkSpeed);
+		StatComp->SetBaseMaxWeight(In.BaseMaxWeight);
+
+		StatComp->SetEquipmentBonusMaxHealth(In.EquipmentBonusMaxHealth);
+		StatComp->SetEquipmentBonusHealthGenRate(In.EquipmentBonusHealthGenRate);
+		StatComp->SetEquipmentBonusMaxStamina(In.EquipmentBonusMaxStamina);
+		StatComp->SetEquipmentBonusStaminaGenRate(In.EquipmentBonusStaminaGenRate);
+		StatComp->SetEquipmentBonusAttack(In.EquipmentBonusAttack);
+		StatComp->SetEquipmentBonusDefense(In.EquipmentBonusDefense);
+		StatComp->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
+		StatComp->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
+		StatComp->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
 	}
 
     // 5. Skill 복원 + 보너스 적용
@@ -443,23 +483,27 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         const auto& In = CachedTempSaveData.TempStatData;
         Stat->SetHealth(In.Health);
         Stat->SetStamina(In.Stamina);
+        Stat->SetCurrentWeight(In.CurrentWeight);
 
         Stat->SetBaseMaxHealth(In.BaseMaxHealth);
-        Stat->SetBonusMaxHealth(In.BonusMaxHealth);
-
+        Stat->SetBaseHealthGenRate(In.BaseHealthGenRate);
+        Stat->SetBaseMaxStamina(In.BaseMaxStamina);
+        Stat->SetBaseStaminaGenRate(In.BaseStaminaGenRate);
         Stat->SetBaseAttack(In.BaseAttack);
-        Stat->SetBonusAttack(In.BonusAttack);
-
         Stat->SetBaseDefense(In.BaseDefense);
-        Stat->SetBonusDefense(In.BonusDefense);
-
-        Stat->SetWeight(In.Weight);
-        Stat->SetBaseMaxWeight(In.BaseMaxWeight);
-        Stat->SetBonusMaxWeight(In.BonusMaxWeight);
-
+        Stat->SetBaseAttackSpeed(In.BaseAttackSpeed);
         Stat->SetBaseWalkSpeed(In.BaseWalkSpeed);
-        Stat->SetBonusWalkSpeed(In.BonusWalkSpeed);
-        // SprintSpeed는 내부에서 계산되므로 필요하면 추가?
+        Stat->SetBaseMaxWeight(In.BaseMaxWeight);
+
+        Stat->SetEquipmentBonusMaxHealth(In.EquipmentBonusMaxHealth);
+        Stat->SetEquipmentBonusHealthGenRate(In.EquipmentBonusHealthGenRate);
+        Stat->SetEquipmentBonusMaxStamina(In.EquipmentBonusMaxStamina);
+        Stat->SetEquipmentBonusStaminaGenRate(In.EquipmentBonusStaminaGenRate);
+        Stat->SetEquipmentBonusAttack(In.EquipmentBonusAttack);
+        Stat->SetEquipmentBonusDefense(In.EquipmentBonusDefense);
+        Stat->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
+        Stat->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
+        Stat->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
     }
 
     if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())

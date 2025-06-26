@@ -26,10 +26,10 @@ public:
 
     // 장착된 아이템들 (장비 슬롯 타입 -> 아이템 인스턴스)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory | Equipped")
-    TMap<EEquipSlotType, UItemBase*> EquippedItems;
+    TMap<EEquipSlotType, UEquippableItem*> EquippedItems;
 
 protected:
-    // 캐릭터의 스탯 컴포넌트 참조 (BeginPlay에서 가져옴)
+    // 캐릭터의 스탯 컴포넌트 참조
     UPROPERTY()
     TObjectPtr<UCharacterStatComponent> CharacterStatComponent;
 
@@ -39,7 +39,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     void InitializeSlots();
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
     bool AddItem(UItemBase* ItemTemplate, int32& QuantityToAdd);
 
     // {{인벤토리 아이템 상호작용 함수들}} //
@@ -59,15 +59,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     bool DropItemInSlot(int32 SlotIndex, int32 QuantityToDrop = 1);
 
-    // 장착된 모든 아이템의 스탯을 합산하여 CharacterStatComponent에 적용하는 함수
-    UFUNCTION(BlueprintCallable, Category = "Inventory | Equipped")
-    void UpdateEquippedStats();
-
     // 특정 장비 슬롯에 장착된 아이템을 가져오는 함수
     UFUNCTION(BlueprintPure, Category = "Inventory | Equipped")
-    UItemBase* GetEquippedItem(EEquipSlotType SlotType) const;
+    UEquippableItem* GetEquippedItem(EEquipSlotType SlotType) const;
 
     // 인벤토리 상태를 디버그 메시지로 출력하는 함수
-    UFUNCTION(BlueprintCallable, Category = "Inventory | Debug") // 블루프린트에서 호출 가능하도록 변경
+    UFUNCTION(BlueprintCallable, Category = "Inventory | Debug")
         void ShowInventoryStatus();
 };

@@ -56,19 +56,15 @@ bool UConsumableItem::UseItem(AActor* Instigator)
             bEffectApplied = true;
             break;
         case EConsumableEffectType::BuffAttack:
-            CharacterStats->ApplyAttackBuff(Effect.EffectValue, Effect.Duration);
-#if WITH_EDITOR
-            if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, FString::Printf(TEXT("%s used %s: Applied %f Attack Buff for %f sec. Current BonusAttack: %f"), *Instigator->GetName(), *ItemBaseData.ItemName.ToString(), Effect.EffectValue, Effect.Duration, CharacterStats->GetBonusAttack()));
-            UE_LOG(LogTemp, Log, TEXT("UConsumableItem::UseItem - %s used %s: Applied %f Attack Buff for %f sec. Current BonusAttack: %f"), *Instigator->GetName(), *ItemBaseData.ItemName.ToString(), Effect.EffectValue, Effect.Duration, CharacterStats->GetBonusAttack());
-#endif
-            bEffectApplied = true;
-            break;
         case EConsumableEffectType::BuffDefense:
-            CharacterStats->ApplyDefenseBuff(Effect.EffectValue, Effect.Duration);
-#if WITH_EDITOR
-            if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, FString::Printf(TEXT("%s used %s: Applied %f Defense Buff for %f sec. Current BonusDefense: %f"), *Instigator->GetName(), *ItemBaseData.ItemName.ToString(), Effect.EffectValue, Effect.Duration, CharacterStats->GetBonusDefense()));
-            UE_LOG(LogTemp, Log, TEXT("UConsumableItem::UseItem - %s used %s: Applied %f Defense Buff for %f sec. Current BonusDefense: %f"), *Instigator->GetName(), *ItemBaseData.ItemName.ToString(), Effect.EffectValue, Effect.Duration, CharacterStats->GetBonusDefense());
-#endif
+        case EConsumableEffectType::BuffMaxHealth:
+        case EConsumableEffectType::BuffMaxStamina:
+        case EConsumableEffectType::BuffHealthGenRate:
+        case EConsumableEffectType::BuffStaminaGenRate:
+        case EConsumableEffectType::BuffWalkSpeed:
+        case EConsumableEffectType::BuffMaxWeight:
+        case EConsumableEffectType::BuffAttackSpeed:
+            CharacterStats->ApplyStatBuff(Effect.EffectType, Effect.EffectValue, Effect.Duration);
             bEffectApplied = true;
             break;
         default:
