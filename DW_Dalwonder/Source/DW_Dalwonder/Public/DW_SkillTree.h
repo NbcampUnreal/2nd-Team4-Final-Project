@@ -15,6 +15,10 @@ class DW_DALWONDER_API UDW_SkillTree : public UUserWidget
 
 public:
     virtual void NativeConstruct() override;
+    // Mouse Interaction
+    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+    FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+    FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
     UCanvasPanel* SkillCanvasPanel;
@@ -30,7 +34,15 @@ private:
     UFUNCTION()
     void RefreshAllIcons();
 
+private:
+    FVector2D DragStartPosition;
+    FVector2D OriginalCanvasPosition;
+    bool bIsDragging = false;
+
 public:
     UFUNCTION()
     void UpdateSkillActivationStates();
+
+    UFUNCTION()
+    UImage* CreateLineBetweenPoints(const FVector2D& Start, const FVector2D& End);
 };

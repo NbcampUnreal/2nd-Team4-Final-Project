@@ -22,7 +22,6 @@ void UDW_SkillIcon::NativeConstruct()
     {
         UMaterialInstanceDynamic* DotMID = UMaterialInstanceDynamic::Create(DotMaterial, this);
         DotEffectImage->SetBrushFromMaterial(DotMID);
-        //DotEffectImage->SetVisibility(ESlateVisibility::Hidden);
         //이펙트가 클릭 안가리게
         DotEffectImage->SetVisibility(ESlateVisibility::HitTestInvisible);
     }
@@ -37,6 +36,7 @@ void UDW_SkillIcon::OnSkillDoubleClicked()
     const bool bSuccess = SkillComponent->TryLearnSkill(SkillID);
     if (bSuccess)
     {
+        UE_LOG(LogTemp, Error, TEXT("스킬 배우기 성공!"));
         UpdateIcon();
 
         // 스킬들 선행 조건 확인 후 버튼 활성화 시켜주기
@@ -110,6 +110,9 @@ void UDW_SkillIcon::UpdateIcon()
     // 최대 레벨 도달 시 버튼 비활성화
     if (SkillButton)
     {
+		UE_LOG(LogTemp, Warning, TEXT("SkillID: %s, Level: %d"), *SkillID.ToString(), Level);
+
+		UE_LOG(LogTemp, Warning, TEXT("SkillData: %s"), SkillData ? *SkillData->ToString() : TEXT("없음"));
         if (SkillData && Level >= SkillData->MaxLevel)
         {
             SkillButton->SetIsEnabled(false);
