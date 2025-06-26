@@ -43,17 +43,44 @@ bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
     const FSkillData* SkillData = SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("TryLearnSkill"));
     if (!SkillData) return false;
 
+    UE_LOG(LogTemp, Error, TEXT("SkillData Valid"));
     /*  선행 스킬이 필요한 경우 확인 */
     if (!SkillData->PrerequisiteSkillID.IsNone())
     {
-        const FSkillState* PreState = SkillStateMap.Find(SkillData->PrerequisiteSkillID);
-        if (!PreState || PreState->CurrentLevel <= 0)
+        FString Raw = SkillData->PrerequisiteSkillID.ToString().TrimStartAndEnd();
+
+        // "None", "Null", 빈 문자열이면 선행조건 없음 → 통과
+        if (Raw.IsEmpty() || Raw.Equals("None", ESearchCase::IgnoreCase) || Raw.Equals("Null", ESearchCase::IgnoreCase))
         {
-#if WITH_EDITOR
-            UE_LOG(LogTemp, Warning, TEXT("Prerequisite skill not learned"));
-#endif
-            return false;
+            // 아무런 조건 없이 바로 통과
         }
+        else
+        {
+            TArray<FString> Prereqs;
+
+            if (Raw.Contains(" or "))
+                Raw.ParseIntoArray(Prereqs, TEXT(" or "), true);
+            else
+                Prereqs.Add(Raw);
+
+            bool bPassed = false;
+            for (const FString& P : Prereqs)
+            {
+                FName PID(*P.TrimStartAndEnd());
+                const FSkillState* PreState = SkillStateMap.Find(PID);
+                if (PreState && PreState->CurrentLevel > 0)
+                {
+                    bPassed = true;
+                    break;
+                }
+            }
+
+            if (!bPassed)
+            {
+                return false;
+            }
+        }
+
     }
 
     /* 스킬 학습 또는 레벨업 */

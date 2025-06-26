@@ -211,7 +211,7 @@ void UDW_SkillTree::CreateSkillIcons()
 
         if (Raw.Contains(" or "))
             Raw.ParseIntoArray(Prereqs, TEXT(" or "), true);
-        else if (!Raw.IsEmpty())
+        else if (!Raw.IsEmpty() && !Raw.Equals("None", ESearchCase::IgnoreCase) && !Raw.Equals("Null", ESearchCase::IgnoreCase))
             Prereqs.Add(Raw);
 
         if (Prereqs.Num() > 0)
@@ -314,6 +314,7 @@ UImage* UDW_SkillTree::CreateLineBetweenPoints(const FVector2D& Start, const FVe
     {
         CanSlot->SetAutoSize(true);
         CanSlot->SetPosition(Start);
+        CanSlot->SetZOrder(-1);
     }
 
     return Line;
