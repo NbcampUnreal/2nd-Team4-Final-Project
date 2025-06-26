@@ -1,0 +1,5 @@
+READ ME:
+
+BP_MedievalCharacters_01.uasset - If you have packages Modular Medieval Warrior and Modular Medieval Citizen - you can mix them together using this blueprint. Just copy this file to Content folder. 
+
+In documentation PDF you will fond more information about functions like AutoLipSync system. 

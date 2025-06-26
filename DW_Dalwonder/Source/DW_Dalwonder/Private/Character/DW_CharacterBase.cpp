@@ -49,7 +49,7 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
-	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+	GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetTotalWalkSpeed());
 
 	ArmorComponent = CreateDefaultSubobject<UCharacterArmorComponent>(TEXT("ArmorComponent"));
 
@@ -434,11 +434,11 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 	{
 		if (bIsRidingVehicle)
 		{
-			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed()) * VehicleSpeedMultiplier;
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetTotalWalkSpeed()) * VehicleSpeedMultiplier;
 		}
 		else
 		{
-			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed());
+			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetTotalWalkSpeed());
 		}
 		GetCharacterStatComponent()->StopConsumeStamina();
 		GetCharacterStatComponent()->StartStaminaRegen();
@@ -534,7 +534,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetBaseAttackSpeed() + StatComponent->GetBonusAttackSpeed());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
 				}
 				else
 				{
@@ -550,7 +550,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetBaseAttackSpeed() + StatComponent->GetBonusAttackSpeed());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
 				}
 				else
 				{
@@ -620,7 +620,7 @@ void ADW_CharacterBase::StartAttack()
 		SetCombatState(ECharacterCombatState::Attacking);
 		PlayMontage(GuardAttackMontage[WeaponType]);
 	}
-	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetBaseWalkSpeed() + GetCharacterStatComponent()->GetBonusWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
+	else if (bIsSprinting && GetVelocity().Length() > GetCharacterStatComponent()->GetTotalWalkSpeed() && CurrentCombatState != ECharacterCombatState::ComboWindow)
 	{
 		check(IsValid(SprintAttackMontage[WeaponType]));
 		SetCombatState(ECharacterCombatState::Attacking);
@@ -724,7 +724,7 @@ float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& Damag
 	}
 	else
 	{
-		float KnockBackAmount = (GetCharacterStatComponent()->GetBaseMaxHealth() + GetCharacterStatComponent()->GetBonusMaxHealth()) * 0.3f;
+		float KnockBackAmount = (GetCharacterStatComponent()->GetTotalMaxHealth()) * 0.3f;
 		if (DamageAmount > KnockBackAmount)
 		{
 			KnockBackCharacter();
@@ -900,6 +900,24 @@ void ADW_CharacterBase::BlockCharacterControl(bool bShouldBlock, float Length)
 				bCanControl = bShouldBlock;
 			}), Length, false);
 	}
+}
+
+void ADW_CharacterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (!GetCharacterMovement()->IsFalling()) return;
+	
+	float Velocity = GetVelocity().Z * -1.f;
+	
+	if (Velocity <= FallVelocityLimit)
+	{
+		return;
+	}
+
+	float FallDamage = Velocity / 100.f;
+
+	UGameplayStatics::ApplyDamage(this, FallDamage, GetController(), this, UDamageType::StaticClass());
 }
 
 void ADW_CharacterBase::Dead()
@@ -1147,8 +1165,8 @@ void ADW_CharacterBase::UpdateHUD()
 	{
 		if (UHUDWidget* HUD = Cast<UHUDWidget>(PC->HUDWidgetInstance))  // 정확한 클래스 캐스팅
 		{
-			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetBaseMaxHealth() + StatComponent->GetBonusMaxHealth());
-			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetBaseMaxStamina() + StatComponent->GetBonusMaxStamina());
+			HUD->UpdateHPBar(StatComponent->GetHealth(), StatComponent->GetTotalMaxHealth());
+			HUD->UpdateStaminaBar(StatComponent->GetStamina(), StatComponent->GetTotalMaxHealth());
 		}
 		else {
 			//캐스팅 실패시 타이머 초기화
@@ -1254,7 +1272,7 @@ void ADW_CharacterBase::RideVehicle(bool bOnRiding)
 	}
 
 	bIsRidingVehicle = bOnRiding;
-	float BaseWalkSpeed = StatComponent->GetBaseWalkSpeed() + StatComponent->GetBonusWalkSpeed();
+	float BaseWalkSpeed = StatComponent->GetTotalWalkSpeed();
 
 	if (bIsRidingVehicle)
 	{
