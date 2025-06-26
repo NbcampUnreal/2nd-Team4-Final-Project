@@ -23,6 +23,15 @@ protected:
 
 	virtual void Landed(const FHitResult& Hit) override;
 
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
+
+	void Dead() override;
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void LaunchActor(float Strength, float UpwardRatio, bool bIsForward, FVector TargetLocation);
@@ -30,13 +39,44 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Attack_Explose();
 
+protected:
+	void LaunchSelfFromHit(AActor* DamageCauser);
+
+	void UpdateMaterialFromHit();
+	void MaterialUpdater();
+
+	void DelayDead();
+	void DeadUpdater();
+
 public:
 	// 스폰시킬 TelegraphActor 블루프린트 클래스입니다.
 	UPROPERTY(EditAnywhere, Category = "Telegraph")
 	TSubclassOf<AActor> TelegraphActorClass;
 
+	UPROPERTY(EditAnywhere, Category = "Value")
+	int32 HitMaterialUpdateTime = 15;
+
 private:
 	class USkeletalMeshComponent* Mesh;
+
+	float BandIntensity;
+	float BandSpeed;
+	float InteractiveIntensity;
+
+	float AfterBandIntensity;
+	float AfterBandSpeed;
+	float AfterInteractiveIntensity;
+
+	float DeadZOffset;
+	float CurrentZOffset;
+
+	FVector CurrentActorLocation;
+
+	FTimerHandle MaterialUpdateTimerHandle;
+	FTimerHandle DeadUpdateTimerHandle;
+
+	int32 HitMaterialUpdateCount = 0;
+	int32 DeadUpdateCount = 0;
 
 	/*FVector MeshZOffset;
 
