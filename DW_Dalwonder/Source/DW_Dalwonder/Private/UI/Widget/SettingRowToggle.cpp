@@ -32,3 +32,12 @@ void USettingRowToggle::HandleToggleChanged(bool bNewChecked)
 	bIsOn = bNewChecked;
 	OnToggleChanged.Broadcast(bIsOn);
 }
+
+void USettingRowToggle::SetToggleState(bool bOn)
+{
+	bIsOn = bOn;
+	if (CheckBox)
+	{
+		CheckBox->SetIsChecked(bOn);
+	}
+}

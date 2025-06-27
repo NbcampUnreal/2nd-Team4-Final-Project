@@ -15,6 +15,7 @@
 #include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
+#include "DW_AttributeComponent.h"
 
 struct FDropItemData;
 
@@ -440,15 +441,15 @@ void ADW_MonsterBase::Dead()
 {
 
 	if (bIsDead) return;
-	
+
 	bIsDead = true;
 
 	DropItem(DropTable);
-	
+
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;
-		
+
 		if (Montage && GetMesh())
 		{
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
@@ -472,7 +473,7 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	
+
 	if (bIsGuard)
 	{
 		if (GuardHitNS)
@@ -523,6 +524,27 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	}
 
 	if (bIsDead) return 0;
+
+	// 체력 비례 데미지 계산 로직
+	if(UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
+	{
+		if(MonsterHP >= (MonsterMaxHP / 10.f) * 7.f)
+		{
+			// 현재 체력이 최대 체력의 70% 이상일 경우(기본값이 0으로 되어있어서 임시 예외처리)
+			if (float NewDMG = AttrComp->GetDamageToHighHPEnemies() > DamageAmount)
+			{
+				DamageAmount = NewDMG;
+			}
+		}
+		else if(MonsterHP < (MonsterMaxHP / 10.f) * 3.f)
+		{
+			// 현재 체력이 최대 체력의 30% 미만일 경우(기본값이 0으로 되어있어서 임시 예외처리)
+			if (float NewDMG = AttrComp->GetDamageToHighHPEnemies() > DamageAmount)
+			{
+				DamageAmount = NewDMG;
+			}
+		}
+	}
 
 	if (bIsInvincible)
 	{

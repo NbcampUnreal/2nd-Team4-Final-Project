@@ -34,14 +34,25 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Option")
 	FOnOptionSelected OnOptionSelected;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Option")
+	int32 DefaultSelectedIndex = 0;
+	
+	const TArray<FText>& GetOptionList() const { return OptionList; }
 protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 
+	// 선택 상태 추적 (필요 시)
+	int32 CurrentSelectedIndex = INDEX_NONE;
+
+public:
 	// 선택 이벤트 핸들러
 	UFUNCTION()
 	void OnOptionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
-	// 선택 상태 추적 (필요 시)
-	int32 CurrentSelectedIndex = INDEX_NONE;
+	UFUNCTION(BlueprintCallable, Category="Settings")
+	FString GetSelectedOption() const;
+
+	UFUNCTION(BlueprintCallable, Category="Settings")
+	void SetSelectedIndex(int32 Index);
 };

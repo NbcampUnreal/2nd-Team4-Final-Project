@@ -22,6 +22,12 @@ void UOptionSelectorWidget::NativeConstruct()
 			ComboBoxOptions->AddOption(Option.ToString());
 		}
 
+		if (OptionList.IsValidIndex(DefaultSelectedIndex))
+		{
+			ComboBoxOptions->SetSelectedOption(OptionList[DefaultSelectedIndex].ToString());
+			CurrentSelectedIndex = DefaultSelectedIndex;
+		}
+
 		ComboBoxOptions->OnSelectionChanged.AddDynamic(this, &UOptionSelectorWidget::OnOptionChanged);
 	}
 }
@@ -36,5 +42,24 @@ void UOptionSelectorWidget::OnOptionChanged(FString SelectedItem, ESelectInfo::T
 			OnOptionSelected.Broadcast(i);
 			break;
 		}
+	}
+}
+
+FString UOptionSelectorWidget::GetSelectedOption() const
+{
+	if (ComboBoxOptions)
+	{
+		return ComboBoxOptions->GetSelectedOption();
+	}
+
+	return FString();
+}
+
+void UOptionSelectorWidget::SetSelectedIndex(int32 Index)
+{
+	if (ComboBoxOptions && OptionList.IsValidIndex(Index))
+	{
+		ComboBoxOptions->SetSelectedOption(OptionList[Index].ToString());
+		CurrentSelectedIndex = Index;
 	}
 }
