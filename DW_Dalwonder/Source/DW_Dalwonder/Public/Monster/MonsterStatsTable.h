@@ -28,5 +28,8 @@ struct FMonsterStatsTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Difficulty;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Level = 1;
 	
 };

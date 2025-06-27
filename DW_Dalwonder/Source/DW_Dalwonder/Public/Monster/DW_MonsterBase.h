@@ -204,6 +204,9 @@ public:
 	// 데이터 테이블을 통해 몬스터 스탯을 설정합니다.
 	virtual void SetStats(UDataTable* NewDataTable) override;
 
+	// 데이터 테이블을 기반으로 숙련도를 획득합니다.
+	virtual void IncreaseMastery(UDataTable* NewDataTable) override;
+
 	// 몬스터의 이름을 반환합니다.
 	virtual FName GetMonsterName() const override;
 

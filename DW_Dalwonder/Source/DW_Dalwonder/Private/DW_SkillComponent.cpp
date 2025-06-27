@@ -118,6 +118,31 @@ int32 UDW_SkillComponent::GetSkillLevel(FName SkillID) const
     return State ? State->CurrentLevel : 0;
 }
 
+void UDW_SkillComponent::IncreaseMastery(int32 NewMastery)
+{
+    CurrentMastery += NewMastery;
+
+    while (CurrentMastery >= MaxMastery)
+    {
+        CurrentMastery -= MaxMastery;
+        LevelUpCount++;
+        MaxMastery *= 1.1f;
+        TryLevelUp();
+    }
+}
+
+void UDW_SkillComponent::TryLevelUp()
+{
+    if (LevelUpCount <= 50)
+    {
+        CurrentSP++;
+    }
+    else
+    {
+        CurrentSP += 2;
+    }
+}
+
 /* --------------------------- 효과 적용부 --------------------------- */
 void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel)
 {

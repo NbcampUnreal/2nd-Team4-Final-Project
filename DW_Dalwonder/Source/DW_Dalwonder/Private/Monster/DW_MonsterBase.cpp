@@ -73,7 +73,22 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	{
 		DefaultHitCameraShake = ShakeClass.Class;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_StatsTable(
+	TEXT("/Game/BluePrint/Monster/DataTable/MonsterDataTable.MonsterDataTable"));
+
+	if (DT_StatsTable.Succeeded())
+	{
+		DataTable = DT_StatsTable.Object;
+	}
 	
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_DropTable(
+	TEXT("/Game/BluePrint/Monster/DataTable/MonsterDropTable.MonsterDropTable"));
+
+	if (DT_DropTable.Succeeded())
+	{
+		DropTable = DT_DropTable.Object;
+	}
 }
 
 void ADW_MonsterBase::BeginPlay()
@@ -150,6 +165,24 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 
 	SetMovementSpeed(MonsterSpeed);
 	SetAccelerationSpeed(MonsterAccelSpeed);
+}
+
+void ADW_MonsterBase::IncreaseMastery(UDataTable* NewDataTable)
+{
+	if (IsValid(NewDataTable))
+	{
+		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+
+		const FString ContextString(TEXT("Monster Stat Lookup"));
+		FMonsterStatsTable* StatRow = NewDataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
+
+		if (StatRow)
+		{
+			int32 MasteryValue = StatRow->Level * 100;
+
+			PlayerCharacter->SkillComponent->IncreaseMastery(MasteryValue);
+		}
+	}
 }
 
 FName ADW_MonsterBase::GetMonsterName() const
@@ -445,6 +478,7 @@ void ADW_MonsterBase::Dead()
 	bIsDead = true;
 
 	DropItem(DropTable);
+	IncreaseMastery(DataTable);
 
 	if (IsValid(DeadMontage))
 	{
