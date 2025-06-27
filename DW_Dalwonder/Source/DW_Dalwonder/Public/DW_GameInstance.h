@@ -53,6 +53,12 @@ public:
 public:
 
     UPROPERTY()
+    USettingsManager* SettingsManager;
+
+    UFUNCTION(BlueprintCallable)
+    USettingsManager* GetSettingsManager() const { return SettingsManager; }
+
+    UPROPERTY()
     UDW_SaveGame* LoadedSaveGame = nullptr;
 
     UPROPERTY(BlueprintReadWrite, Category = "Game Start Type")

@@ -31,6 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true), Category = "Toggle")
 	bool bIsOn = true;
 
+	UFUNCTION(BlueprintCallable, Category="Settings")
+	void SetToggleState(bool bOn);
+
 	// 외부 바인딩용 디스패처
 	UPROPERTY(BlueprintAssignable, Category = "Toggle")
 	FOnToggleChanged OnToggleChanged;

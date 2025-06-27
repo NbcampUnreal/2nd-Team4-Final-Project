@@ -65,4 +65,30 @@ public:
 
 	UPROPERTY()
 	TArray<uint8> CompressedFogBits;
+	// 스킬 트리 데이터 저장
+	UPROPERTY(VisibleAnywhere, Category = "SaveData")
+	TMap<FName, FSkillState> SavedSkillStates;
+
+	// 감도
+	UPROPERTY()
+	float SavedMouseSensitivity = 1.0f;
+
+	// UI
+	UPROPERTY(BlueprintReadWrite)
+	int32 SavedWindowMode;
+
+	UPROPERTY(BlueprintReadWrite)
+	FIntPoint SavedResolution;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bSavedVSync;
+	
+	UPROPERTY()
+	float SavedFrameRate;
+
+	UPROPERTY()
+	bool bSavedMotionBlur;
+
+	UPROPERTY()
+	bool bSavedShadow;
 };
