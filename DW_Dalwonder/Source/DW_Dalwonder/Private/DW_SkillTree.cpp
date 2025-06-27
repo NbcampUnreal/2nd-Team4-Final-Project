@@ -249,7 +249,10 @@ void UDW_SkillTree::CreateSkillIcons()
             }
         }
 
-        Icon->SetIsEnabled(bEnable);
+        //  초기 활성화 여부 판단 및 시각 반영
+        bool bColorEnable = SkillManager->CanUnlockSkill(ID, SkillComponent->SkillStateMap);
+        Icon->SetCanActivate(bColorEnable);
+
         Icon->UpdateIcon();
         Spawned.Add(ID);
     }
@@ -314,9 +317,7 @@ void UDW_SkillTree::UpdateSkillActivationStates()
             // 여기에서 판단 위임
             bool bEnable = SkillManager->CanUnlockSkill(SkillID, SkillComponent->SkillStateMap);
 
-            SkillIcon->SetIsEnabled(bEnable);
-            // 버튼과 아이콘 색상 모두 갱신
-            SkillIcon->SetCanActivate(bEnable);
+			SkillIcon->SetCanActivate(bEnable);
         }
     }
 }

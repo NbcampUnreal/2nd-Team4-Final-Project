@@ -84,4 +84,5 @@ protected:
 
 private:
     bool bUnlocked = false;
+    bool bCanActivate = true;
 };

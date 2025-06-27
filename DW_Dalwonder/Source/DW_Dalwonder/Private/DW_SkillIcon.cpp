@@ -34,7 +34,7 @@ void UDW_SkillIcon::NativeConstruct()
 
 void UDW_SkillIcon::OnSkillDoubleClicked()
 {
-    if (!SkillComponent) return;
+    if (!SkillComponent || !bCanActivate) return; // 클릭 제한
 
     const bool bSuccess = SkillComponent->TryLearnSkill(SkillID);
     if (bSuccess)
@@ -109,37 +109,35 @@ void UDW_SkillIcon::UpdateIcon()
         }
     }
 
-    // 최대 레벨 도달 시 버튼 비활성화
-    if (SkillButton)
+    // 상태 판단 및 색상 갱신
+    if (SkillManager)
     {
-        if (SkillData && Level >= SkillData->MaxLevel)
+        const TMap<FName, FSkillState>& SkillStates = SkillComponent->SkillStateMap;
+
+        bool bEnable = true;
+        if (!bUnlocked) // 스킬을 아직 배우지 않은 경우
         {
-            SkillButton->SetIsEnabled(false);
+            bEnable = SkillManager->CanUnlockSkill(SkillID, SkillStates);
         }
-        else
-        {
-            SkillButton->SetIsEnabled(true);
-        }
+
+        SetCanActivate(bEnable);
     }
 }
 
 void UDW_SkillIcon::SetCanActivate(bool bEnable)
 {
-    if (SkillButton)
-        SkillButton->SetIsEnabled(bEnable);
-
     if (IconImage)
     {
-        if (bEnable)
-        {
-            IconImage->SetColorAndOpacity(FLinearColor::White);
-        }
-        else
-        {
-            // 흐리게: 살짝 어둡고, 색상 감도 낮춤
-            IconImage->SetColorAndOpacity(FLinearColor(0.4f, 0.4f, 0.4f, 1.0f));
-        }
+        IconImage->SetRenderOpacity(bEnable ? 1.0f : 0.4f);
     }
+
+    // 항상 true로 유지 (비활성화하면 자식도 같이 알파값 손상)
+    if (SkillButton)
+    {
+        SkillButton->SetIsEnabled(true);
+    }
+
+    bCanActivate = bEnable; // 상태 저장해서 클릭 막기용
 }
 
 void UDW_SkillIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
