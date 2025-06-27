@@ -10,11 +10,15 @@
 #include "UI/Widget/DialogueWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
+#include "Components/ChildActorComponent.h"
 #include "Engine/DataTable.h"
 
 ADW_NpcBase::ADW_NpcBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	AppearanceComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("AppearanceComponent"));
+	AppearanceComponent->SetupAttachment(RootComponent);
 
 	// 메쉬 설정
 	MeshComponent = GetMesh();
