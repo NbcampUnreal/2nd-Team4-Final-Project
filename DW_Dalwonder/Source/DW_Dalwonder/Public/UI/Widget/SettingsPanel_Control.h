@@ -4,14 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "UI/Widget/SettingRowSlider.h"
 #include "SettingsPanel_Control.generated.h"
 
 /**
  * 
  */
+
 UCLASS()
 class DW_DALWONDER_API USettingsPanel_Control : public UUserWidget
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual void NativeConstruct() override;
+	void NativeDestruct();
+
+	UFUNCTION()
+	void HandleMouseSensitivityChanged(float NewValue);
+
+	UPROPERTY(meta = (BindWidget))
+	USettingRowSlider* MouseSensitivity;
 };

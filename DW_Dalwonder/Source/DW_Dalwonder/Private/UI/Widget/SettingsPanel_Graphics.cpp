@@ -20,7 +20,6 @@ USettingsManager* USettingsPanel_Graphics::GetSettingsManager() const
 {
 	if (const UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
 	{
-		UE_LOG(LogTemp, Error, TEXT("GameInstance is nullptr!"));
 		return GI->GetSettingsManager();
 	}
 	return nullptr;
@@ -43,13 +42,11 @@ void USettingsPanel_Graphics::NativeConstruct()
 
 	if (MotionBlur)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SetToggleState(MotionBlur): %d"), SM->IsMotionBlurEnabled());
 		MotionBlur->SetToggleState(SM->IsMotionBlurEnabled());
 		MotionBlur->OnToggleChanged.AddDynamic(this, &USettingsPanel_Graphics::HandleMotionBlurChanged);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MotionBlur is null"));
 	}
 
 	if (FPSLimit)

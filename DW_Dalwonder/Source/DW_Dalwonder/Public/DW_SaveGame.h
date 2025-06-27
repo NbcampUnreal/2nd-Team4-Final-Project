@@ -33,6 +33,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "SaveData")
 	TMap<FName, FSkillState> SavedSkillStates;
 
+	// 감도
+	UPROPERTY()
+	float SavedMouseSensitivity = 1.0f;
 
 	// UI
 	UPROPERTY(BlueprintReadWrite)

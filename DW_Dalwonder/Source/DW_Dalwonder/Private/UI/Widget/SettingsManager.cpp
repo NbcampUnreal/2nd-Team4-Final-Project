@@ -31,6 +31,7 @@ void USettingsManager::SaveSettingsTo(UDW_SaveGame* Save)
 	Save->SavedFrameRate = FrameRateLimit;
 	Save->bSavedMotionBlur = bMotionBlurEnabled;
 	Save->bSavedShadow = bShadowEnabled;
+	Save->SavedMouseSensitivity = MouseSensitivity;
 }
 
 void USettingsManager::SaveToSlot()
@@ -40,6 +41,11 @@ void USettingsManager::SaveToSlot()
 
 	SaveSettingsTo(Save);
 	UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
+
+	UE_LOG(LogTemp, Warning, TEXT("Saving MouseSensitivity: %f"), MouseSensitivity);
+
+	bool bSuccess = UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
+	UE_LOG(LogTemp, Warning, TEXT("Save success? %s"), bSuccess ? TEXT("Yes") : TEXT("No"));
 }
 
 void USettingsManager::LoadSettings()
@@ -71,6 +77,7 @@ void USettingsManager::LoadSettingsFrom(UDW_SaveGame* Save)
 	ApplyFrameLimit(Save->SavedFrameRate);
 	ApplyMotionBlur(Save->bSavedMotionBlur);
 	ApplyShadows(Save->bSavedShadow);
+	MouseSensitivity = Save->SavedMouseSensitivity;
 }
 
 void USettingsManager::ApplyWindowMode(int32 ModeIndex)
@@ -139,4 +146,14 @@ void USettingsManager::ApplyShadows(bool bEnable)
 	{
 		CVar->Set(bEnable ? 3 : 0);
 	}
+}
+
+void USettingsManager::ApplyMouseSensitivity(float InSensitivity)
+{
+	MouseSensitivity = InSensitivity;
+
+}
+
+void USettingsManager::ApplyVolumeMaster(float Value)
+{
 }
