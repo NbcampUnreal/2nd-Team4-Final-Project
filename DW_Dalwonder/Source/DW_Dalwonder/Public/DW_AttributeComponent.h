@@ -5,6 +5,7 @@
 #include "DW_AttributeComponent.generated.h"
 
 struct FAttributeSaveData;
+class UCharacterStatComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DW_DALWONDER_API UDW_AttributeComponent : public UActorComponent
@@ -13,6 +14,9 @@ class DW_DALWONDER_API UDW_AttributeComponent : public UActorComponent
 
 public:
     UDW_AttributeComponent();
+
+    UPROPERTY()
+    UCharacterStatComponent* StatComponent;
 
     /* ==================== Base ==================== */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseMaxStamina = 100.f;

@@ -9,6 +9,7 @@ class UTextBlock;
 class UButton;
 class UDW_SkillComponent;
 class UDW_SkillTooltip;
+class UDW_SkillManager;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
@@ -39,7 +40,14 @@ public:
     UFUNCTION()
     void UpdateIcon();
 
+    UFUNCTION()
+    void SetCanActivate(bool bEnable);
+
     UImage* GetIconImage() const { return IconImage; }
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    UDW_SkillManager* SkillManager;
 
 protected:
     UFUNCTION()
@@ -72,6 +80,9 @@ protected:
     UPROPERTY(meta = (BindWidget))
     UImage* LevelSpot05;
 
+    
+
 private:
     bool bUnlocked = false;
+    bool bCanActivate = true;
 };

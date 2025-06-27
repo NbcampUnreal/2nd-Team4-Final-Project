@@ -19,12 +19,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     int32 CurrentSP = 10;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill")
-    UDataTable* SkillDataTable;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
     TMap<FName, FSkillState> SkillStateMap;
 
+    UPROPERTY()
+    UDW_AttributeComponent* AttrCom;
+    
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
     float CurrentMastery = 0.f;
 

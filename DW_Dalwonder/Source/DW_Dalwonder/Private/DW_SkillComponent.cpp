@@ -1,16 +1,32 @@
 #include "DW_SkillComponent.h"
 #include "DW_AttributeComponent.h"
+#include "DW_SkillManager.h"
 #include "GameFramework/Character.h"
+#include "DW_GmBase.h"
+#include "Kismet/GameplayStatics.h"
 
 UDW_SkillComponent::UDW_SkillComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+
+    if (AActor* Owner = GetOwner())
+    {
+        AttrCom = Owner->FindComponentByClass<UDW_AttributeComponent>();
+    }
 }
 
 /* ------------------------------ 저장데이터 불러오기 ------------------------------ */
 void UDW_SkillComponent::ApplyAllSkillBonuses(UDW_AttributeComponent* AttributeComponent)
 {
-    if (!AttributeComponent || !SkillDataTable) return;
+    if (!AttributeComponent) return;
+
+    // SkillManager를 GameMode에서 가져오기
+    ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (!GM || !GM->GetSkillManager()) return;
+
+    UDW_SkillManager* SkillManager = GM->GetSkillManager();
+    UDataTable* SkillDataTable = SkillManager->GetSkillDataTable();
+    if (!SkillDataTable) return;
 
     for (const auto& Elem : SkillStateMap)
     {
@@ -38,78 +54,26 @@ FSkillState* UDW_SkillComponent::FindSkillState(FName SkillID)
 /* ------------------------------ 스킬 API ------------------------------ */
 bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 {
-    if (!SkillDataTable) return false;
+    AActor* Owner = GetOwner();
+    if (!Owner) return false;
 
-    const FSkillData* SkillData = SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("TryLearnSkill"));
-    if (!SkillData) return false;
+    UDW_AttributeComponent* Attr = Owner->FindComponentByClass<UDW_AttributeComponent>();
+    if (!Attr) return false;
 
-    UE_LOG(LogTemp, Error, TEXT("SkillData Valid"));
-    /*  선행 스킬이 필요한 경우 확인 */
-    if (!SkillData->PrerequisiteSkillID.IsNone())
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
     {
-        FString Raw = SkillData->PrerequisiteSkillID.ToString().TrimStartAndEnd();
-
-        // "None", "Null", 빈 문자열이면 선행조건 없음 → 통과
-        if (Raw.IsEmpty() || Raw.Equals("None", ESearchCase::IgnoreCase) || Raw.Equals("Null", ESearchCase::IgnoreCase))
+        if (UDW_SkillManager* SkillMgr = GM->GetSkillManager())
         {
-            // 아무런 조건 없이 바로 통과
-        }
-        else
-        {
-            TArray<FString> Prereqs;
-
-            if (Raw.Contains(" or "))
-                Raw.ParseIntoArray(Prereqs, TEXT(" or "), true);
-            else
-                Prereqs.Add(Raw);
-
-            bool bPassed = false;
-            for (const FString& P : Prereqs)
+            const bool bSuccess = SkillMgr->TryLearnSkill(SkillID, CurrentSP, SkillStateMap, Attr);
+            if (bSuccess)
             {
-                FName PID(*P.TrimStartAndEnd());
-                const FSkillState* PreState = SkillStateMap.Find(PID);
-                if (PreState && PreState->CurrentLevel > 0)
-                {
-                    bPassed = true;
-                    break;
-                }
+                OnSkillUpdated.Broadcast();
             }
-
-            if (!bPassed)
-            {
-                return false;
-            }
+            return bSuccess;
         }
-
     }
 
-    /* 스킬 학습 또는 레벨업 */
-    FSkillState* MyState = SkillStateMap.Find(SkillID);
-    if (!MyState)           // 처음 배우는 경우
-    {
-        if (CurrentSP < SkillData->Cost) return false;
-
-        FSkillState NewState{ SkillID, 1 };
-        SkillStateMap.Add(SkillID, NewState);
-        CurrentSP -= SkillData->Cost;
-
-        ApplySkillEffect(*SkillData, 1);
-    }
-    else                    // 이미 배운 경우
-    {
-        if (MyState->CurrentLevel >= SkillData->MaxLevel) return false;
-        if (CurrentSP < SkillData->Cost) return false;
-
-        MyState->CurrentLevel++;
-        CurrentSP -= SkillData->Cost;
-
-        ApplySkillEffect(*SkillData, 1);
-    }
-#if WITH_EDITOR
-    UE_LOG(LogTemp, Warning, TEXT("CurrentSP: %d"), CurrentSP);
-#endif
-    OnSkillUpdated.Broadcast();
-    return true;
+    return false;
 }
 
 int32 UDW_SkillComponent::GetSkillLevel(FName SkillID) const
@@ -146,36 +110,23 @@ void UDW_SkillComponent::TryLevelUp()
 /* --------------------------- 효과 적용부 --------------------------- */
 void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel)
 {
-    AActor* OwnerActor = GetOwner();
-    if (!OwnerActor) return;
+    if (!AttrCom) return;
 
-    UDW_AttributeComponent* AttrComp = OwnerActor->FindComponentByClass<UDW_AttributeComponent>();
-    if (!AttrComp) return;
-
-    const FString Prefix = SkillData.SkillID.ToString().Left(3).ToLower();
-    const float   RawInc = static_cast<float>(SkillData.Increase) * DeltaLevel;
-
-    auto AddBonus = [&](float& BonusField, float BaseField)
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+    {
+        if (UDW_SkillManager* SkillMgr = GM->GetSkillManager())
         {
-            if (SkillData.IncreaseType == 1)       // % 증가
-                BonusField += BaseField * (RawInc / 100.f);
-            else                                   // 고정 증가
-                BonusField += RawInc;
-        };
+            for (const auto& Elem : SkillStateMap)
+            {
+                const int32 Level = Elem.Value.CurrentLevel;
+                if (Level <= 0) continue;
 
-    if (Prefix == TEXT("sta")) AddBonus(AttrComp->BonusMaxStamina, AttrComp->BaseMaxStamina);
-    else if (Prefix == TEXT("spe")) AddBonus(AttrComp->BonusMoveSpeed, AttrComp->BaseMoveSpeed);
-    else if (Prefix == TEXT("bag")) AddBonus(AttrComp->BonusMaxCarryWeight, AttrComp->BaseMaxCarryWeight);
-    else if (Prefix == TEXT("hea")) AddBonus(AttrComp->BonusMaxHealth, AttrComp->BaseMaxHealth);
-    else if (Prefix == TEXT("reg")) AddBonus(AttrComp->BonusHealthRegen, AttrComp->BaseHealthRegen);
-    else if (Prefix == TEXT("pro")) AddBonus(AttrComp->BonusStaminaRegen, AttrComp->BaseStaminaRegen);
-    else if (Prefix == TEXT("lon")) AddBonus(AttrComp->BonusLongswordXPMod, AttrComp->BaseLongswordXPMod);
-    else if (Prefix == TEXT("gre")) AddBonus(AttrComp->BonusGreatswordXPMod, AttrComp->BaseGreatswordXPMod);
-    else if (Prefix == TEXT("shi")) AddBonus(AttrComp->BonusDefense, AttrComp->BaseDefense);
-    else if (Prefix == TEXT("log")) AddBonus(AttrComp->BonusLongswordDamageMod, AttrComp->BaseLongswordDamageMod);
-    else if (Prefix == TEXT("grg")) AddBonus(AttrComp->BonusGreatswordDamageMod, AttrComp->BaseGreatswordDamageMod);
-    else if (Prefix == TEXT("min")) AddBonus(AttrComp->BonusDamageToLowHPEnemies, AttrComp->BaseDamageToLowHPEnemies);
-	else if (Prefix == TEXT("max")) AddBonus(AttrComp->BonusDamageToHighHPEnemies, AttrComp->BaseDamageToHighHPEnemies);
-	else if (Prefix == TEXT("nor")) AddBonus(AttrComp->BonusDamageToNormalEnemies, AttrComp->BaseDamageToNormalEnemies);
-    else if (Prefix == TEXT("bos")) AddBonus(AttrComp->BonusDamageToBoss, AttrComp->BaseDamageToBoss);
+                const FSkillData* SkillDataPtr = SkillMgr->GetSkillData(Elem.Key);
+                if (SkillDataPtr)
+                {
+                    SkillMgr->ApplySkillEffect(*SkillDataPtr, Level, AttrCom);
+                }
+            }
+        }
+    }
 }
