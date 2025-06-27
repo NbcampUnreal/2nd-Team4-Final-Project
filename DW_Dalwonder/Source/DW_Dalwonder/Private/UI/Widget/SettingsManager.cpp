@@ -41,11 +41,6 @@ void USettingsManager::SaveToSlot()
 
 	SaveSettingsTo(Save);
 	UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
-
-	UE_LOG(LogTemp, Warning, TEXT("Saving MouseSensitivity: %f"), MouseSensitivity);
-
-	bool bSuccess = UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
-	UE_LOG(LogTemp, Warning, TEXT("Save success? %s"), bSuccess ? TEXT("Yes") : TEXT("No"));
 }
 
 void USettingsManager::LoadSettings()
