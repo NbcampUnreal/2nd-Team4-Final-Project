@@ -25,6 +25,9 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
     TMap<FName, FSkillState> SkillStateMap;
 
+    UPROPERTY()
+    UDW_AttributeComponent* AttrCom;
+
     UFUNCTION(BlueprintCallable)
     bool TryLearnSkill(FName SkillID);
 

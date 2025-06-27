@@ -1,5 +1,6 @@
 #include "DW_AttributeComponent.h"
 #include "DW_AttributeSaveData.h"
+#include "Character/CharacterStatComponent.h"
 
 UDW_AttributeComponent::UDW_AttributeComponent()
 {
@@ -9,6 +10,31 @@ UDW_AttributeComponent::UDW_AttributeComponent()
 void UDW_AttributeComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (AActor* Owner = GetOwner())
+    {
+        StatComponent = Owner->FindComponentByClass<UCharacterStatComponent>();
+        if (!StatComponent)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Attribute] StatComponent not found on %s"), *Owner->GetName());
+            return;
+        }
+
+        // StatComponent에서 Base값 가져와서 AttributeComponent에 복사
+        BaseMaxStamina = StatComponent->GetBaseMaxStamina();
+        BaseMoveSpeed = StatComponent->GetBaseWalkSpeed(); // 걷는 속도를 이동속도로 사용
+        BaseMaxCarryWeight = StatComponent->GetBaseMaxWeight();
+        BaseMaxHealth = StatComponent->GetBaseMaxHealth();
+        BaseHealthRegen = StatComponent->GetBaseHealthGenRate();
+        BaseStaminaRegen = StatComponent->GetBaseStaminaGenRate();
+        BaseDefense = StatComponent->GetBaseDefense();
+
+		// 추가데미지는 공격력 관련
+        /*BaseDamageToLowHPEnemies = StatComponent->GetAttack();
+        BaseDamageToHighHPEnemies = StatComponent->GetAttack();
+        BaseDamageToNormalEnemies = StatComponent->GetAttack();
+        BaseDamageToBoss = StatComponent->GetAttack();*/
+    }
 }
 
 void UDW_AttributeComponent::ClearAllBonuses()

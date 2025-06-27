@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/FogOfWarManager.h"
+#include "DW_SkillManager.h"
 
 ADW_GmBase::ADW_GmBase()
 {
@@ -21,7 +22,14 @@ void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    /*if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    if (!SkillManager)
+    {
+        SkillManager = NewObject<UDW_SkillManager>(this);
+        // SkillDataTable 할당은 필요한 시점 또는 여기서도 가능
+        // SkillManager->Initialize(DataTable);
+    }
+
+    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
     {
         GI->ApplyLoadedData();
     }*/
