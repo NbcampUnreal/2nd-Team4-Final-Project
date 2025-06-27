@@ -27,16 +27,16 @@ void UPlayerInfoWidget::NativeConstruct()
         {
             if (const UCharacterStatComponent* Stat = Player->GetCharacterStatComponent())
             {
-                const float MaxHP = Stat->GetBaseMaxHealth() + Stat->GetBonusMaxHealth() + Attr->BonusMaxHealth;
-                const float MaxStamina = Stat->GetBaseMaxStamina() + Stat->GetBonusMaxStamina() + Attr->BonusMaxStamina;
-                const float Defense = Stat->GetBaseDefense() + Stat->GetBonusDefense() + Attr->BonusDefense;
-                const float Weight = Stat->GetBaseMaxWeight() + Stat->GetBonusMaxWeight() + Attr->BonusMaxCarryWeight;
-                const float MoveSpeed = Stat->GetBaseWalkSpeed() + Stat->GetBonusWalkSpeed() + Attr->BonusMoveSpeed;
-                const float HPRegen = Stat->GetBaseHealthGenRate() + Stat->GetBonusHealthGenRate() + Attr->BonusHealthRegen;
-                const float STRegen = Stat->GetBaseStaminaGenRate() + Stat->GetBonusStaminaGenRate() + Attr->BonusStaminaRegen;
+                const float MaxHP = Stat->GetTotalMaxHealth() + Attr->BonusMaxHealth;
+                const float MaxStamina = Stat->GetTotalMaxStamina() + Attr->BonusMaxStamina;
+                const float Defense = Stat->GetTotalDefense() + Attr->BonusDefense;
+                const float Weight = Stat->GetTotalMaxWeight() + Attr->BonusMaxCarryWeight;
+                const float MoveSpeed = Stat->GetTotalWalkSpeed() + Attr->BonusMoveSpeed;
+                const float HPRegen = Stat->GetTotalHealthGenRate() + Attr->BonusHealthRegen;
+                const float STRegen = Stat->GetTotalStaminaGenRate() + Attr->BonusStaminaRegen;
 
                 // 기본 공격력
-                float Attack = Stat->GetBaseAttack() + Stat->GetBonusAttack();
+                float Attack = Stat->GetTotalAttack();
 
                 // 무기 코드 기반 장/대검 보너스 데미지 추가
                 if (const auto* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())

@@ -29,11 +29,6 @@ void ADW_GmBase::BeginPlay()
         // SkillManager->Initialize(DataTable);
     }
 
-    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-    {
-        GI->ApplyLoadedData();
-    }*/
-
     UWorld* World = GetWorld();
     if (!World) return;
 
