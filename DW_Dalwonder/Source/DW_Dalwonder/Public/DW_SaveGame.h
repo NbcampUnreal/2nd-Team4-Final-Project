@@ -65,9 +65,6 @@ public:
 
 	UPROPERTY()
 	TArray<uint8> CompressedFogBits;
-	// 스킬 트리 데이터 저장
-	UPROPERTY(VisibleAnywhere, Category = "SaveData")
-	TMap<FName, FSkillState> SavedSkillStates;
 
 	// 감도
 	UPROPERTY()
