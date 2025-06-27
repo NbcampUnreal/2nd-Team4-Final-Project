@@ -37,7 +37,25 @@ public:
 	void ApplyShadows(bool bEnable);
 	void ApplyMouseSensitivity(float InSensitivity);
 	void ApplyVolumeMaster(float Value);
+	void ApplyVolumeBGM(float Value);
+	void ApplyVolumeSFX(float Value);
+	void ApplyVolumeUI(float Value);
 	void SaveToSlot();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundMix* MasterMix;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundClass* MasterClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundClass* BGMClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundClass* SFXClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundClass* UIClass;
 
 private:
 	/** 저장용 내부 변수들 */
@@ -45,7 +63,10 @@ private:
 	FIntPoint ResolutionValue;
 
 	float MouseSensitivity = 1.0f;
-	float VolumeMaster, VolumeBGM, VolumeSFX, VolumeUI;
+	float VolumeMaster = 100.f;
+	float VolumeBGM = 100.f;
+	float VolumeSFX = 100.f;
+	float VolumeUI = 100.f;
 	float FrameRateLimit;
 	bool bVSyncEnabled;
 	bool bMotionBlurEnabled;
@@ -68,5 +89,9 @@ public:
 	float GetVolumeBGM() const { return VolumeBGM; }
 	float GetVolumeSFX() const { return VolumeSFX; }
 	float GetVolumeUI() const { return VolumeUI; }
+	void SetVolumeMaster(float Value);
+	void SetVolumeBGM(float Value);
+	void SetVolumeSFX(float Value);
+	void SetVolumeUI(float Value);
 
 };

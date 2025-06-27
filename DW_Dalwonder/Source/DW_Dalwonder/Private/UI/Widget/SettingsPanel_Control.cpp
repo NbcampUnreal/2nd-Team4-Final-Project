@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "UI/Widget/SettingsPanel_Control.h"
 #include "DW_GameInstance.h"
 #include "UI/Widget/SettingsManager.h"

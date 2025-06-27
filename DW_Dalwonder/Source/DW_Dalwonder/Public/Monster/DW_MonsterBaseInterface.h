@@ -32,6 +32,8 @@ public:
 	// 데이터 테이블을 통해 몬스터 스탯 설정
 	virtual void SetStats(UDataTable* DataTable) = 0;
 
+	virtual void IncreaseMastery(UDataTable* NewDataTable) = 0;
+
 	// 몬스터 이름 반환
 	virtual FName GetMonsterName() const = 0;
 

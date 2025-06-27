@@ -33,6 +33,7 @@ void USettingRowSlider::NativeConstruct()
 		TextBox_ValueDisplay->SetText(FText::AsNumber(CurrentValue));
 		TextBox_ValueDisplay->OnTextCommitted.AddDynamic(this, &USettingRowSlider::OnTextCommitted);
 	}
+
 }
 
 void USettingRowSlider::NativePreConstruct()
