@@ -62,4 +62,7 @@ public:
     //방어구/무기 추가
     UPROPERTY(VisibleAnywhere, Category = "SaveData")
     FEquippedArmorSaveData SavedArmorData;
+
+	UPROPERTY()
+	TArray<uint8> CompressedFogBits;
 };

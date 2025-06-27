@@ -12,6 +12,7 @@
 #include "Engine/DataTable.h"
 #include "Character/CharacterStatComponent.h"
 #include "Character/CharacterArmorComponent.h"
+#include "UI/Widget/FogOfWarManager.h"
 
 void UDW_GameInstance::Init()
 {
@@ -202,6 +203,19 @@ void UDW_GameInstance::SaveGameData()
         SaveGameInstance->SavedArmorData.WeaponCode = ArmorComp->Weapon ? ArmorComp->Weapon->ItemCode : 0;
     }
 
+    // 9. 안개 저장
+    
+    TArray<AActor*> FogActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFogOfWarManager::StaticClass(), FogActors);
+    if (FogActors.Num() > 0)
+    {
+        AFogOfWarManager* FogManager = Cast<AFogOfWarManager>(FogActors[0]);
+        if (FogManager)
+        {
+            SaveGameInstance->CompressedFogBits = FogManager->GetFogAsBitmask();
+        }
+    }
+
     UGameplayStatics::SaveGameToSlot(SaveGameInstance, DefaultSaveSlot, 0);
 }
 
@@ -364,6 +378,19 @@ void UDW_GameInstance::ApplyLoadedData()
 
 		// 캐릭터의 스켈레탈 메시 업데이트
         PlayerCharacter->UpdateSkeletalMesh();
+    }
+
+    // 9. 안개 적용
+
+    TArray<AActor*> FogActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFogOfWarManager::StaticClass(), FogActors);
+    if (FogActors.Num() > 0)
+    {
+        AFogOfWarManager* FogManager = Cast<AFogOfWarManager>(FogActors[0]);
+        if (FogManager)
+        {
+            FogManager->SetFogFromBitmask(LoadedSaveGame->CompressedFogBits);
+        }
     }
 
     LoadedSaveGame = nullptr; // 일회성 데이터로 초기화

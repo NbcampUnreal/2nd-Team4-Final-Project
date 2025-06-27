@@ -534,7 +534,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttackSpeed());
 				}
 				else
 				{
@@ -550,7 +550,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttackSpeed());
 				}
 				else
 				{
