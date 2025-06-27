@@ -10,15 +10,11 @@
 #include "UI/Widget/DialogueWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
-#include "Components/ChildActorComponent.h"
 #include "Engine/DataTable.h"
 
 ADW_NpcBase::ADW_NpcBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
-	AppearanceComponent = CreateDefaultSubobject<UChildActorComponent>(TEXT("AppearanceComponent"));
-	AppearanceComponent->SetupAttachment(RootComponent);
 
 	// 메쉬 설정
 	MeshComponent = GetMesh();
@@ -115,7 +111,7 @@ TArray<FDialogueLine> ADW_NpcBase::GetDialogueForQuestState(UQuestManagerCompone
 
 	if (!DialogueDataTable) return Result;
 
-	// 퀘스트 연동 여부 판단 기본값 None
+	// 퀴스트 연동 유무 판단 기본값 None
 	bool bHasQuest = QuestID != NAME_None;
 	EQuestDialogueStage Stage = EQuestDialogueStage::None;
 
@@ -127,7 +123,7 @@ TArray<FDialogueLine> ADW_NpcBase::GetDialogueForQuestState(UQuestManagerCompone
 			{
 				FQuestData QuestData = QuestDB->FindQuestByID(QuestID);
 
-				if (QuestData.QuestID != NAME_None)  // 유효한지 확인
+				if (QuestData.QuestID != NAME_None)  // 유회한지 확인
 				{
 					if (QuestManager->IsQuestCompleted(QuestData))
 						Stage = EQuestDialogueStage::Completed;
@@ -148,19 +144,17 @@ TArray<FDialogueLine> ADW_NpcBase::GetDialogueForQuestState(UQuestManagerCompone
 	{
 		if (!Row) continue;
 
-		// 퀘스트가 있는 NPC → 해당 QuestID와 상태가 맞는 대사만
+		// 퀴스트가 있는 NPC → 해당 QuestID와 상황이 맞는 대상만
 		if (bHasQuest)
 		{
 			if (Row->QuestID == QuestID && Row->DialogueStage == Stage && Row->SpeakerName.ToString() == Name.ToString())
 			{
-				// 데이터 테이블에서 이름을 찾아서 대사 저장
 				Result.Add(*Row);
 			}
 		}
-		// 퀘스트 없는 NPC → DialogueStage == None만 허용
+		// 퀴스트 없는 NPC → DialogueStage == None만 허용
 		else if (Row->DialogueStage == EQuestDialogueStage::None)
 		{
-			// 데이터 테이블에서 이름을 찾아서 대사 저장
 			if (Row->SpeakerName.ToString() == Name.ToString())
 			{
 				Result.Add(*Row);

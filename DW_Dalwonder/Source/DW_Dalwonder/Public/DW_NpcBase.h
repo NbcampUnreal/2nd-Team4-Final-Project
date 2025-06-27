@@ -65,7 +65,4 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	ACameraActor* NPCInteractionCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "NPC|Visual")
-	UChildActorComponent* AppearanceComponent;
-
 };
