@@ -147,4 +147,10 @@ void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 Del
     else if (Prefix == TEXT("lon")) AddBonus(AttrComp->BonusLongswordXPMod, AttrComp->BaseLongswordXPMod);
     else if (Prefix == TEXT("gre")) AddBonus(AttrComp->BonusGreatswordXPMod, AttrComp->BaseGreatswordXPMod);
     else if (Prefix == TEXT("shi")) AddBonus(AttrComp->BonusDefense, AttrComp->BaseDefense);
+    else if (Prefix == TEXT("log")) AddBonus(AttrComp->BonusLongswordDamageMod, AttrComp->BaseLongswordDamageMod);
+    else if (Prefix == TEXT("grg")) AddBonus(AttrComp->BonusGreatswordDamageMod, AttrComp->BaseGreatswordDamageMod);
+    else if (Prefix == TEXT("min")) AddBonus(AttrComp->BonusDamageToLowHPEnemies, AttrComp->BaseDamageToLowHPEnemies);
+	else if (Prefix == TEXT("max")) AddBonus(AttrComp->BonusDamageToHighHPEnemies, AttrComp->BaseDamageToHighHPEnemies);
+	else if (Prefix == TEXT("nor")) AddBonus(AttrComp->BonusDamageToNormalEnemies, AttrComp->BaseDamageToNormalEnemies);
+    else if (Prefix == TEXT("bos")) AddBonus(AttrComp->BonusDamageToBoss, AttrComp->BaseDamageToBoss);
 }

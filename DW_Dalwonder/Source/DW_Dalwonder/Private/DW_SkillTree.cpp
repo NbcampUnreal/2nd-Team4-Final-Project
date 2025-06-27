@@ -28,6 +28,9 @@ void UDW_SkillTree::NativeConstruct()
     }
 
     CreateSkillIcons();
+
+    // 기본 줌 적용
+    ApplyZoom();
 }
 
 void UDW_SkillTree::CreateSkillIcons()
@@ -271,11 +274,19 @@ void UDW_SkillTree::RefreshAllIcons()
     }
 }
 
+void UDW_SkillTree::ApplyZoom()
+{
+    if (SkillCanvasPanel)
+    {
+        SkillCanvasPanel->SetRenderScale(FVector2D(CurrentZoom, CurrentZoom));
+    }
+}
+
 void UDW_SkillTree::UpdateSkillActivationStates()
 {
     if (!SkillCanvasPanel || !SkillComponent || !SkillComponent->SkillDataTable)
         return;
-    // 모든 스킬트리의 스킬 확인
+
     for (UWidget* Child : SkillCanvasPanel->GetAllChildren())
     {
         if (UDW_SkillIcon* SkillIcon = Cast<UDW_SkillIcon>(Child))
@@ -283,10 +294,45 @@ void UDW_SkillTree::UpdateSkillActivationStates()
             const FName& SkillID = SkillIcon->SkillID;
             const FSkillData* SkillData = SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("UpdateActivation"));
 
-            if (SkillData && !SkillData->PrerequisiteSkillID.IsNone())
+            if (!SkillData) continue;
+
+            FString Raw = SkillData->PrerequisiteSkillID.ToString().TrimStartAndEnd();
+
+            if (Raw.IsEmpty() || Raw.Equals("None", ESearchCase::IgnoreCase) || Raw.Equals("Null", ESearchCase::IgnoreCase))
             {
-                int32 PrereqLevel = SkillComponent->GetSkillLevel(SkillData->PrerequisiteSkillID);
-                SkillIcon->SetIsEnabled(PrereqLevel > 0);
+                // 루트 스킬은 항상 활성화
+                SkillIcon->SetIsEnabled(true);
+            }
+            else
+            {
+                TArray<FString> Prereqs;
+                if (Raw.Contains(" or "))
+                    Raw.ParseIntoArray(Prereqs, TEXT(" or "), true);
+                else
+                    Prereqs.Add(Raw);
+
+                bool bEnable = false;
+                for (const FString& P : Prereqs)
+                {
+                    FName PID(*P.TrimStartAndEnd());
+                    if (SkillComponent->GetSkillLevel(PID) > 0)
+                    {
+                        bEnable = true;
+                        break;
+                    }
+                }
+
+                SkillIcon->SetIsEnabled(bEnable);
+
+                // 색상도 갱신
+                if (UImage* IconImage = SkillIcon->GetIconImage())
+                {
+                    FLinearColor Color = bEnable
+                        ? FLinearColor::White
+                        : FLinearColor(0.4f, 0.4f, 0.4f, 0.85f);
+
+                    IconImage->SetColorAndOpacity(Color);
+                }
             }
         }
     }
@@ -348,4 +394,17 @@ FReply UDW_SkillTree::NativeOnMouseButtonUp(const FGeometry& InGeometry, const F
 {
     bIsDragging = false;
     return FReply::Handled().ReleaseMouseCapture();
+}
+
+FReply UDW_SkillTree::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    const float Delta = InMouseEvent.GetWheelDelta();
+    const float ZoomStep = 0.1f;
+
+    CurrentZoom += Delta * ZoomStep;
+    CurrentZoom = FMath::Clamp(CurrentZoom, MinZoom, MaxZoom);
+
+    ApplyZoom();
+
+    return FReply::Handled();
 }

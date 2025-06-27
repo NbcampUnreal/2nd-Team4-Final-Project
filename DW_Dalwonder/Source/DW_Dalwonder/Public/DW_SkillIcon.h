@@ -8,6 +8,7 @@ class UImage;
 class UTextBlock;
 class UButton;
 class UDW_SkillComponent;
+class UDW_SkillTooltip;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
@@ -18,6 +19,10 @@ public:
 
     virtual void NativeConstruct() override;
 
+	// Mouse interaction functions
+    void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+    void NativeOnMouseLeave(const FPointerEvent& InMouseEvent);
+
     UPROPERTY(BlueprintReadWrite)
     FName SkillID;
 
@@ -26,6 +31,10 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
     UMaterialInterface* DotMaterial;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ToolTip")
+    TSubclassOf<UDW_SkillTooltip> TooltipWidgetClass;
+    UDW_SkillTooltip* ActiveTooltip = nullptr;
 
     UFUNCTION()
     void UpdateIcon();
