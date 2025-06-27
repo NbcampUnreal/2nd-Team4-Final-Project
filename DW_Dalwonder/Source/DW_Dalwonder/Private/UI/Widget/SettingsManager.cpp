@@ -32,6 +32,10 @@ void USettingsManager::SaveSettingsTo(UDW_SaveGame* Save)
 	Save->bSavedMotionBlur = bMotionBlurEnabled;
 	Save->bSavedShadow = bShadowEnabled;
 	Save->SavedMouseSensitivity = MouseSensitivity;
+	Save->SavedVolumeMaster = VolumeMaster;
+	Save->SavedVolumeBGM = VolumeBGM;
+	Save->SavedVolumeSFX = VolumeSFX;
+	Save->SavedVolumeUI = VolumeUI;
 }
 
 void USettingsManager::SaveToSlot()
@@ -73,6 +77,10 @@ void USettingsManager::LoadSettingsFrom(UDW_SaveGame* Save)
 	ApplyMotionBlur(Save->bSavedMotionBlur);
 	ApplyShadows(Save->bSavedShadow);
 	MouseSensitivity = Save->SavedMouseSensitivity;
+	SetVolumeMaster(Save->SavedVolumeMaster);
+	SetVolumeBGM(Save->SavedVolumeBGM);
+	SetVolumeSFX(Save->SavedVolumeSFX);
+	SetVolumeUI(Save->SavedVolumeUI);
 }
 
 void USettingsManager::ApplyWindowMode(int32 ModeIndex)
@@ -151,4 +159,52 @@ void USettingsManager::ApplyMouseSensitivity(float InSensitivity)
 
 void USettingsManager::ApplyVolumeMaster(float Value)
 {
+	VolumeMaster = Value;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.0f, 0.0f, true);
+	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+}
+
+void USettingsManager::ApplyVolumeBGM(float Value)
+{
+	VolumeBGM = Value;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, BGMClass, Value / 100.f, 1.0f, 0.0f, true);
+	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+}
+
+void USettingsManager::ApplyVolumeSFX(float Value)
+{
+	VolumeSFX = Value;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, SFXClass, Value / 100.f, 1.0f, 0.0f, true);
+	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+}
+
+void USettingsManager::ApplyVolumeUI(float Value)
+{
+	VolumeUI = Value;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.0f, 0.0f, true);
+	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+}
+
+void USettingsManager::SetVolumeMaster(float Value)
+{
+	VolumeMaster = Value;
+	// 여기에 사운드 시스템 연동 코드 추가 예정
+}
+
+void USettingsManager::SetVolumeBGM(float Value)
+{
+	VolumeBGM = Value;
+	// 여기에 BGM 사운드 믹스 적용 코드 추가 예정
+}
+
+void USettingsManager::SetVolumeSFX(float Value)
+{
+	VolumeSFX = Value;
+	// 여기에 효과음 볼륨 반영 코드 추가 예정
+}
+
+void USettingsManager::SetVolumeUI(float Value)
+{
+	VolumeUI = Value;
+	// 여기에 UI 사운드 볼륨 반영 코드 추가 예정
 }

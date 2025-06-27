@@ -70,7 +70,7 @@ public:
 	UPROPERTY()
 	float SavedMouseSensitivity = 1.0f;
 
-	// UI
+	// UI 그래픽
 	UPROPERTY(BlueprintReadWrite)
 	int32 SavedWindowMode;
 
@@ -88,4 +88,17 @@ public:
 
 	UPROPERTY()
 	bool bSavedShadow;
+	
+	// 사운드
+	UPROPERTY()
+	float SavedVolumeMaster = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeBGM = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeSFX = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeUI = 100.f;
 };
