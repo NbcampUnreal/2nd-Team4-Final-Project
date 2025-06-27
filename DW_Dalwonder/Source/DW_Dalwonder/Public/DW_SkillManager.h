@@ -21,6 +21,9 @@ public:
 
     const FSkillData* GetSkillData(FName SkillID) const;
 
+	/** 스킬 데이터 테이블 가져오기 */
+	UDataTable* GetSkillDataTable() const { return SkillDataTable; }
+
     /** 선행 조건이 충족됐는지 확인 */
     bool CanUnlockSkill(FName SkillID, const TMap<FName, FSkillState>& SkillStateMap) const;
 

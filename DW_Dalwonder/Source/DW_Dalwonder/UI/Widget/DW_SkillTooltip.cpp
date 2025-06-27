@@ -6,7 +6,6 @@
 
 void UDW_SkillTooltip::SetSkillTooltipInfo(const FText& Name, const FText& Desc, int32 CurrentLevel, int32 MaxLevel)
 {
-	UE_LOG(LogTemp, Log, TEXT("Setting Skill Tooltip Info: %s, %s, Lv %d / %d"), *Name.ToString(), *Desc.ToString(), CurrentLevel, MaxLevel);
     if (SkillNameText) SkillNameText->SetText(Name);
     if (SkillDescText) SkillDescText->SetText(Desc);
 

@@ -19,30 +19,124 @@ const FSkillData* UDW_SkillManager::GetSkillData(FName SkillID) const
 bool UDW_SkillManager::CanUnlockSkill(FName SkillID, const TMap<FName, FSkillState>& SkillStateMap) const
 {
     const FSkillData* Data = GetSkillData(SkillID);
-    if (!Data) return false;
+    if (!Data)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CanUnlockSkill: SkillData not found for %s"), *SkillID.ToString());
+        return false;
+    }
 
+    // 선행 조건이 명시되지 않은 경우 → 항상 가능
     if (Data->PrerequisiteSkillID.IsNone())
         return true;
 
-    const FSkillState* PreState = SkillStateMap.Find(Data->PrerequisiteSkillID);
-    return PreState && PreState->CurrentLevel > 0;
+    FString Raw = Data->PrerequisiteSkillID.ToString().TrimStartAndEnd();
+
+    // 예외 처리: None, Null, 빈 문자열
+    if (Raw.IsEmpty() || Raw.Equals(TEXT("None"), ESearchCase::IgnoreCase) || Raw.Equals(TEXT("Null"), ESearchCase::IgnoreCase))
+        return true;
+
+    // "or" 조건 분리
+    TArray<FString> Tokens;
+    if (Raw.Contains(TEXT(" or ")))
+        Raw.ParseIntoArray(Tokens, TEXT(" or "), true);
+    else
+        Tokens.Add(Raw); // 단일 조건
+
+    // 둘 중 하나라도 만족하면 true
+    for (const FString& Token : Tokens)
+    {
+        FName PreID(*Token.TrimStartAndEnd());
+        const FSkillState* PreState = SkillStateMap.Find(PreID);
+        if (PreState && PreState->CurrentLevel > 0)
+            return true;
+    }
+
+    // 아무 조건도 만족하지 않으면 false
+    return false;
 }
 
 bool UDW_SkillManager::TryLearnSkill(FName SkillID, int32& InOutSP, TMap<FName, FSkillState>& SkillStateMap, UDW_AttributeComponent* AttrComp)
 {
     const FSkillData* SkillData = GetSkillData(SkillID);
-    if (!SkillData) return false;
+    if (!SkillData)
+    {
+        UE_LOG(LogTemp, Error, TEXT(" TryLearnSkill: SkillData not found for %s"), *SkillID.ToString());
+        return false;
+    }
 
-    if (!CanUnlockSkill(SkillID, SkillStateMap)) return false;
-    if (InOutSP < SkillData->Cost) return false;
+    // ────────────────
+    // 선행 조건 검사
+    // ────────────────
+    if (!SkillData->PrerequisiteSkillID.IsNone())
+    {
+        FString PrereqStr = SkillData->PrerequisiteSkillID.ToString();
 
-    FSkillState& State = SkillStateMap.FindOrAdd(SkillID);
-    if (State.CurrentLevel >= SkillData->MaxLevel) return false;
+        TArray<FString> PrereqIDs;
+        PrereqStr.ParseIntoArray(PrereqIDs, TEXT(" or "), true);
 
-    State.CurrentLevel++;
+        bool bAnySatisfied = false;
+
+        for (const FString& IDStr : PrereqIDs)
+        {
+            FName PreID(*IDStr.TrimStartAndEnd());
+            const FSkillState* PreState = SkillStateMap.Find(PreID);
+            if (PreState && PreState->CurrentLevel > 0)
+            {
+                bAnySatisfied = true;
+                break;
+            }
+        }
+
+        if (!bAnySatisfied)
+        {
+            UE_LOG(LogTemp, Warning, TEXT(" Prerequisite not met for %s. Requires one of: %s"),
+                *SkillID.ToString(), *PrereqStr);
+            return false;
+        }
+    }
+
+    // ────────────────
+    // SP 체크
+    // ────────────────
+    if (InOutSP < SkillData->Cost)
+    {
+        UE_LOG(LogTemp, Warning, TEXT(" Not enough SP for %s (Cost: %d, Available: %d)"),
+            *SkillID.ToString(), SkillData->Cost, InOutSP);
+        return false;
+    }
+
+    // ────────────────
+    // 현재 상태 확인
+    // ────────────────
+    FSkillState* State = SkillStateMap.Find(SkillID);
+
+    if (State)
+    {
+        if (State->CurrentLevel >= SkillData->MaxLevel)
+        {
+            UE_LOG(LogTemp, Warning, TEXT(" %s is already at max level (%d)"),
+                *SkillID.ToString(), SkillData->MaxLevel);
+            return false;
+        }
+
+        State->CurrentLevel++;
+        UE_LOG(LogTemp, Warning, TEXT(" %s leveled up to %d"), *SkillID.ToString(), State->CurrentLevel);
+    }
+    else
+    {
+        FSkillState NewState{ SkillID, 1 };
+        SkillStateMap.Add(SkillID, NewState);
+        UE_LOG(LogTemp, Warning, TEXT(" %s learned for the first time"), *SkillID.ToString());
+    }
+
+    // ────────────────
+    // SP 차감 & 효과 적용
+    // ────────────────
     InOutSP -= SkillData->Cost;
+    UE_LOG(LogTemp, Warning, TEXT("Remaining SP: %d"), InOutSP);
 
     ApplySkillEffect(*SkillData, 1, AttrComp);
+
     return true;
 }
 

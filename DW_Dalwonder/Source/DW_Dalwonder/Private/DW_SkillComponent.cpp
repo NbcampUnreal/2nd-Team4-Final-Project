@@ -2,6 +2,8 @@
 #include "DW_AttributeComponent.h"
 #include "DW_SkillManager.h"
 #include "GameFramework/Character.h"
+#include "DW_GmBase.h"
+#include "Kismet/GameplayStatics.h"
 
 UDW_SkillComponent::UDW_SkillComponent()
 {
@@ -10,17 +12,21 @@ UDW_SkillComponent::UDW_SkillComponent()
     if (AActor* Owner = GetOwner())
     {
         AttrCom = Owner->FindComponentByClass<UDW_AttributeComponent>();
-        if (!AttrCom)
-        {
-            UE_LOG(LogTemp, Error, TEXT("AttributeComponent not found on %s"), *Owner->GetName());
-        }
     }
 }
 
 /* ------------------------------ 저장데이터 불러오기 ------------------------------ */
 void UDW_SkillComponent::ApplyAllSkillBonuses(UDW_AttributeComponent* AttributeComponent)
 {
-    if (!AttributeComponent || !SkillDataTable) return;
+    if (!AttributeComponent) return;
+
+    // SkillManager를 GameMode에서 가져오기
+    ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
+    if (!GM || !GM->GetSkillManager()) return;
+
+    UDW_SkillManager* SkillManager = GM->GetSkillManager();
+    UDataTable* SkillDataTable = SkillManager->GetSkillDataTable();
+    if (!SkillDataTable) return;
 
     for (const auto& Elem : SkillStateMap)
     {
@@ -49,20 +55,25 @@ FSkillState* UDW_SkillComponent::FindSkillState(FName SkillID)
 bool UDW_SkillComponent::TryLearnSkill(FName SkillID)
 {
     AActor* Owner = GetOwner();
-    if (!Owner || !SkillDataTable) return false;
+    if (!Owner) return false;
 
     UDW_AttributeComponent* Attr = Owner->FindComponentByClass<UDW_AttributeComponent>();
     if (!Attr) return false;
 
-    // Lazy Init
-    static UDW_SkillManager* SkillMgr = NewObject<UDW_SkillManager>(this);
-    SkillMgr->Initialize(SkillDataTable);
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
+    {
+        if (UDW_SkillManager* SkillMgr = GM->GetSkillManager())
+        {
+            const bool bSuccess = SkillMgr->TryLearnSkill(SkillID, CurrentSP, SkillStateMap, Attr);
+            if (bSuccess)
+            {
+                OnSkillUpdated.Broadcast();
+            }
+            return bSuccess;
+        }
+    }
 
-    if (!SkillMgr->TryLearnSkill(SkillID, CurrentSP, SkillStateMap, Attr))
-        return false;
-
-    OnSkillUpdated.Broadcast();
-    return true;
+    return false;
 }
 
 int32 UDW_SkillComponent::GetSkillLevel(FName SkillID) const
@@ -74,20 +85,23 @@ int32 UDW_SkillComponent::GetSkillLevel(FName SkillID) const
 /* --------------------------- 효과 적용부 --------------------------- */
 void UDW_SkillComponent::ApplySkillEffect(const FSkillData& SkillData, int32 DeltaLevel)
 {
-    if (!AttrCom || !SkillDataTable) return;
+    if (!AttrCom) return;
 
-    static UDW_SkillManager* SkillMgr = NewObject<UDW_SkillManager>(this);
-    SkillMgr->Initialize(SkillDataTable);
-
-    for (const auto& Elem : SkillStateMap)
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this)))
     {
-        const int32 Level = Elem.Value.CurrentLevel;
-        if (Level <= 0) continue;
-
-        const FSkillData* SkillDataPtr = SkillMgr->GetSkillData(Elem.Key);
-        if (SkillDataPtr)
+        if (UDW_SkillManager* SkillMgr = GM->GetSkillManager())
         {
-            SkillMgr->ApplySkillEffect(*SkillDataPtr, Level, AttrCom);
+            for (const auto& Elem : SkillStateMap)
+            {
+                const int32 Level = Elem.Value.CurrentLevel;
+                if (Level <= 0) continue;
+
+                const FSkillData* SkillDataPtr = SkillMgr->GetSkillData(Elem.Key);
+                if (SkillDataPtr)
+                {
+                    SkillMgr->ApplySkillEffect(*SkillDataPtr, Level, AttrCom);
+                }
+            }
         }
     }
 }

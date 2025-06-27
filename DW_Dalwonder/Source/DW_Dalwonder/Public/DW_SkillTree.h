@@ -7,6 +7,7 @@
 class UCanvasPanel;
 class UDW_SkillComponent;
 class UDW_SkillIcon;
+class UDW_SkillManager;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SkillTree : public UUserWidget
@@ -26,6 +27,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn))
     UDW_SkillComponent* SkillComponent;
+
+    UPROPERTY()
+    UDW_SkillManager* SkillManager;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
     TSubclassOf<UDW_SkillIcon> SkillIconClass;

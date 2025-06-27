@@ -9,6 +9,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UI/Widget/DW_SkillTooltip.h"
+#include "DW_SkillManager.h"
 
 
 void UDW_SkillIcon::NativeConstruct()
@@ -52,12 +53,12 @@ void UDW_SkillIcon::UpdateIcon()
 {
     if (!SkillComponent) return;
 
+    if (SkillID.IsNone()) return;
+
     const int32 Level = SkillComponent->GetSkillLevel(SkillID);
     bUnlocked = Level > 0;
 
-    const FSkillData* SkillData = SkillComponent->SkillDataTable
-        ? SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("SkillIcon Update"))
-        : nullptr;
+    const FSkillData* SkillData = SkillManager ? SkillManager->GetSkillData(SkillID) : nullptr;
 
     if (!SkillData || !IconImage) return;
 
@@ -85,7 +86,7 @@ void UDW_SkillIcon::UpdateIcon()
     {
         if (bUnlocked)
         {
-            DotEffectImage->SetVisibility(ESlateVisibility::Visible);
+            DotEffectImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 
             // 1초 후 이펙트를 자동으로 숨김
             FTimerHandle TimerHandle;
@@ -120,31 +121,35 @@ void UDW_SkillIcon::UpdateIcon()
             SkillButton->SetIsEnabled(true);
         }
     }
+}
 
-    // 색상 반영
+void UDW_SkillIcon::SetCanActivate(bool bEnable)
+{
+    if (SkillButton)
+        SkillButton->SetIsEnabled(bEnable);
+
     if (IconImage)
     {
-        const bool bEnabled = SkillButton->GetIsEnabled();
-        FLinearColor Color = bEnabled
-            ? FLinearColor::White
-            : FLinearColor(0.4f, 0.4f, 0.4f, 0.85f);
-
-        IconImage->SetColorAndOpacity(Color);
+        if (bEnable)
+        {
+            IconImage->SetColorAndOpacity(FLinearColor::White);
+        }
+        else
+        {
+            // 흐리게: 살짝 어둡고, 색상 감도 낮춤
+            IconImage->SetColorAndOpacity(FLinearColor(0.4f, 0.4f, 0.4f, 1.0f));
+        }
     }
 }
 
 void UDW_SkillIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
-	UE_LOG(LogTemp, Warning, TEXT("Skill Icon Mouse Entered: %s"), *SkillID.ToString());
-    if (TooltipWidgetClass && SkillComponent && SkillComponent->SkillDataTable)
+	
+    if (TooltipWidgetClass && SkillManager)
     {
-		UE_LOG(LogTemp, Warning, TEXT("Creating Tooltip for Skill ID: %s"), *SkillID.ToString());
-        const FSkillData* Data = SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("Tooltip"));
-        if (!Data) { 
-			UE_LOG(LogTemp, Warning, TEXT("SkillData not found for ID: %s"), *SkillID.ToString());
-            return;
-        }
+        const FSkillData* Data = SkillManager->GetSkillData(SkillID);
+        if (!Data) return;
 
         ActiveTooltip = CreateWidget<UDW_SkillTooltip>(GetWorld(), TooltipWidgetClass);
         if (ActiveTooltip)
@@ -165,7 +170,7 @@ void UDW_SkillIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPoint
 void UDW_SkillIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
     Super::NativeOnMouseLeave(InMouseEvent);
-	UE_LOG(LogTemp, Warning, TEXT("Skill Icon Mouse Left: %s"), *SkillID.ToString());
+
     if (ActiveTooltip)
     {
         ActiveTooltip->RemoveFromParent();

@@ -25,8 +25,8 @@ void ADW_GmBase::BeginPlay()
     if (!SkillManager)
     {
         SkillManager = NewObject<UDW_SkillManager>(this);
-        // SkillDataTable 할당은 필요한 시점 또는 여기서도 가능
-        // SkillManager->Initialize(DataTable);
+        // SkillDataTable 할당
+        SkillManager->Initialize(SkillDataTable);
     }
 
     UWorld* World = GetWorld();
