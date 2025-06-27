@@ -15,6 +15,9 @@
 #include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
+#include "Item/ItemTranslator.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 struct FDropItemData;
 
@@ -441,6 +444,60 @@ void ADW_MonsterBase::Dead()
 
 	if (bIsDead) return;
 	
+	if (DropTable)
+	{
+		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+		const FMonsterDropTable* DropData = DropTable->FindRow<FMonsterDropTable>(RowName, TEXT(""));
+
+		if (DropData && DropData->DropItems.Num() > 0)
+		{
+			EItemGrade HighestGrade = EItemGrade::Normal;
+
+			for (const FDropItemData& ItemData : DropData->DropItems)
+			{
+				EItemGrade CurrentGrade;
+				int32 EnchantLevel, ItemRowID;
+				bool bIsSuccess;
+				
+				UItemTranslator::ParseItemCode(ItemData.ItemCode, CurrentGrade, EnchantLevel, ItemRowID, bIsSuccess);
+
+				if (bIsSuccess && static_cast<int32>(CurrentGrade) > static_cast<int32>(HighestGrade))
+				{
+					HighestGrade = CurrentGrade;
+				}
+			}
+    
+			FString VFX_Path;
+			switch (HighestGrade)
+			{
+				case EItemGrade::Normal:
+					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Normal.NE_Drop_Normal'");
+					break;
+				case EItemGrade::Rare:
+					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Rare.NE_Drop_Rare'");
+					break;
+				case EItemGrade::Unique:
+					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Unique.NE_Drop_Unique'");
+					break;
+				case EItemGrade::Legendary: 
+					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Legendery.NE_Drop_Legendery'");
+					break;
+				default:
+					VFX_Path = TEXT("");
+					break;
+			}
+
+			if (!VFX_Path.IsEmpty())
+			{
+				UNiagaraSystem* VFX_ToSpawn = Cast<UNiagaraSystem>(StaticLoadObject(UNiagaraSystem::StaticClass(), nullptr, *VFX_Path));
+				if (VFX_ToSpawn)
+				{
+					UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_ToSpawn, GetActorLocation());
+				}
+			}
+		}
+	}
+	
 	bIsDead = true;
 
 	DropItem(DropTable);
@@ -655,8 +712,8 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 	{
 		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
 		{
-			FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
-			FVector SpawnLocation = GetActorLocation() + RandOffset;
+			//FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
+			FVector SpawnLocation = GetActorLocation();
 
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
