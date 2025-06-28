@@ -8,10 +8,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Item/ItemBase.h"
 #include "Character/CharacterArmorComponent.h"
+#include "Character/CharacterStatComponent.h"
 
 UDW_SwordAttackNotify::UDW_SwordAttackNotify()
 {
-	AttackDamage = 10.f;
 	PlayerCharacter = nullptr;
 	CharacterWeapon = nullptr;
 }
@@ -121,7 +121,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				PlayerCharacter->AttackingActors.Add(HitActor);
 
 				// 기본 공격력
-				float TotalDamage = AttackDamage;
+				float TotalDamage = PlayerCharacter->GetCharacterStatComponent()->GetTotalAttack() * AttackMultiplier;
 
 				// Attribute에서 보너스 데미지 적용
 				if (UDW_AttributeComponent* Attr = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
