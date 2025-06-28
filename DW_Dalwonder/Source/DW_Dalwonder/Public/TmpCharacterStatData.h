@@ -57,4 +57,8 @@ struct FTmpCharacterStatData
 	UPROPERTY() float EquipmentBonusWalkSpeed;
 	UPROPERTY() float EquipmentBonusMaxWeight;
 
+	UPROPERTY() float CurrentMastery;
+	UPROPERTY() float MaxMastery;
+	UPROPERTY() int32 LevelUpCount;
+
 };

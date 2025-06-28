@@ -35,7 +35,7 @@ public:
 	TSubclassOf<class ADW_MonsterBase> Mimic;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
-	int32 ItemCode = 1000;
+	FString ItemCode = "1000";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State", meta = (EditCondition = "bIsChest", EditConditionHides))
 	bool bUseMinDropCount = false;

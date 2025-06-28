@@ -7,7 +7,6 @@
 void USettingsPanel_Control::NativeConstruct()
 {
 	Super::NativeConstruct();
-	UE_LOG(LogTemp, Warning, TEXT("Control Panel NativeConstruct"));
 
 	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
 	{

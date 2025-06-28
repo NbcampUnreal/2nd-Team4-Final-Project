@@ -43,7 +43,7 @@ void AWorldItemActor::BeginPlay()
 {
     Super::BeginPlay();
 
-	if (ItemBase->ItemCode != 0)
+	if (!(ItemBase->ItemCode).IsEmpty())
 	{
 		bool bSuccess = false;
 		// 아이템 코드가 설정되어 있다면 해당 아이템 데이터를 로드
@@ -64,7 +64,7 @@ void AWorldItemActor::BeginPlay()
 
     if (ItemDataTable)
     {
-		FName FItemRowName = FName(*FString::FromInt(ItemBase->ItemBaseData.ItemID));
+		FName FItemRowName = FName(*ItemBase->ItemBaseData.ItemID);
         const FItemData* FoundData = ItemDataTable->FindRow<FItemData>(FItemRowName, TEXT("Item Lookup"));
         if (FoundData)
         {
@@ -132,7 +132,7 @@ void AWorldItemActor::Interact(ADW_CharacterBase* PlayerCharacter)
     Destroy();
 }
 
-void AWorldItemActor::SetItemCode(int NewItemCode)
+void AWorldItemActor::SetItemCode(FString NewItemCode)
 {
     if (ItemBase)
     {
@@ -148,14 +148,14 @@ void AWorldItemActor::SetItemCode(int NewItemCode)
         ItemBase->LoadItemFromCode(ItemBase->ItemCode); // 이 함수가 ItemBaseData를 채운다고 가정
 
 #if WITH_EDITOR
-        if (!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("월드아이템 ItemCode 파싱 실패!!!! ItemCode: %d"), NewItemCode));
+        //if (!bSuccess) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("월드아이템 ItemCode 파싱 실패!!!! ItemCode: %d"), NewItemCode));
 #endif
 
         // ItemCode가 설정된 후 BeginPlay에서 DataTable을 통해 나머지 데이터를 로드합니다.
         // 하지만 SetItemCode가 호출되는 시점에 이미 DataTable이 로드되어 있다면 여기서 바로 적용할 수도 있습니다.
         if (ItemDataTable)
         {
-            FName FItemRowName = FName(*FString::FromInt(ItemBase->ItemBaseData.ItemID));
+            FName FItemRowName = FName(*ItemBase->ItemBaseData.ItemID);
             const FItemData* FoundData = ItemDataTable->FindRow<FItemData>(FItemRowName, TEXT("Item Lookup"));
             if (FoundData)
             {

@@ -14,17 +14,17 @@ struct FEquippedArmorSaveData
     GENERATED_BODY()
 
     UPROPERTY()
-    int32 HelmetCode = 0;
+    FString HelmetCode = "0";
 
     UPROPERTY()
-    int32 ArmorCode = 0;
+    FString ArmorCode = "0";
 
     UPROPERTY()
-    int32 GloveCode = 0;
+    FString GloveCode = "0";
 
     UPROPERTY()
-    int32 BootsCode = 0;
+    FString BootsCode = "0";
 
     UPROPERTY()
-    int32 WeaponCode = 0;
+    FString WeaponCode = "0";
 };
