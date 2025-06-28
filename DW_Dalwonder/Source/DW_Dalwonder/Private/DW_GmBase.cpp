@@ -27,11 +27,13 @@ void ADW_GmBase::BeginPlay()
     {
         if (USettingsManager* SM = GI->GetSettingsManager())
         {
-            UE_LOG(LogTemp, Warning, TEXT("[GMBase] Scheduling MasterMix reapply"));
             FTimerHandle TimerHandle;
             GetWorld()->GetTimerManager().SetTimer(TimerHandle, [SM]()
             {
                 SM->ApplyVolumeMaster(SM->GetVolumeMaster());
+                SM->ApplyVolumeBGM(SM->GetVolumeBGM());
+                SM->ApplyVolumeSFX(SM->GetVolumeSFX());
+                SM->ApplyVolumeUI(SM->GetVolumeUI());
             }, 0.1f, false);
         }
     }

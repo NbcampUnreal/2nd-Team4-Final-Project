@@ -30,8 +30,12 @@ void USettingsManager::Initialize()
 	SFXClass = SFXClassAsset.Get();
 	UIClass = UIClassAsset.Get();
 
-	LoadSettings();  // 저장된 값 로드
-	ApplyVolumeMaster(VolumeMaster);  // 로드 후 즉시 반영
+	LoadSettings();
+
+	ApplyVolumeMaster(VolumeMaster);
+	ApplyVolumeBGM(VolumeBGM);
+	ApplyVolumeSFX(VolumeSFX);
+	ApplyVolumeUI(VolumeUI);
 
 	UE_LOG(LogTemp, Warning, TEXT("Settings initialized: MasterVol=%.2f"), VolumeMaster);
 }
