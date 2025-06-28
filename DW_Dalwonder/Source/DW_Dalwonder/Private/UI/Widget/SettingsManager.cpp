@@ -8,31 +8,36 @@
 
 USettingsManager::USettingsManager()
 {
-	MasterMixAsset = TSoftObjectPtr<USoundMix>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/MasterMix")));
-	MasterClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_Master")));
-	BGMClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_BGM")));
-	SFXClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_SFX")));
-	UIClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI")));
+	MasterMixAsset = TSoftObjectPtr<USoundMix>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/MasterMix.MasterMix")));
+	MasterClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_Master.SC_Master")));
+	BGMClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_BGM.SC_BGM")));
+	SFXClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_SFX.SC_SFX")));
+	UIClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI.SC_UI")));
 }
 
 void USettingsManager::Initialize()
 {
-	LoadSettings();
-	
-	// 비동기 로드: 설정된 소프트 오브젝트 포인터 불러오기
+	// ① 사운드 리소스 동기 로드
 	MasterMixAsset.LoadSynchronous();
 	MasterClassAsset.LoadSynchronous();
 	BGMClassAsset.LoadSynchronous();
 	SFXClassAsset.LoadSynchronous();
 	UIClassAsset.LoadSynchronous();
 
-	// 실제 UObject 포인터로 캐싱
+	// ② UObject 포인터로 캐싱
 	MasterMix = MasterMixAsset.Get();
 	MasterClass = MasterClassAsset.Get();
 	BGMClass = BGMClassAsset.Get();
 	SFXClass = SFXClassAsset.Get();
 	UIClass = UIClassAsset.Get();
 
+	// ③ 로그로 확인 (옵션)
+	UE_LOG(LogTemp, Warning, TEXT("MasterMix loaded? %s"), MasterMix ? TEXT("Yes") : TEXT("No"));
+
+	// ④ 설정 로드 (이제 ApplyVolumeX 내부에서 nullptr 걱정 없음)
+	LoadSettings();
+
+	// ⑤ 현재 볼륨 값 적용
 	ApplyVolumeMaster(VolumeMaster);
 	ApplyVolumeBGM(VolumeBGM);
 	ApplyVolumeSFX(VolumeSFX);
@@ -67,6 +72,9 @@ void USettingsManager::SaveSettingsTo(UDW_SaveGame* Save)
 	Save->SavedVolumeBGM = VolumeBGM;
 	Save->SavedVolumeSFX = VolumeSFX;
 	Save->SavedVolumeUI = VolumeUI;
+
+	UE_LOG(LogTemp, Warning, TEXT("[Save] Master: %.2f / BGM: %.2f / SFX: %.2f / UI: %.2f"),
+	VolumeMaster, VolumeBGM, VolumeSFX, VolumeUI);
 }
 
 void USettingsManager::SaveToSlot()
@@ -101,6 +109,10 @@ void USettingsManager::LoadSettings()
 
 void USettingsManager::LoadSettingsFrom(UDW_SaveGame* Save)
 {
+	
+	UE_LOG(LogTemp, Warning, TEXT("[Load] Master: %.2f / BGM: %.2f / SFX: %.2f / UI: %.2f"),
+		Save->SavedVolumeMaster, Save->SavedVolumeBGM, Save->SavedVolumeSFX, Save->SavedVolumeUI);
+	
 	ApplyWindowMode(Save->SavedWindowMode);
 	ApplyResolution(Save->SavedResolution);
 	ApplyVSync(Save->bSavedVSync);
@@ -238,11 +250,16 @@ void USettingsManager::ApplyVolumeUI(float Value)
 {
 	VolumeUI = Value;
 
+
 	if (MasterMix && MasterClass)
 	{
 		UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.0f, 0.0f, true);
+		UE_LOG(LogTemp, Warning, TEXT("SetSoundMixClassOverride 호출 완료"));
 		UGameplayStatics::PushSoundMixModifier(this, MasterMix);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("ApplyVolumeUI: Value = %.2f"), Value);
+	UE_LOG(LogTemp, Warning, TEXT("MasterMix = %s"), MasterMix ? *MasterMix->GetName() : TEXT("nullptr"));
+	UE_LOG(LogTemp, Warning, TEXT("UIClass = %s"), UIClass ? *UIClass->GetName() : TEXT("nullptr"));
 }
 
 void USettingsManager::SetVolumeMaster(float Value)

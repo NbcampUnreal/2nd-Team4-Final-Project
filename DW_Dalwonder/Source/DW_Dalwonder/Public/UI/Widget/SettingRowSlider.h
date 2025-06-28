@@ -21,12 +21,7 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativePreConstruct() override;
 	void InitSetting(const FText& InLabel, float InMin, float InMax, float InStep, int32 InDecimalPlaces,
-	                 float InArrowStep,
-	                 float InDefault);
-
-
-	UFUNCTION()
-	void OnSliderValueChanged(float Value);
+	                 float InArrowStep, float InDefault);
 
 	UFUNCTION()
 	void OnLeftClicked();
@@ -36,6 +31,9 @@ public:
 
 	UFUNCTION()
 	void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void HandleSliderValueChanged(float NewValue);
 
 	void UpdateDisplayText(float Value);
 	void SetSliderAndDisplay(float InValue);
@@ -47,19 +45,19 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Event")
 	FOnSliderSaved OnSliderSaved;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnSliderValueChanged OnValueChanged;
+	UPROPERTY(BlueprintAssignable, Category="Event")
+	FOnSliderValueChanged OnSliderValueChanged;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slider")
 	bool bHasSavedValue = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slider")
 	float SavedValue = 0.f;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Slider")
 	float CurrentValue = 0.f;
-protected:
 
-	// 설정 레이블 (디자인 타임용)
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slider")
 	FText Label;
 
@@ -89,7 +87,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slider")
 	float ArrowStepSize = 5.0f;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slider", meta = (ClampMin = "0.0"))
 	float DefaultValue = 1.0f;
