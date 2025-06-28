@@ -17,7 +17,7 @@ public:
     UItemBase();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    int32 ItemCode = 0;
+    FString ItemCode = "0";
 
     // 아이템 코드 파싱 후 저장될 실제 아이템 정보
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
@@ -31,7 +31,7 @@ public:
 
     // ItemCode를 기반으로 아이템 정보를 로드하는 함수
     UFUNCTION(BlueprintCallable, Category = "Item")
-    virtual void LoadItemFromCode(int32 InItemCode);
+    virtual void LoadItemFromCode(FString InItemCode);
 
 
     // --- 아이템 동작 함수들 ---

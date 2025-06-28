@@ -1,26 +1,30 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
-#include "EItemType.h"
-#include "EItemgrade.h"
+#include "UObject/NoExportTypes.h"
+#include "EItemGrade.h"
 #include "ItemTranslator.generated.h"
 
 /**
- * 
+ * ������ �ڵ带 ���� �� �ؼ��ϴ� ��ƿ��Ƽ Ŭ����
  */
 UCLASS()
-class DW_DALWONDER_API UItemTranslator : public UBlueprintFunctionLibrary
+class DW_DALWONDER_API UItemTranslator : public UObject
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintCallable, Category = "Item Code")
-    static int32 MakeItemCode(EItemGrade ItemGrade, int32 EnchantLevel, int32 ItemRowID);
+    // ������ �ڵ� ���� (FString ���)
+    UFUNCTION(BlueprintCallable, Category = "ItemCode")
+    static FString MakeItemCode(EItemGrade ItemGrade, int32 EnchantLevel, const FString& ItemRowID);
 
-    UFUNCTION(BlueprintCallable, Category = "Item Code", Meta = (AutoCreateRefTerm = "ItemCode"))
-    static void ParseItemCode(int32 ItemCode, EItemGrade& OutItemGrade, int32& OutEnchantLevel, int32& OutItemRowID, bool& OutIsSuccess);
-	
+    // ������ �ڵ� �ؼ� (FString ���)
+    UFUNCTION(BlueprintCallable, Category = "ItemCode")
+    static void ParseItemCode(
+        const FString& ItemCode,
+        EItemGrade& OutItemGrade,
+        int32& OutEnchantLevel,
+        FString& OutItemRowID,
+        bool& OutIsSuccess
+    );
 };

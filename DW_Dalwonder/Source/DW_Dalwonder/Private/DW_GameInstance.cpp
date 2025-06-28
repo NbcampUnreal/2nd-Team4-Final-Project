@@ -206,11 +206,11 @@ void UDW_GameInstance::SaveGameData()
 	// 8. 방어구/무기 저장(아이템코드)
     if (UCharacterArmorComponent* ArmorComp = PlayerCharacter->FindComponentByClass<UCharacterArmorComponent>())
     {
-        SaveGameInstance->SavedArmorData.HelmetCode = ArmorComp->Helmet ? ArmorComp->Helmet->ItemCode : 0;
-        SaveGameInstance->SavedArmorData.ArmorCode = ArmorComp->Armor ? ArmorComp->Armor->ItemCode : 0;
-        SaveGameInstance->SavedArmorData.GloveCode = ArmorComp->Glove ? ArmorComp->Glove->ItemCode : 0;
-        SaveGameInstance->SavedArmorData.BootsCode = ArmorComp->Boots ? ArmorComp->Boots->ItemCode : 0;
-        SaveGameInstance->SavedArmorData.WeaponCode = ArmorComp->Weapon ? ArmorComp->Weapon->ItemCode : 0;
+        SaveGameInstance->SavedArmorData.HelmetCode = ArmorComp->Helmet ? ArmorComp->Helmet->ItemCode : "0";
+        SaveGameInstance->SavedArmorData.ArmorCode = ArmorComp->Armor ? ArmorComp->Armor->ItemCode : "0";
+        SaveGameInstance->SavedArmorData.GloveCode = ArmorComp->Glove ? ArmorComp->Glove->ItemCode : "0";
+        SaveGameInstance->SavedArmorData.BootsCode = ArmorComp->Boots ? ArmorComp->Boots->ItemCode : "0";
+        SaveGameInstance->SavedArmorData.WeaponCode = ArmorComp->Weapon ? ArmorComp->Weapon->ItemCode : "0";
     }
 
     // 9. 안개 저장
@@ -381,9 +381,9 @@ void UDW_GameInstance::ApplyLoadedData()
     {
         const FEquippedArmorSaveData& Loaded = LoadedSaveGame->SavedArmorData;
 
-        auto CreateItem = [&](int32 Code) -> UItemBase*
+        auto CreateItem = [&](FString Code) -> UItemBase*
             {
-                if (Code <= 0) return nullptr;
+                if (!Code.IsEmpty()) return nullptr;
 
                 UItemBase* NewItem = NewObject<UItemBase>(ArmorComp);
                 if (NewItem)
@@ -428,32 +428,6 @@ void UDW_GameInstance::ApplyLoadedData()
 
 
     LoadedSaveGame = nullptr; // 일회성 데이터로 초기화
-}
-
-void UDW_GameInstance::LoadLevelWithLoadingScreen(FName LevelName)
-{
-    // 서브시스템 가져오기
-    UDW_LevelLoadSubsystem* LoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
-    if (!LoadSubsystem) return;
-    
-    if (!LoadingWidgetClass) return;
-
-    // 로딩 위젯 넘겨주고 맵 비동기 로드 시작
-    LoadSubsystem->SetLoadingWidgetClass(LoadingWidgetClass);
-    LoadSubsystem->StreamLevelAsync(LevelName);
-}
-
-void UDW_GameInstance::StartLevelStreaming()
-{
-    if (!LevelLoadSubsystem)
-    {
-        LevelLoadSubsystem = GetSubsystem<UDW_LevelLoadSubsystem>();
-    }
-
-    // 서브시스템로드실패 및 맵이름 없을때
-    if (!LevelLoadSubsystem || PendingLevelName.IsNone()) return;
-
-    LevelLoadSubsystem->StreamLevelAsync(PendingLevelName);
 }
 
 void UDW_GameInstance::CacheTempDataBeforeLevelChange()

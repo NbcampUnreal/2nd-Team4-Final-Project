@@ -131,7 +131,7 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 					{
 						if (ArmorComp->Weapon)
 						{
-							FString ItemCodeStr = FString::FromInt(ArmorComp->Weapon->ItemCode); // ex) "0011", "00112", "00124"
+							FString ItemCodeStr = ArmorComp->Weapon->ItemCode; // ex) "0011", "00112", "00124"
 							if (ItemCodeStr.Len() > 3) // 최소 길이만 확인 (안전하게)
 							{
 								FString WeaponCodeStr = ItemCodeStr.Mid(3); // 앞 3자리 제거 → "1", "12", "24" 등

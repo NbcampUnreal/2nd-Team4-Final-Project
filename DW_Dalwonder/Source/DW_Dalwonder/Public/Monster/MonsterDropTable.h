@@ -16,7 +16,7 @@ struct FDropItemData
 	TSubclassOf<AWorldItemActor> DropItem;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 ItemCode;
+	FString ItemCode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DropChance;
