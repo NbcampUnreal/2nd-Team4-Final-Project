@@ -41,11 +41,11 @@ void UMainWidget::NativeConstruct()
 
 void UMainWidget::OnNewGameClicked()
 {
-	//UGameplayStatics::OpenLevel(this, "LoadingMap");
 	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
 		GameInstance->bIsNewGame = true;
-		UGameplayStatics::OpenLevel(this, "LoadingMap");
+		//UGameplayStatics::OpenLevel(this, "LoadingMap");
+		UGameplayStatics::OpenLevel(this, "FC_Map_Medieval");
 	}
 
 	RemoveFromParent();
