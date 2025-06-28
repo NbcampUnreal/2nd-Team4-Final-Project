@@ -92,6 +92,7 @@ public:
 	float GetMouseSensitivity() const { return MouseSensitivity; }
 	void SetMouseSensitivity(float NewSensitivity) { MouseSensitivity = NewSensitivity; }
 	// 사운드
+	USoundMix* GetMasterMix() const { return MasterMix; }
 	float GetVolumeMaster() const { return VolumeMaster; }
 	float GetVolumeBGM() const { return VolumeBGM; }
 	float GetVolumeSFX() const { return VolumeSFX; }
