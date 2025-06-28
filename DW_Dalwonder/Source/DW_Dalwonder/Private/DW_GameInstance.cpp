@@ -226,6 +226,16 @@ void UDW_GameInstance::SaveGameData()
         }
     }
 
+    // 10. 경험치 저장
+
+    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
+    {
+        FTmpCharacterStatData& Out = SaveGameInstance->SaveStatData;
+        Out.CurrentMastery = SkillComp->CurrentMastery;
+        Out.MaxMastery = SkillComp->MaxMastery;
+        Out.LevelUpCount = SkillComp->LevelUpCount;
+    }
+
     UGameplayStatics::SaveGameToSlot(SaveGameInstance, DefaultSaveSlot, 0);
 }
 
@@ -396,7 +406,6 @@ void UDW_GameInstance::ApplyLoadedData()
     }
 
     // 9. 안개 적용
-
     TArray<AActor*> FogActors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFogOfWarManager::StaticClass(), FogActors);
     if (FogActors.Num() > 0)
@@ -407,6 +416,16 @@ void UDW_GameInstance::ApplyLoadedData()
             FogManager->SetFogFromBitmask(LoadedSaveGame->CompressedFogBits);
         }
     }
+
+    // 10. 경험치 적용
+    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
+    {
+        const FTmpCharacterStatData& In = LoadedSaveGame->SaveStatData;
+        SkillComp->CurrentMastery = In.CurrentMastery;
+        SkillComp->MaxMastery = In.MaxMastery;
+        SkillComp->LevelUpCount = In.LevelUpCount;
+    }
+
 
     LoadedSaveGame = nullptr; // 일회성 데이터로 초기화
 }
