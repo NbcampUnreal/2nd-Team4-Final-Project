@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Character/DW_CharacterBase.h"
 #include "FogManager.h"
 
 void UMapWidget::NativeConstruct()
@@ -50,23 +51,35 @@ void UMapWidget::NativeConstruct()
 
 void UMapWidget::UpdatePlayerMarker()
 {
-    APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
-    if (!Player || !PlayerMarker || !FogImage) return;
+    if (!FogManager || !PlayerMarker || !MapImage) return;
 
-    FVector WorldPos = Player->GetActorLocation();
+    ADW_CharacterBase* Player = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(this, 0));
+    if (!Player) return;
 
-    // 월드 위치를 맵 UV로 변환 (GridOrigin/PixelSize 기반)
-    FVector2D WorldXY = FVector2D(WorldPos.X, WorldPos.Y);
-    FVector2D Relative = WorldXY + FogManager->GetGridOrigin();
-    FVector2D UV = Relative / (FogManager->GetTextureSize() * FogManager->GetPixelSize());
+    FVector2D WorldXY(Player->GetActorLocation().X, Player->GetActorLocation().Y);
+    FVector2D Relative = WorldXY - FogManager->GetGridOrigin();
 
-    // 맵 이미지에서 위치 계산
-    FVector2D MarkerPos = UV * MapImageSize * ZoomLevel;
+    float TextureWorldSize = FogManager->GetTextureSize() * FogManager->GetPixelSize();
 
-    if (UCanvasPanelSlot* MarkerSlot = Cast<UCanvasPanelSlot>(PlayerMarker->Slot))
-    {
-        MarkerSlot->SetPosition(MarkerPos);
-    }
+    // 월드 좌표 → 정규화된 UV 좌표
+    float U = Relative.Y / TextureWorldSize;
+    float V = 1.0f - (Relative.X / TextureWorldSize);
+
+    FVector2D UV = FVector2D(U, V).ClampAxes(0.f, 1.f);
+
+    // 마커 위치 계산
+    FVector2D LocalMapSize = MapImageSize * ZoomLevel;
+    FVector2D MarkerPos = UV * LocalMapSize + CurrentOffset;
+
+    // 마커 위치 적용
+    PlayerMarker->SetRenderTransform(FWidgetTransform{
+        MarkerPos,
+        FVector2D(1.f, 1.f),
+        FVector2D(0.5f, 0.5f),
+        0.f
+        });
+
+    PlayerMarker->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 }
 
 void UMapWidget::SetZoom(float NewZoom)

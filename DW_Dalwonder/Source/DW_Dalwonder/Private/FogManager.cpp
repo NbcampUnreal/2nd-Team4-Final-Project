@@ -50,7 +50,6 @@ void AFogManager::InitFog()
     // === [2] Landscape가 없을 경우 fallback ===
     if (!CombinedLandscapeBounds.IsValid)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[FogManager] No Landscape found. Using fallback bounds."));
         CombinedLandscapeBounds = FBox(FVector(-50000, -50000, 0), FVector(50000, 50000, 0)); // 예시: 1km x 1km
     }
 
@@ -58,11 +57,9 @@ void AFogManager::InitFog()
     FVector BoundsMin = CombinedLandscapeBounds.Min;
     FVector BoundsSize = CombinedLandscapeBounds.GetSize();
 
-    GridOrigin = FVector2D(-BoundsMin.X, -BoundsMin.Y); // 월드좌표계 → 상대좌표계
+    GridOrigin = FVector2D(BoundsMin.X, BoundsMin.Y);
+    //GridOrigin = FVector2D(-BoundsMin.X, -BoundsMin.Y); // 월드좌표계 → 상대좌표계
     TextureSize = FMath::CeilToInt(FMath::Max(BoundsSize.X, BoundsSize.Y) / PixelSize);
-
-    UE_LOG(LogTemp, Log, TEXT("[FogManager] InitFog with size: %dx%d, GridOrigin: (%.0f, %.0f)"),
-        TextureSize, TextureSize, GridOrigin.X, GridOrigin.Y);
 
     // === [4] 텍스처 생성 ===
     FogTexture = UTexture2D::CreateTransient(TextureSize, TextureSize, PF_B8G8R8A8);
@@ -88,14 +85,15 @@ void AFogManager::TryRevealFog()
     if (!PlayerChar) return;
 
     FVector WorldLocation = PlayerChar->GetActorLocation();
-    FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
+
+    // GridOrigin 기준 상대 위치
+    FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) - GridOrigin;
 
     int32 GridX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
     int32 GridY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
 
     FIntPoint CurrentGrid(GridX, GridY);
 
-    // 새로운 셀에 도달한 경우에만 밝히기
     if (CurrentGrid != LastRevealedGrid)
     {
         LastRevealedGrid = CurrentGrid;
@@ -105,11 +103,34 @@ void AFogManager::TryRevealFog()
 
         UE_LOG(LogTemp, Log, TEXT("Revealed Grid: (%d, %d)"), GridX, GridY);
     }
+
+    //ADW_CharacterBase* PlayerChar = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    //if (!PlayerChar) return;
+
+    //FVector WorldLocation = PlayerChar->GetActorLocation();
+    //FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
+
+    //int32 GridX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
+    //int32 GridY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
+
+    //FIntPoint CurrentGrid(GridX, GridY);
+
+    //// 새로운 셀에 도달한 경우에만 밝히기
+    //if (CurrentGrid != LastRevealedGrid)
+    //{
+    //    LastRevealedGrid = CurrentGrid;
+
+    //    UpdateFogAtPlayerLocation(WorldLocation);
+    //    RevealedGrids.Add(CurrentGrid);
+
+    //    UE_LOG(LogTemp, Log, TEXT("Revealed Grid: (%d, %d)"), GridX, GridY);
+    //}
 }
 
 void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
 {
-    FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
+    // GridOrigin 기준 상대 위치
+    FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) - GridOrigin;
 
     int32 CenterX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
     int32 CenterY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
@@ -126,7 +147,6 @@ void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
             if (DistSqr > RadiusInPixels * RadiusInPixels)
                 continue;
 
-            // 좌표 보정
             int32 TextureX = GridY;
             int32 TextureY = TextureSize - GridX - 1;
 
@@ -139,6 +159,37 @@ void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
     }
 
     UpdateTexture();
+
+    //FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
+
+    //int32 CenterX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
+    //int32 CenterY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
+    //int32 RadiusInPixels = FMath::CeilToInt(RevealRadius / PixelSize);
+
+    //for (int32 Y = -RadiusInPixels; Y <= RadiusInPixels; ++Y)
+    //{
+    //    for (int32 X = -RadiusInPixels; X <= RadiusInPixels; ++X)
+    //    {
+    //        int32 GridX = CenterX + X;
+    //        int32 GridY = CenterY + Y;
+
+    //        float DistSqr = X * X + Y * Y;
+    //        if (DistSqr > RadiusInPixels * RadiusInPixels)
+    //            continue;
+
+    //        // 좌표 보정
+    //        int32 TextureX = GridY;
+    //        int32 TextureY = TextureSize - GridX - 1;
+
+    //        if (TextureX < 0 || TextureY < 0 || TextureX >= TextureSize || TextureY >= TextureSize)
+    //            continue;
+
+    //        int32 Index = TextureY * TextureSize + TextureX;
+    //        Pixels[Index] = FColor::White;
+    //    }
+    //}
+
+    //UpdateTexture();
 }
 
 void AFogManager::UpdateTexture()
