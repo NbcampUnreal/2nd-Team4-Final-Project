@@ -13,6 +13,20 @@ void UMapWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    // 초기화
+    ZoomLevel = 1.0f;
+    CurrentOffset = FVector2D::ZeroVector;
+
+    if (MapImage)
+    {
+        MapImage->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+    }
+
+    if (FogImage)
+    {
+        FogImage->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+    }
+
     // FogManager 찾기
     FogManager = Cast<AFogManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AFogManager::StaticClass()));
     if (!FogManager || !FogImage || !FogMaterialBase) return;
@@ -69,4 +83,60 @@ void UMapWidget::SetZoom(float NewZoom)
         int32 Percent = FMath::RoundToInt(ZoomLevel * 100.f);
         ZoomText->SetText(FText::FromString(FString::Printf(TEXT("%d%%"), Percent)));
     }
+}
+
+FReply UMapWidget::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    float ScrollDelta = InMouseEvent.GetWheelDelta();
+    ZoomLevel = FMath::Clamp(ZoomLevel + ScrollDelta * 0.1f, 0.5f, 3.0f);
+
+    FWidgetTransform NewTransform;
+    NewTransform.Translation = CurrentOffset;
+    NewTransform.Scale = FVector2D(ZoomLevel, ZoomLevel);
+
+    if (MapImage) MapImage->SetRenderTransform(NewTransform);
+    if (FogImage) FogImage->SetRenderTransform(NewTransform);
+
+    return FReply::Handled();
+}
+
+FReply UMapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        bDragging = true;
+        DragStartPosition = InMouseEvent.GetScreenSpacePosition();
+        return FReply::Handled();
+    }
+    return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UMapWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    if (bDragging && InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+    {
+        bDragging = false;
+        return FReply::Handled().ReleaseMouseCapture();
+    }
+    return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+FReply UMapWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    if (bDragging)
+    {
+        FVector2D Delta = InMouseEvent.GetScreenSpacePosition() - DragStartPosition;
+        DragStartPosition = InMouseEvent.GetScreenSpacePosition();
+        CurrentOffset += Delta;
+
+        FWidgetTransform NewTransform;
+        NewTransform.Translation = CurrentOffset;
+        NewTransform.Scale = FVector2D(ZoomLevel, ZoomLevel);
+
+        if (MapImage) MapImage->SetRenderTransform(NewTransform);
+        if (FogImage) FogImage->SetRenderTransform(NewTransform);
+
+        return FReply::Handled();
+    }
+    return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }

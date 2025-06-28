@@ -23,6 +23,12 @@ class DW_DALWONDER_API UMapWidget : public UUserWidget
 public:
     virtual void NativeConstruct() override;
 
+	/** 마우스 휠 이벤트 처리 */
+    virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+    virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
     /** 플레이어 위치 갱신 */
     UFUNCTION()
     void UpdatePlayerMarker();
@@ -32,7 +38,12 @@ public:
     void SetZoom(float NewZoom);
 
 protected:
-    /** 맵 + Fog 표시용 이미지 */
+
+	/** 맵 이미지 표시용 이미지 */
+    UPROPERTY(meta = (BindWidget))
+    UImage* MapImage;
+
+    /** Fog 표시용 이미지 */
     UPROPERTY(meta = (BindWidget))
     UImage* FogImage;
 
@@ -72,4 +83,8 @@ protected:
     /** 맵 사이즈 (정사각형, 예: 2048x2048) */
     UPROPERTY(EditAnywhere, Category = "Map")
     FVector2D MapImageSize = FVector2D(2048.f, 2048.f);
+
+    FVector2D CurrentOffset = FVector2D::ZeroVector;
+    bool bDragging = false;
+    FVector2D DragStartPosition;
 };

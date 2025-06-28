@@ -119,17 +119,21 @@ void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
     {
         for (int32 X = -RadiusInPixels; X <= RadiusInPixels; ++X)
         {
-            int32 PX = CenterX + X;
-            int32 PY = CenterY + Y;
-
-            if (PX < 0 || PY < 0 || PX >= TextureSize || PY >= TextureSize)
-                continue;
+            int32 GridX = CenterX + X;
+            int32 GridY = CenterY + Y;
 
             float DistSqr = X * X + Y * Y;
             if (DistSqr > RadiusInPixels * RadiusInPixels)
                 continue;
 
-            int32 Index = PY * TextureSize + PX;
+            // 좌표 보정
+            int32 TextureX = GridY;
+            int32 TextureY = TextureSize - GridX - 1;
+
+            if (TextureX < 0 || TextureY < 0 || TextureX >= TextureSize || TextureY >= TextureSize)
+                continue;
+
+            int32 Index = TextureY * TextureSize + TextureX;
             Pixels[Index] = FColor::White;
         }
     }
