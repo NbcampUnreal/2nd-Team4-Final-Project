@@ -6,6 +6,7 @@
 #include "ItemTranslator.h"
 #include "Interactionprompt.h"
 #include "Character/DW_CharacterBase.h"
+#include "Monster/DW_MonsterBase.h"
 
 AWorldItemActor::AWorldItemActor()
 {
@@ -118,7 +119,13 @@ void AWorldItemActor::OnPlayerExitRadius(UPrimitiveComponent* OverlappedComp, AA
 
 void AWorldItemActor::Interact(ADW_CharacterBase* PlayerCharacter)
 {
+	UE_LOG(LogTemp, Error, TEXT("AWorldItemActor::Interact CALLED!"));
+	
     if (!bCanInteract || !PlayerCharacter) return;
+	if (OwnerMonster)
+	{
+		OwnerMonster->DestroySpawnedVFX();
+	}
 #if WITH_EDITOR
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("아이템과 상호작용!"));
 #endif
@@ -182,5 +189,9 @@ void AWorldItemActor::SetItemCode(int NewItemCode)
         }
 
     }
+}
+void AWorldItemActor::SetOwnerMonster(ADW_MonsterBase* InOwnerMonster)
+{
+	OwnerMonster = InOwnerMonster;
 }
 

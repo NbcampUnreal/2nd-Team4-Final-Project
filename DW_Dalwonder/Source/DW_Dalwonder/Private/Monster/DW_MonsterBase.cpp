@@ -441,8 +441,10 @@ void ADW_MonsterBase::Parried()
 
 void ADW_MonsterBase::Dead()
 {
-
 	if (bIsDead) return;
+	
+	bIsDead = true;
+	DropItem(DropTable); 
 	
 	if (DropTable)
 	{
@@ -452,15 +454,12 @@ void ADW_MonsterBase::Dead()
 		if (DropData && DropData->DropItems.Num() > 0)
 		{
 			EItemGrade HighestGrade = EItemGrade::Normal;
-
 			for (const FDropItemData& ItemData : DropData->DropItems)
 			{
 				EItemGrade CurrentGrade;
 				int32 EnchantLevel, ItemRowID;
 				bool bIsSuccess;
-				
 				UItemTranslator::ParseItemCode(ItemData.ItemCode, CurrentGrade, EnchantLevel, ItemRowID, bIsSuccess);
-
 				if (bIsSuccess && static_cast<int32>(CurrentGrade) > static_cast<int32>(HighestGrade))
 				{
 					HighestGrade = CurrentGrade;
@@ -470,21 +469,11 @@ void ADW_MonsterBase::Dead()
 			FString VFX_Path;
 			switch (HighestGrade)
 			{
-				case EItemGrade::Normal:
-					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Normal.NE_Drop_Normal'");
-					break;
-				case EItemGrade::Rare:
-					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Rare.NE_Drop_Rare'");
-					break;
-				case EItemGrade::Unique:
-					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Unique.NE_Drop_Unique'");
-					break;
-				case EItemGrade::Legendary: 
-					VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Legendery.NE_Drop_Legendery'");
-					break;
-				default:
-					VFX_Path = TEXT("");
-					break;
+				case EItemGrade::Normal:   VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Normal.NE_Drop_Normal'");     break;
+				case EItemGrade::Rare:     VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Rare.NE_Drop_Rare'");         break;
+				case EItemGrade::Unique:   VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Unique.NE_Drop_Unique'");     break;
+				case EItemGrade::Legendary:VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Legendery.NE_Drop_Legendery'"); break;
+				default:                   VFX_Path = TEXT("");                                                                 break;
 			}
 
 			if (!VFX_Path.IsEmpty())
@@ -492,30 +481,24 @@ void ADW_MonsterBase::Dead()
 				UNiagaraSystem* VFX_ToSpawn = Cast<UNiagaraSystem>(StaticLoadObject(UNiagaraSystem::StaticClass(), nullptr, *VFX_Path));
 				if (VFX_ToSpawn)
 				{
-					UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_ToSpawn, GetActorLocation());
+					SpawnedVFX = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_ToSpawn, GetActorLocation());
 				}
 			}
 		}
 	}
 	
-	bIsDead = true;
-
-	DropItem(DropTable);
-	
+	// 3. 마지막으로 사망 애니메이션을 재생하고 AI를 정지시킵니다.
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;
-		
 		if (Montage && GetMesh())
 		{
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
-
 			if (AAIController* AIController = Cast<AAIController>(GetController()))
 			{
 				if (UBehaviorTreeComponent* BTComp = Cast<UBehaviorTreeComponent>(AIController->GetBrainComponent()))
 				{
 					BTComp->StopTree(EBTStopMode::Forced);
-
 					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
@@ -728,6 +711,7 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			);
 
 			ItemActor->SetItemCode(ItemData.ItemCode);
+			ItemActor->SetOwnerMonster(this);
 			
 			int32 ItemCount;
 			if (ItemData.bUseMinDropCount)
@@ -759,4 +743,15 @@ void ADW_MonsterBase::HitStop(float StopTime)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
 	}, 0.001f * StopTime, false);
+}
+void ADW_MonsterBase::DestroySpawnedVFX()
+{
+	if (SpawnedVFX && SpawnedVFX->IsValidLowLevel())
+	{
+		SpawnedVFX->Deactivate(); 
+		
+		SpawnedVFX->DestroyComponent(); 
+		
+		SpawnedVFX = nullptr; 
+	}
 }

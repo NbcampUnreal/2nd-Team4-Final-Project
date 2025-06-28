@@ -9,6 +9,8 @@
 #include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
+class ADW_MonsterBase;
+
 class UWidgetComponent;
 class UStaticMeshComponent;
 
@@ -68,7 +70,13 @@ public:
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
 
+    void SetOwnerMonster(ADW_MonsterBase* InOwnerMonster);
+    
 	int32 GetItemCount() const { return ItemCount; }
 
     void SetItemCount(int32 changevalue) { ItemCount = changevalue; }
+
+protected:
+    UPROPERTY()
+    TObjectPtr<ADW_MonsterBase> OwnerMonster;
 };
