@@ -1541,6 +1541,8 @@ void ADW_CharacterBase::UpdateFootstepSurface()
 
 void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 {
+	if (bIsRidingVehicle) return;
+	
 	const FVector NewFootLocation = GetMesh()->GetSocketLocation(FootSocketName);
 	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
 	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
@@ -1568,6 +1570,8 @@ void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 
 void ADW_CharacterBase::SpawnFootstepEffect_H(const FName FootSocketName) const
 {
+	if (!bIsRidingVehicle) return;
+	
 	const FVector NewFootLocation = Vehicle->GetSocketLocation(FootSocketName);
 	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
 	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
