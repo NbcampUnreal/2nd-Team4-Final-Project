@@ -15,8 +15,6 @@
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
-    // // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = false;
 }
 
 void ADW_GmBase::BeginPlay()
