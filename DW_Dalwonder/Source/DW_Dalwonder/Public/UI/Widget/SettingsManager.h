@@ -15,6 +15,7 @@ class DW_DALWONDER_API USettingsManager : public UObject
 {
 	GENERATED_BODY()
 public:
+	USettingsManager();
 	/** 초기화 (GameInstance에서 호출) */
 	void Initialize();
 
@@ -42,20 +43,26 @@ public:
 	void ApplyVolumeUI(float Value);
 	void SaveToSlot();
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundMix* MasterMix;
+	USoundMix* MasterMix = nullptr;
+	USoundClass* MasterClass = nullptr;
+	USoundClass* BGMClass = nullptr;
+	USoundClass* SFXClass = nullptr;
+	USoundClass* UIClass = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundClass* MasterClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TSoftObjectPtr<USoundMix> MasterMixAsset;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundClass* BGMClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TSoftObjectPtr<USoundClass> MasterClassAsset;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundClass* SFXClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TSoftObjectPtr<USoundClass> BGMClassAsset;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundClass* UIClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TSoftObjectPtr<USoundClass> SFXClassAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	TSoftObjectPtr<USoundClass> UIClassAsset;
 
 private:
 	/** 저장용 내부 변수들 */

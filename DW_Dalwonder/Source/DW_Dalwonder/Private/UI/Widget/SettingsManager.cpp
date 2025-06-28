@@ -1,11 +1,42 @@
 #include "UI/Widget/SettingsManager.h"
 #include "DW_SaveGame.h"
 #include "GameFramework/GameUserSettings.h"
+#include "Sound/SoundMix.h"
+#include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
+
+
+USettingsManager::USettingsManager()
+{
+	MasterMixAsset = TSoftObjectPtr<USoundMix>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/MasterMix")));
+	MasterClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_Master")));
+	BGMClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_BGM")));
+	SFXClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_SFX")));
+	UIClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI")));
+}
 
 void USettingsManager::Initialize()
 {
 	LoadSettings();
+	
+	// 비동기 로드: 설정된 소프트 오브젝트 포인터 불러오기
+	MasterMixAsset.LoadSynchronous();
+	MasterClassAsset.LoadSynchronous();
+	BGMClassAsset.LoadSynchronous();
+	SFXClassAsset.LoadSynchronous();
+	UIClassAsset.LoadSynchronous();
+
+	// 실제 UObject 포인터로 캐싱
+	MasterMix = MasterMixAsset.Get();
+	MasterClass = MasterClassAsset.Get();
+	BGMClass = BGMClassAsset.Get();
+	SFXClass = SFXClassAsset.Get();
+	UIClass = UIClassAsset.Get();
+
+	ApplyVolumeMaster(VolumeMaster);
+	ApplyVolumeBGM(VolumeBGM);
+	ApplyVolumeSFX(VolumeSFX);
+	ApplyVolumeUI(VolumeUI);
 }
 
 void USettingsManager::ApplySettings()
@@ -81,6 +112,10 @@ void USettingsManager::LoadSettingsFrom(UDW_SaveGame* Save)
 	SetVolumeBGM(Save->SavedVolumeBGM);
 	SetVolumeSFX(Save->SavedVolumeSFX);
 	SetVolumeUI(Save->SavedVolumeUI);
+	ApplyVolumeMaster(Save->SavedVolumeMaster);
+	ApplyVolumeBGM(Save->SavedVolumeBGM);
+	ApplyVolumeSFX(Save->SavedVolumeSFX);
+	ApplyVolumeUI(Save->SavedVolumeUI);
 }
 
 void USettingsManager::ApplyWindowMode(int32 ModeIndex)
@@ -160,29 +195,54 @@ void USettingsManager::ApplyMouseSensitivity(float InSensitivity)
 void USettingsManager::ApplyVolumeMaster(float Value)
 {
 	VolumeMaster = Value;
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.0f, 0.0f, true);
-	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+
+	if (!MasterMix || !MasterClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyVolumeMaster: Missing SoundMix or SoundClass"));
+		return;
+	}
+	
+	if (MasterMix && MasterClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.0f, 0.0f, true);
+		UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+	}
+	
 }
 
 void USettingsManager::ApplyVolumeBGM(float Value)
 {
 	VolumeBGM = Value;
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, BGMClass, Value / 100.f, 1.0f, 0.0f, true);
-	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+
+	UE_LOG(LogTemp, Warning, TEXT("ApplyVolumeMaster: Missing BGM or SoundClass"));
+	
+	if (MasterMix && MasterClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, BGMClass, Value / 100.f, 1.0f, 0.0f, true);
+		UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+	}
 }
 
 void USettingsManager::ApplyVolumeSFX(float Value)
 {
 	VolumeSFX = Value;
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, SFXClass, Value / 100.f, 1.0f, 0.0f, true);
-	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+
+	if (MasterMix && MasterClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, SFXClass, Value / 100.f, 1.0f, 0.0f, true);
+		UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+	}
 }
 
 void USettingsManager::ApplyVolumeUI(float Value)
 {
 	VolumeUI = Value;
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.0f, 0.0f, true);
-	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+
+	if (MasterMix && MasterClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.0f, 0.0f, true);
+		UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+	}
 }
 
 void USettingsManager::SetVolumeMaster(float Value)

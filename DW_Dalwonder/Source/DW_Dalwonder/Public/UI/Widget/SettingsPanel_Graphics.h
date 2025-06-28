@@ -20,9 +20,7 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
-	void InitResolutionSelector(USettingsManager* SM);
-	void HandleFPSLimitChanged(int32 Index);
-
+	UFUNCTION()
 	USettingsManager* GetSettingsManager() const;
 protected:
 	/** 화면 모드 (전체화면/창모드 등) */
@@ -68,4 +66,11 @@ protected:
 
 	UFUNCTION()
 	void HandleShadowsChanged(bool bOn);
+	
+	UFUNCTION()
+	void HandleFPSLimitChanged(int32 Index);
+	
+	UFUNCTION()
+	void InitResolutionSelector(USettingsManager* SM);
+	
 };

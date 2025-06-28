@@ -14,7 +14,10 @@ UCLASS()
 class DW_DALWONDER_API USettingsPanel_Sound : public UUserWidget
 {
 	GENERATED_BODY()
-public:
+protected:
+	void NativeConstruct();
+	void NativeDestruct();
+	
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* VolumeMaster;
 
@@ -27,10 +30,13 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* VolumeUI;
 	
-	void NativeConstruct();
-	void NativeDestruct();
+
+	UFUNCTION()
 	void HandleVolumeMasterChanged(float NewValue);
+	UFUNCTION()
 	void HandleVolumeBGMChanged(float NewValue);
+	UFUNCTION()
 	void HandleVolumeSFXChanged(float NewValue);
+	UFUNCTION()
 	void HandleVolumeUIChanged(float NewValue);
 };
