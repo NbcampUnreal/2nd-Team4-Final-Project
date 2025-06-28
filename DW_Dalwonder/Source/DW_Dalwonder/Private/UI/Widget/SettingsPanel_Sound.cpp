@@ -11,51 +11,62 @@ void USettingsPanel_Sound::NativeConstruct()
 	{
 		if (USettingsManager* SM = GI->GetSettingsManager())
 		{
-			// 저장된 값 반영
+			// 저장된 값 반영 + UI에 슬라이더 표시
 			if (VolumeMaster)
 			{
-				VolumeMaster->SavedValue = SM->GetVolumeMaster();
+				const float Value = SM->GetVolumeMaster();
+				VolumeMaster->SavedValue = Value;
 				VolumeMaster->bHasSavedValue = true;
+				VolumeMaster->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeBGM)
 			{
-				VolumeBGM->SavedValue = SM->GetVolumeBGM();
+				const float Value = SM->GetVolumeBGM();
+				VolumeBGM->SavedValue = Value;
 				VolumeBGM->bHasSavedValue = true;
+				VolumeBGM->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeSFX)
 			{
-				VolumeSFX->SavedValue = SM->GetVolumeSFX();
+				const float Value = SM->GetVolumeSFX();
+				VolumeSFX->SavedValue = Value;
 				VolumeSFX->bHasSavedValue = true;
+				VolumeSFX->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeUI)
 			{
-				VolumeUI->SavedValue = SM->GetVolumeUI();
+				const float Value = SM->GetVolumeUI();
+				VolumeUI->SavedValue = Value;
 				VolumeUI->bHasSavedValue = true;
+				VolumeUI->SetSliderAndDisplay(Value);
 			}
 		}
 	}
 
-	// 슬라이더 이벤트 바인딩
+	// 저장 이벤트 바인딩
 	if (VolumeMaster)
 	{
 		VolumeMaster->OnSliderSaved.AddDynamic(this, &USettingsPanel_Sound::HandleVolumeMasterChanged);
+		VolumeMaster->OnSliderValueChanged.AddDynamic(this, &USettingsPanel_Sound::ApplyVolumeMasterRuntime);
 	}
 	if (VolumeBGM)
 	{
 		VolumeBGM->OnSliderSaved.AddDynamic(this, &USettingsPanel_Sound::HandleVolumeBGMChanged);
+		VolumeBGM->OnSliderValueChanged.AddDynamic(this, &USettingsPanel_Sound::ApplyVolumeBGMRuntime);
 	}
 	if (VolumeSFX)
 	{
 		VolumeSFX->OnSliderSaved.AddDynamic(this, &USettingsPanel_Sound::HandleVolumeSFXChanged);
+		VolumeSFX->OnSliderValueChanged.AddDynamic(this, &USettingsPanel_Sound::ApplyVolumeSFXRuntime);
 	}
 	if (VolumeUI)
 	{
 		VolumeUI->OnSliderSaved.AddDynamic(this, &USettingsPanel_Sound::HandleVolumeUIChanged);
+		VolumeUI->OnSliderValueChanged.AddDynamic(this, &USettingsPanel_Sound::ApplyVolumeUIRuntime);
 	}
-
 }
 
 void USettingsPanel_Sound::NativeDestruct()
@@ -71,6 +82,7 @@ void USettingsPanel_Sound::NativeDestruct()
 	}
 }
 
+// 저장 이벤트
 void USettingsPanel_Sound::HandleVolumeMasterChanged(float NewValue)
 {
 	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
@@ -111,6 +123,52 @@ void USettingsPanel_Sound::HandleVolumeUIChanged(float NewValue)
 		if (USettingsManager* SM = GI->GetSettingsManager())
 		{
 			SM->SetVolumeUI(NewValue);
+		}
+	}
+}
+
+// 실시간 반영
+void USettingsPanel_Sound::ApplyVolumeMasterRuntime(float NewValue)
+{
+	
+	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
+	{
+		if (USettingsManager* SM = GI->GetSettingsManager())
+		{
+			SM->ApplyVolumeMaster(NewValue);
+		}
+	}
+}
+
+void USettingsPanel_Sound::ApplyVolumeBGMRuntime(float NewValue)
+{
+	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
+	{
+		if (USettingsManager* SM = GI->GetSettingsManager())
+		{
+			SM->ApplyVolumeBGM(NewValue);
+		}
+	}
+}
+
+void USettingsPanel_Sound::ApplyVolumeSFXRuntime(float NewValue)
+{
+	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
+	{
+		if (USettingsManager* SM = GI->GetSettingsManager())
+		{
+			SM->ApplyVolumeSFX(NewValue);
+		}
+	}
+}
+
+void USettingsPanel_Sound::ApplyVolumeUIRuntime(float NewValue)
+{
+	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
+	{
+		if (USettingsManager* SM = GI->GetSettingsManager())
+		{
+			SM->ApplyVolumeUI(NewValue);
 		}
 	}
 }

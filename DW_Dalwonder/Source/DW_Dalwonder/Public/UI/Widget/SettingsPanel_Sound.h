@@ -14,10 +14,11 @@ UCLASS()
 class DW_DALWONDER_API USettingsPanel_Sound : public UUserWidget
 {
 	GENERATED_BODY()
-protected:
-	void NativeConstruct();
-	void NativeDestruct();
 	
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* VolumeMaster;
 
@@ -29,8 +30,8 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* VolumeUI;
-	
 
+	// 저장 시 호출
 	UFUNCTION()
 	void HandleVolumeMasterChanged(float NewValue);
 	UFUNCTION()
@@ -39,4 +40,14 @@ protected:
 	void HandleVolumeSFXChanged(float NewValue);
 	UFUNCTION()
 	void HandleVolumeUIChanged(float NewValue);
+
+	// 실시간 반영용 (슬라이더 값 변화 시 호출)
+	UFUNCTION()
+	void ApplyVolumeMasterRuntime(float NewValue);
+	UFUNCTION()
+	void ApplyVolumeBGMRuntime(float NewValue);
+	UFUNCTION()
+	void ApplyVolumeSFXRuntime(float NewValue);
+	UFUNCTION()
+	void ApplyVolumeUIRuntime(float NewValue);
 };

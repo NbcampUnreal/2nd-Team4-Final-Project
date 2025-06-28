@@ -1541,6 +1541,8 @@ void ADW_CharacterBase::UpdateFootstepSurface()
 
 void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 {
+	if (bIsRidingVehicle) return;
+	
 	const FVector NewFootLocation = GetMesh()->GetSocketLocation(FootSocketName);
 	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
 	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
@@ -1559,6 +1561,35 @@ void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 			if (GetMesh()->DoesSocketExist(FootSocketName))
 			{
 				FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+			}
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());
+		}
+	}
+}
+
+void ADW_CharacterBase::SpawnFootstepEffect_H(const FName FootSocketName) const
+{
+	if (!bIsRidingVehicle) return;
+	
+	const FVector NewFootLocation = Vehicle->GetSocketLocation(FootSocketName);
+	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
+	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetMesh()->GetOwner());
+	Params.bReturnPhysicalMaterial = true;
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, NewTraceStart, NewTraceEnd, ECC_Visibility, Params))
+	{
+		if (UNiagaraSystem* const* FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+		{
+			FVector FootLocation = Hit.ImpactPoint;
+
+			if (Vehicle->DoesSocketExist(FootSocketName))
+			{
+				FootLocation = Vehicle->GetSocketLocation(FootSocketName);
 			}
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());

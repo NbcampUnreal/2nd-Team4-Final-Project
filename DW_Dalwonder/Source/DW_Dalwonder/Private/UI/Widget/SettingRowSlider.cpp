@@ -1,7 +1,4 @@
 #include "UI/Widget/SettingRowSlider.h"
-
-#include "DW_GameInstance.h"
-#include "UI/Widget/SettingsManager.h"
 #include "Components/TextBlock.h"
 #include "Components/Slider.h"
 #include "Components/Button.h"
@@ -11,11 +8,7 @@ void USettingRowSlider::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	float InitVal = DefaultValue;
-	if (bHasSavedValue)
-	{
-		InitVal = SavedValue;
-	}
+	float InitVal = bHasSavedValue ? SavedValue : DefaultValue;
 	CurrentValue = InitVal;
 
 	if (Slider_Value)
@@ -24,16 +17,25 @@ void USettingRowSlider::NativeConstruct()
 		Slider_Value->SetMaxValue(MaxValue);
 		Slider_Value->SetStepSize(StepSize);
 		Slider_Value->SetValue(CurrentValue);
-		Slider_Value->OnValueChanged.AddDynamic(this, &USettingRowSlider::OnSliderValueChanged);
+		Slider_Value->OnValueChanged.AddDynamic(this, &USettingRowSlider::HandleSliderValueChanged);
 	}
 
 	UpdateDisplayText(CurrentValue);
+
 	if (TextBox_ValueDisplay)
 	{
 		TextBox_ValueDisplay->SetText(FText::AsNumber(CurrentValue));
 		TextBox_ValueDisplay->OnTextCommitted.AddDynamic(this, &USettingRowSlider::OnTextCommitted);
 	}
 
+	if (Button_Left)
+	{
+		Button_Left->OnClicked.AddDynamic(this, &USettingRowSlider::OnLeftClicked);
+	}
+	if (Button_Right)
+	{
+		Button_Right->OnClicked.AddDynamic(this, &USettingRowSlider::OnRightClicked);
+	}
 }
 
 void USettingRowSlider::NativePreConstruct()
@@ -72,7 +74,6 @@ void USettingRowSlider::InitSetting(const FText& InLabel, float InMin, float InM
 
 	bHasSavedValue = true;
 	SavedValue = InDefault;
-
 	CurrentValue = FMath::Clamp(SavedValue, MinValue, MaxValue);
 
 	if (Text_SettingLabel)
@@ -91,35 +92,27 @@ void USettingRowSlider::InitSetting(const FText& InLabel, float InMin, float InM
 	UpdateDisplayText(CurrentValue);
 }
 
-void USettingRowSlider::OnSliderValueChanged(float Value)
+void USettingRowSlider::HandleSliderValueChanged(float NewValue)
 {
-	CurrentValue = Value;
-	UpdateDisplayText(Value);
-	OnValueChanged.Broadcast(Value);
-	OnSliderSaved.Broadcast(Value);
+	CurrentValue = NewValue;
+	UpdateDisplayText(NewValue);
+	OnSliderValueChanged.Broadcast(NewValue);
+	OnSliderSaved.Broadcast(NewValue);
 }
 
 void USettingRowSlider::OnLeftClicked()
 {
 	CurrentValue = FMath::Clamp(CurrentValue - ArrowStepSize, MinValue, MaxValue);
-	if (Slider_Value)
-	{
-		Slider_Value->SetValue(CurrentValue);
-	}
-	UpdateDisplayText(CurrentValue);
-	OnValueChanged.Broadcast(CurrentValue);
+	SetSliderAndDisplay(CurrentValue);
+	OnSliderValueChanged.Broadcast(CurrentValue);
 	OnSliderSaved.Broadcast(CurrentValue);
 }
 
 void USettingRowSlider::OnRightClicked()
 {
 	CurrentValue = FMath::Clamp(CurrentValue + ArrowStepSize, MinValue, MaxValue);
-	if (Slider_Value)
-	{
-		Slider_Value->SetValue(CurrentValue);
-	}
-	UpdateDisplayText(CurrentValue);
-	OnValueChanged.Broadcast(CurrentValue);
+	SetSliderAndDisplay(CurrentValue);
+	OnSliderValueChanged.Broadcast(CurrentValue);
 	OnSliderSaved.Broadcast(CurrentValue);
 }
 
@@ -130,12 +123,8 @@ void USettingRowSlider::OnTextCommitted(const FText& Text, ETextCommit::Type Com
 	{
 		float ParsedValue = FCString::Atof(*Str);
 		CurrentValue = FMath::Clamp(ParsedValue, MinValue, MaxValue);
-		if (Slider_Value)
-		{
-			Slider_Value->SetValue(CurrentValue);
-		}
-		UpdateDisplayText(CurrentValue);
-		OnValueChanged.Broadcast(CurrentValue);
+		SetSliderAndDisplay(CurrentValue);
+		OnSliderValueChanged.Broadcast(CurrentValue);
 		OnSliderSaved.Broadcast(CurrentValue);
 	}
 }

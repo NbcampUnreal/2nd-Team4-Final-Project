@@ -464,7 +464,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnFootstepEffect(const FName FootSocketName) const;
-
+	UFUNCTION(BlueprintCallable)
+	void SpawnFootstepEffect_H(const FName FootSocketName) const;
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")
