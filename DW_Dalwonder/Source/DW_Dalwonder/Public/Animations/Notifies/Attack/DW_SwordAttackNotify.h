@@ -26,7 +26,7 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
-	float AttackDamage;
+	float AttackMultiplier = 1.f;
 
 	UPROPERTY()
 	ADW_Warrior* PlayerCharacter;

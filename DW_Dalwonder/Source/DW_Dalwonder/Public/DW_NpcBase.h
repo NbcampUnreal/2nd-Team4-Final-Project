@@ -31,7 +31,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TSubclassOf<UUserWidget> InteractionWidgetClass;
 
-public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
 	UDataTable* DialogueDataTable;
 
@@ -57,7 +56,6 @@ protected:
 	void FocusCameraOnNPC(AActor* PlayerActor);
 	TArray<FDialogueLine> GetDialogueForQuestState(class UQuestManagerComponent* QuestManager) const;
 
-protected:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> DialogueUIClass;
 
@@ -66,4 +64,5 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	ACameraActor* NPCInteractionCamera;
+
 };

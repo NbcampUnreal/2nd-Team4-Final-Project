@@ -7,6 +7,8 @@
 #include "DW_GmBase.generated.h"
 
 class UUserWidget;
+class UDataTable;
+class UDW_SkillManager;
 
 UCLASS()
 class DW_DALWONDER_API ADW_GmBase : public AGameModeBase
@@ -76,9 +78,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> BossHUDWidgetClass;
 	
-	// UUserWidget* ActiveResultWidget;
+    // SkillManager 접근용 Getter
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    UDW_SkillManager* GetSkillManager() const { return SkillManager; }
 
 protected:
     UPROPERTY()
     UUserWidget* CurrentWidget;
+
+    // SkillManager 인스턴스
+    UPROPERTY()
+    UDW_SkillManager* SkillManager;
+
+    // SkillData 테이블
+    UPROPERTY(EditDefaultsOnly, Category = "Skill")
+    UDataTable* SkillDataTable;
 };

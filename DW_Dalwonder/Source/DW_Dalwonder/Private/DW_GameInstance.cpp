@@ -13,10 +13,15 @@
 #include "Character/CharacterStatComponent.h"
 #include "Character/CharacterArmorComponent.h"
 #include "UI/Widget/FogOfWarManager.h"
+#include "UI/Widget/SettingsManager.h"
 
 void UDW_GameInstance::Init()
 {
     Super::Init();
+
+    SettingsManager = NewObject<USettingsManager>(this);
+    SettingsManager->Initialize();
+
 
     if (QuestDatabase && QuestDatabase->QuestDataTable)
     {
@@ -70,7 +75,12 @@ void UDW_GameInstance::SaveGameData()
         UGameplayStatics::CreateSaveGameObject(UDW_SaveGame::StaticClass())
     );
     if (!SaveGameInstance) return;
-
+    
+    if (SettingsManager)
+    {
+        SettingsManager->SaveSettingsTo(SaveGameInstance);
+    }
+    
     ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     if (!PlayerCharacter) return;
 
@@ -233,6 +243,11 @@ void UDW_GameInstance::ApplyLoadedData()
 {
     if (!LoadedSaveGame) return;
 
+    if (SettingsManager)
+    {
+        SettingsManager->LoadSettingsFrom(LoadedSaveGame);
+    }
+    
     ADW_CharacterBase* PlayerCharacter = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     if (!PlayerCharacter) return;
 

@@ -6,10 +6,12 @@
 #include "Interface/BearableInterface.h"
 #include "Character/DW_SwordBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Item/ItemBase.h"
+#include "Character/CharacterArmorComponent.h"
+#include "Character/CharacterStatComponent.h"
 
 UDW_SwordAttackNotify::UDW_SwordAttackNotify()
 {
-	AttackDamage = 10.f;
 	PlayerCharacter = nullptr;
 	CharacterWeapon = nullptr;
 }
@@ -118,9 +120,52 @@ void UDW_SwordAttackNotify::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSe
 				if (PlayerCharacter->AttackingActors.Contains(HitActor)) continue;
 				PlayerCharacter->AttackingActors.Add(HitActor);
 
+				// 기본 공격력
+				float TotalDamage = PlayerCharacter->GetCharacterStatComponent()->GetTotalAttack() * AttackMultiplier;
+
+				// Attribute에서 보너스 데미지 적용
+				if (UDW_AttributeComponent* Attr = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
+				{
+					// 무기 타입 기반 추가 피해
+					if (UCharacterArmorComponent* ArmorComp = PlayerCharacter->FindComponentByClass<UCharacterArmorComponent>())
+					{
+						if (ArmorComp->Weapon)
+						{
+							FString ItemCodeStr = FString::FromInt(ArmorComp->Weapon->ItemCode); // ex) "0011", "00112", "00124"
+							if (ItemCodeStr.Len() > 3) // 최소 길이만 확인 (안전하게)
+							{
+								FString WeaponCodeStr = ItemCodeStr.Mid(3); // 앞 3자리 제거 → "1", "12", "24" 등
+								int32 WeaponCode = FCString::Atoi(*WeaponCodeStr); // "1" → 1
+
+								// 대검: 1~11, 23, 24
+								if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
+								{
+									TotalDamage += Attr->BonusGreatswordDamageMod;
+								}
+								// 장검: 12~22, 25, 26
+								else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+								{
+									TotalDamage += Attr->BonusLongswordDamageMod;
+								}
+							}
+						}
+					}
+
+					// 몬스터 타입 판정
+					if (HitActor->ActorHasTag("NormalMonster"))
+					{
+						TotalDamage += Attr->BonusDamageToNormalEnemies;
+					}
+					else if (HitActor->ActorHasTag("BossMonster"))
+					{
+						TotalDamage += Attr->BonusDamageToBoss;
+					}
+				}
+
+				// 원래 AttackDamage로 되어있었습니다 데미지 계산값 들어가도록 바꿈
 				UGameplayStatics::ApplyPointDamage(
 					HitActor,
-					AttackDamage,
+					TotalDamage,
 					(Hit.TraceEnd - Hit.TraceStart).GetSafeNormal(),
 					Hit,
 					PlayerCharacter->GetController(),

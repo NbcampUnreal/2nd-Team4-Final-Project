@@ -19,17 +19,32 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
     int32 CurrentSP = 10;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill")
-    UDataTable* SkillDataTable;
-
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
     TMap<FName, FSkillState> SkillStateMap;
+
+    UPROPERTY()
+    UDW_AttributeComponent* AttrCom;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
+    float CurrentMastery = 0.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
+    float MaxMastery = 20.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
+    int32 LevelUpCount = 0;
 
     UFUNCTION(BlueprintCallable)
     bool TryLearnSkill(FName SkillID);
 
     UFUNCTION(BlueprintCallable)
     int32 GetSkillLevel(FName SkillID) const;
+
+    UFUNCTION(BlueprintCallable)
+    void IncreaseMastery(int32 NewMastery);
+
+    UFUNCTION(BlueprintCallable)
+    void TryLevelUp();
 
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillUpdated);
     UPROPERTY(BlueprintAssignable)

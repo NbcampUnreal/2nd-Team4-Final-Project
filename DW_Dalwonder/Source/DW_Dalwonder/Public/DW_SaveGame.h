@@ -65,4 +65,40 @@ public:
 
 	UPROPERTY()
 	TArray<uint8> CompressedFogBits;
+
+	// 감도
+	UPROPERTY()
+	float SavedMouseSensitivity = 1.0f;
+
+	// UI 그래픽
+	UPROPERTY(BlueprintReadWrite)
+	int32 SavedWindowMode;
+
+	UPROPERTY(BlueprintReadWrite)
+	FIntPoint SavedResolution;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bSavedVSync;
+	
+	UPROPERTY()
+	float SavedFrameRate;
+
+	UPROPERTY()
+	bool bSavedMotionBlur;
+
+	UPROPERTY()
+	bool bSavedShadow;
+	
+	// 사운드
+	UPROPERTY()
+	float SavedVolumeMaster = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeBGM = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeSFX = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeUI = 100.f;
 };

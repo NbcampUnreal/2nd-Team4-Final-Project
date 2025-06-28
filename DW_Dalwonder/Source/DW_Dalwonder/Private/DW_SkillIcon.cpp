@@ -2,11 +2,14 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "DW_SkillComponent.h"
 #include "DW_SkillTree.h"
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/Widget/DW_SkillTooltip.h"
+#include "DW_SkillManager.h"
 
 
 void UDW_SkillIcon::NativeConstruct()
@@ -31,12 +34,11 @@ void UDW_SkillIcon::NativeConstruct()
 
 void UDW_SkillIcon::OnSkillDoubleClicked()
 {
-    if (!SkillComponent) return;
+    if (!SkillComponent || !bCanActivate) return; // 클릭 제한
 
     const bool bSuccess = SkillComponent->TryLearnSkill(SkillID);
     if (bSuccess)
     {
-        UE_LOG(LogTemp, Error, TEXT("스킬 배우기 성공!"));
         UpdateIcon();
 
         // 스킬들 선행 조건 확인 후 버튼 활성화 시켜주기
@@ -51,12 +53,12 @@ void UDW_SkillIcon::UpdateIcon()
 {
     if (!SkillComponent) return;
 
+    if (SkillID.IsNone()) return;
+
     const int32 Level = SkillComponent->GetSkillLevel(SkillID);
     bUnlocked = Level > 0;
 
-    const FSkillData* SkillData = SkillComponent->SkillDataTable
-        ? SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("SkillIcon Update"))
-        : nullptr;
+    const FSkillData* SkillData = SkillManager ? SkillManager->GetSkillData(SkillID) : nullptr;
 
     if (!SkillData || !IconImage) return;
 
@@ -84,7 +86,7 @@ void UDW_SkillIcon::UpdateIcon()
     {
         if (bUnlocked)
         {
-            DotEffectImage->SetVisibility(ESlateVisibility::Visible);
+            DotEffectImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 
             // 1초 후 이펙트를 자동으로 숨김
             FTimerHandle TimerHandle;
@@ -107,18 +109,69 @@ void UDW_SkillIcon::UpdateIcon()
         }
     }
 
-    // 최대 레벨 도달 시 버튼 비활성화
+    // 상태 판단 및 색상 갱신
+    if (SkillManager)
+    {
+        const TMap<FName, FSkillState>& SkillStates = SkillComponent->SkillStateMap;
+
+        bool bEnable = true;
+        if (!bUnlocked) // 스킬을 아직 배우지 않은 경우
+        {
+            bEnable = SkillManager->CanUnlockSkill(SkillID, SkillStates);
+        }
+
+        SetCanActivate(bEnable);
+    }
+}
+
+void UDW_SkillIcon::SetCanActivate(bool bEnable)
+{
+    if (IconImage)
+    {
+        IconImage->SetRenderOpacity(bEnable ? 1.0f : 0.4f);
+    }
+
+    // 항상 true로 유지 (비활성화하면 자식도 같이 알파값 손상)
     if (SkillButton)
     {
-		UE_LOG(LogTemp, Warning, TEXT("SkillID: %s, Level: %d"), *SkillID.ToString(), Level);
-        
-        if (SkillData && Level >= SkillData->MaxLevel)
+        SkillButton->SetIsEnabled(true);
+    }
+
+    bCanActivate = bEnable; // 상태 저장해서 클릭 막기용
+}
+
+void UDW_SkillIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+	
+    if (TooltipWidgetClass && SkillManager)
+    {
+        const FSkillData* Data = SkillManager->GetSkillData(SkillID);
+        if (!Data) return;
+
+        ActiveTooltip = CreateWidget<UDW_SkillTooltip>(GetWorld(), TooltipWidgetClass);
+        if (ActiveTooltip)
         {
-            SkillButton->SetIsEnabled(false);
+            int32 Level = SkillComponent->GetSkillLevel(SkillID);
+            ActiveTooltip->SetSkillTooltipInfo(Data->SkillName, Data->Description, Level, Data->MaxLevel);
+
+            FVector2D MouseScreenPos = InMouseEvent.GetScreenSpacePosition();
+            FVector2D Offset(1.f, 1.f); // 마우스 오른쪽 아래
+
+            ActiveTooltip->AddToViewport(999); // 높은 ZOrder
+            ActiveTooltip->SetVisibility(ESlateVisibility::Visible);
+            ActiveTooltip->SetPositionInViewport(MouseScreenPos + Offset, true); // DPI 무시
         }
-        else
-        {
-            SkillButton->SetIsEnabled(true);
-        }
+    }
+}
+
+void UDW_SkillIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+    Super::NativeOnMouseLeave(InMouseEvent);
+
+    if (ActiveTooltip)
+    {
+        ActiveTooltip->RemoveFromParent();
+        ActiveTooltip = nullptr;
     }
 }

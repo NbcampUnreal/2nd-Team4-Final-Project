@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "DW_GameInstance.h"
 #include "EngineUtils.h"
 #include "Character/DW_PlayerController.h"
 #include "Character/DW_AnimInstanceBase.h"
@@ -26,6 +27,7 @@
 #include "UI/Widget/LockOnWidget.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 #include "Item/Interactionprompt.h"
+#include "UI/Widget/SettingsManager.h"
 #include "Components/WidgetComponent.h"
 
 
@@ -363,11 +365,23 @@ void ADW_CharacterBase::Move(const FInputActionValue& Value)
 void ADW_CharacterBase::Look(const FInputActionValue& Value)
 {
 	if (bIsLockOn) return;
-	
+
 	FVector2D LookInput = Value.Get<FVector2D>();
 
-	AddControllerYawInput(LookInput.X);
-	AddControllerPitchInput(LookInput.Y);
+	float Sensitivity = 1.f;
+	if (UWorld* World = GetWorld())
+	{
+		if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(World->GetGameInstance()))
+		{
+			if (const USettingsManager* SM = GI->GetSettingsManager())
+			{
+				Sensitivity = SM->GetMouseSensitivity();
+			}
+		}
+	}
+
+	AddControllerYawInput(LookInput.X * Sensitivity);
+	AddControllerPitchInput(LookInput.Y * Sensitivity);
 }
 
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
