@@ -11,7 +11,7 @@ struct FCraftItemTable : public FTableRowBase
 	GENERATED_BODY();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 ItemCode;
+	FString ItemCode;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<UItemBase*, int32> IngredientItems;

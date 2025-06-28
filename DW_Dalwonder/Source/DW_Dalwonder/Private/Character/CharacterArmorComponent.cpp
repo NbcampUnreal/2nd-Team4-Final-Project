@@ -1,6 +1,4 @@
 #include "Character/CharacterArmorComponent.h"
-
-#include "MediaSampleSink.h"
 #include "Item/ItemBase.h"
 #include "Character/DW_CharacterBase.h"
 #include "Character/DW_Warrior.h"
@@ -78,32 +76,36 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) const
 {
-	check(IsValid(ItemTable));
+	FString ItemCodeStr = Item->ItemCode;
+	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
 
-	//@TODO : ItemTable 에서 SkeletalMesh 가져오는 로직 작성
-	FName RowName(FString::FromInt(FCString::Atoi(*Item->ItemCode) / 10000));
-	const FString ContextString(TEXT("ItemTable	Lookup"));
-	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
-	if (ItemDataRow == nullptr)
+	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
 	{
-		return nullptr;
+		Character->SetWeaponType(1);
+	}
+	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+	{
+		Character->SetWeaponType(0);
 	}
 
-	return nullptr; // StaticCast<USkeletalMesh*>(ItemDataRow->ItemMesh);
+	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
+	return nullptr; // ItemData.ItemMesh;
 }
 
 AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
 {
-	check(IsValid(ItemTable));
+	FString ItemCodeStr = Item->ItemCode;
+	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
 
-	//@TODO : ItemTable 에서 무기 액터 가져오는 로직 작성
-	FName RowName(FString::FromInt(FCString::Atoi(*Item->ItemCode) / 10000));
-	const FString ContextString(TEXT("ItemTable	Lookup"));
-	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
-	if (ItemDataRow == nullptr)
+	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
 	{
-		return nullptr;
+		Character->SetWeaponType(1);
 	}
-
-	return nullptr; // StaticCast<AActor*>(ItemDataRow->ItemMesh);
+	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+	{
+		Character->SetWeaponType(0);
+	}
+	
+	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
+	return nullptr; // ItemData.ItemMesh;
 }
