@@ -6,7 +6,7 @@
 #include "ItemTranslator.generated.h"
 
 /**
- * ¾ÆÀÌÅÛ ÄÚµå¸¦ »ý¼º ¹× ÇØ¼®ÇÏ´Â À¯Æ¿¸®Æ¼ Å¬·¡½º
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµå¸¦ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ø¼ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Æ¿ï¿½ï¿½Æ¼ Å¬ï¿½ï¿½ï¿½ï¿½
  */
 UCLASS()
 class DW_DALWONDER_API UItemTranslator : public UObject
@@ -14,11 +14,11 @@ class DW_DALWONDER_API UItemTranslator : public UObject
     GENERATED_BODY()
 
 public:
-    // ¾ÆÀÌÅÛ ÄÚµå »ý¼º (FString ±â¹Ý)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ (FString ï¿½ï¿½ï¿½)
     UFUNCTION(BlueprintCallable, Category = "ItemCode")
     static FString MakeItemCode(EItemGrade ItemGrade, int32 EnchantLevel, const FString& ItemRowID);
 
-    // ¾ÆÀÌÅÛ ÄÚµå ÇØ¼® (FString ±â¹Ý)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½Ø¼ï¿½ (FString ï¿½ï¿½ï¿½)
     UFUNCTION(BlueprintCallable, Category = "ItemCode")
     static void ParseItemCode(
         const FString& ItemCode,

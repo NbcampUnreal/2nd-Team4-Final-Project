@@ -37,7 +37,7 @@ protected:
     TSubclassOf<AActor> MonsterClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MonsterSetting", meta = (EditCondition = "!bIsMonster"))
-    int32 ItemCode;
+    FString ItemCode;
 
     bool bHasOpened = false;
 
