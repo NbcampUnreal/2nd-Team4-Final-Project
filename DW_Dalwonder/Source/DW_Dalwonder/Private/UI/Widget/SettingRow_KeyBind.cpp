@@ -2,6 +2,21 @@
 #include "Components/TextBlock.h"
 #include "Framework/Application/SlateApplication.h"
 
+void USettingRow_KeyBind::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+
+	if (Text_KeyName)
+	{
+		Text_KeyName->SetText(FText::FromString(AssignedKey.GetDisplayName().ToString()));
+	}
+
+	if (UTextBlock* Label = Cast<UTextBlock>(GetWidgetFromName(TEXT("Text_SettingLabel"))))
+	{
+		Label->SetText(LabelText);
+	}
+}
+
 void USettingRow_KeyBind::NativeConstruct()
 {
 	Super::NativeConstruct();

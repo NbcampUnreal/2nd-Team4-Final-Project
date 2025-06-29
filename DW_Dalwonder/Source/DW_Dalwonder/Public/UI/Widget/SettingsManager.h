@@ -64,6 +64,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	TSoftObjectPtr<USoundClass> UIClassAsset;
 
+	UPROPERTY()
+	TMap<FName, FKey> CustomKeyMap;
 private:
 	/** 저장용 내부 변수들 */
 	int32 WindowModeIndex;
@@ -79,7 +81,6 @@ private:
 	bool bMotionBlurEnabled;
 	bool bShadowEnabled;
 
-	
 public:
 	// 그래픽
     int32 GetWindowModeIndex() const { return WindowModeIndex; }
@@ -91,6 +92,8 @@ public:
 	// 컨트롤러
 	float GetMouseSensitivity() const { return MouseSensitivity; }
 	void SetMouseSensitivity(float NewSensitivity) { MouseSensitivity = NewSensitivity; }
+
+	void SetCustomKey(FName ActionName, FKey NewKey);
 	// 사운드
 	USoundMix* GetMasterMix() const { return MasterMix; }
 	float GetVolumeMaster() const { return VolumeMaster; }
@@ -101,5 +104,4 @@ public:
 	void SetVolumeBGM(float Value);
 	void SetVolumeSFX(float Value);
 	void SetVolumeUI(float Value);
-
 };

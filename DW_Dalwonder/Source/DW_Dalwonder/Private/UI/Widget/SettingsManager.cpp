@@ -4,6 +4,7 @@
 #include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
 #include "AudioDevice.h"
+#include "Character/DW_PlayerController.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -274,4 +275,18 @@ void USettingsManager::SetVolumeSFX(float Value)
 void USettingsManager::SetVolumeUI(float Value)
 {
 	VolumeUI = Value;
+}
+
+void USettingsManager::SetCustomKey(FName ActionName, FKey NewKey)
+{
+	CustomKeyMap.FindOrAdd(ActionName) = NewKey;
+
+	// PlayerController에 적용
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+		{
+			DWPC->ApplyCustomKeyBindings(CustomKeyMap);
+		}
+	}
 }

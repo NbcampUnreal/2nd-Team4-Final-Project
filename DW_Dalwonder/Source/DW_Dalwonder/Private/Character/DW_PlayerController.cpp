@@ -13,7 +13,10 @@
 #include "InputActionValue.h"
 #include "UI/Widget/BossHUDWidget.h"
 
-const FName ADW_PlayerController::Action_Move = TEXT("Move");
+const FName ADW_PlayerController::Action_MoveForward = TEXT("Move_Forward");
+const FName ADW_PlayerController::Action_MoveBackward = TEXT("Move_Backward");
+const FName ADW_PlayerController::Action_MoveLeft = TEXT("Move_Left");
+const FName ADW_PlayerController::Action_MoveRight = TEXT("Move_Right");
 const FName ADW_PlayerController::Action_Look = TEXT("Look");
 const FName ADW_PlayerController::Action_Jump = TEXT("Jump");
 const FName ADW_PlayerController::Action_Attack = TEXT("Attack");
@@ -30,7 +33,10 @@ const FName ADW_PlayerController::Action_Ride = TEXT("Ride");
 
 ADW_PlayerController::ADW_PlayerController()
 	: InputMappingContext(nullptr),
-	MoveAction(nullptr),
+	MoveForwardAction(nullptr),
+	MoveBackwardAction(nullptr),
+	MoveLeftAction(nullptr),
+	MoveRightAction(nullptr),
 	LookAction(nullptr),
 	JumpAction(nullptr),
 	AttackAction(nullptr),
@@ -62,7 +68,10 @@ void ADW_PlayerController::BeginPlay()
 		}
 	}
 
-	ActionMap.Add(Action_Move, MoveAction);
+	ActionMap.Add(Action_MoveForward, MoveForwardAction);
+	ActionMap.Add(Action_MoveBackward, MoveBackwardAction);
+	ActionMap.Add(Action_MoveLeft, MoveLeftAction);
+	ActionMap.Add(Action_MoveRight, MoveRightAction);
 	ActionMap.Add(Action_Look, LookAction);
 	ActionMap.Add(Action_Jump, JumpAction);
 	ActionMap.Add(Action_Attack, AttackAction);
@@ -89,6 +98,22 @@ void ADW_PlayerController::SetupInputComponent()
 		if (ESCAction)
 		{
 			EnhancedInputComponent->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
+		}
+		if (MoveForwardAction)
+		{
+			EnhancedInputComponent->BindAction(MoveForwardAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveForward);
+		}
+		if (MoveBackwardAction)
+		{
+			EnhancedInputComponent->BindAction(MoveBackwardAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveBackward);
+		}
+		if (MoveLeftAction)
+		{
+			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveLeft);
+		}
+		if (MoveRightAction)
+		{
+			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveRight);
 		}
 	}
 }
@@ -320,9 +345,21 @@ void ADW_PlayerController::ApplyCustomKeyBindings(const TMap<FName, FKey>& KeyMa
 			UInputAction* Action = FindActionByName(ActionName);
 			if (!Action) continue;
 
-			if (ActionName == Action_Move)
+			if (ActionName == TEXT("MoveForward"))
 			{
-				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMove);
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveForward);
+			}
+			else if (ActionName == TEXT("MoveBackward"))
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveBackward);
+			}
+			else if (ActionName == TEXT("MoveLeft"))
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveLeft);
+			}
+			else if (ActionName == TEXT("MoveRight"))
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveRight);
 			}
 			else if (ActionName == Action_Look)
 			{
@@ -381,10 +418,46 @@ void ADW_PlayerController::ApplyCustomKeyBindings(const TMap<FName, FKey>& KeyMa
 	}
 }
 
-void ADW_PlayerController::HandleMove(const FInputActionValue& Value)
+void ADW_PlayerController::HandleMoveForward(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Log, TEXT("[입력] Move: %s"), *Value.ToString());
+	if (APawn* MyPawn = GetPawn())
+	{
+		const FRotator ControlRot = GetControlRotation();
+		const FVector Forward = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::X);
+		MyPawn->AddMovementInput(Forward, Value.Get<float>());
+	}
 }
+
+void ADW_PlayerController::HandleMoveBackward(const FInputActionValue& Value)
+{
+	if (APawn* MyPawn = GetPawn())
+	{
+		const FRotator ControlRot = GetControlRotation();
+		const FVector Forward = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::X);
+		MyPawn->AddMovementInput(Forward, -Value.Get<float>());
+	}
+}
+
+void ADW_PlayerController::HandleMoveLeft(const FInputActionValue& Value)
+{
+	if (APawn* MyPawn = GetPawn())
+	{
+		const FRotator ControlRot = GetControlRotation();
+		const FVector Right = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::Y);
+		MyPawn->AddMovementInput(Right, -Value.Get<float>());
+	}
+}
+
+void ADW_PlayerController::HandleMoveRight(const FInputActionValue& Value)
+{
+	if (APawn* MyPawn = GetPawn())
+	{
+		const FRotator ControlRot = GetControlRotation();
+		const FVector Right = FRotationMatrix(ControlRot).GetUnitAxis(EAxis::Y);
+		MyPawn->AddMovementInput(Right, Value.Get<float>());
+	}
+}
+
 
 void ADW_PlayerController::HandleLook(const FInputActionValue& Value)
 {

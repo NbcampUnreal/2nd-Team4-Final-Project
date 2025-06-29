@@ -15,14 +15,62 @@ UCLASS()
 class DW_DALWONDER_API USettingsPanel_Control : public UUserWidget
 {
 	GENERATED_BODY()
-	
 protected:
 	virtual void NativeConstruct() override;
 	void NativeDestruct();
 
 	UFUNCTION()
 	void HandleMouseSensitivityChanged(float NewValue);
+	UFUNCTION()
+	void HandleKeyChanged(FName ActionName, FKey NewKey);
 
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* MouseSensitivity;
+	
+	// 키 바인딩 위젯 참조 (BindWidget)
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_MoveForward;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_MoveBackward;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_MoveLeft;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_MoveRight;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Jump;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Attack;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Interact;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Guard;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Dodge;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Lockon;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Skill;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_UseSkill1;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_UseSkill2;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_UseSkill3;
+
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Ride;
+	
 };

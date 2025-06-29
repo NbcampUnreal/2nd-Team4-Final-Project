@@ -7,6 +7,9 @@
 #include "InputCoreTypes.h"
 #include "SettingRow_KeyBind.generated.h"
 
+class UHorizontalBox;
+class UTextBlock;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKeyAssigned, FName, ActionName, FKey, NewKey);
 
 UCLASS()
@@ -15,7 +18,12 @@ class DW_DALWONDER_API USettingRow_KeyBind : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KeyBind", meta = (ExposeOnSpawn))
+	FText LabelText;
+	
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	/** 외부에서 이 액션이 뭔지 지정 (Jump, Attack 등) */
