@@ -3,6 +3,8 @@
 #include "GameFramework/GameUserSettings.h"
 #include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
+#include "AudioDevice.h"
+#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 
 USettingsManager::USettingsManager()
@@ -28,9 +30,14 @@ void USettingsManager::Initialize()
 	SFXClass = SFXClassAsset.Get();
 	UIClass = UIClassAsset.Get();
 
-	UE_LOG(LogTemp, Warning, TEXT("MasterMix loaded? %s"), MasterMix ? TEXT("Yes") : TEXT("No"));
-
 	LoadSettings();
+
+	ApplyVolumeMaster(VolumeMaster);
+	ApplyVolumeBGM(VolumeBGM);
+	ApplyVolumeSFX(VolumeSFX);
+	ApplyVolumeUI(VolumeUI);
+
+	UE_LOG(LogTemp, Warning, TEXT("Settings initialized: MasterVol=%.2f"), VolumeMaster);
 }
 
 void USettingsManager::ApplySettings()
@@ -196,16 +203,11 @@ void USettingsManager::ApplyVolumeMaster(float Value)
 {
 	VolumeMaster = Value;
 
-	if (!MasterMix || !MasterClass)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeMaster] Failed - MasterMix or MasterClass is null"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeMaster] Applying value: %.2f"), Value);
-
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.0f, 0.0f, true);
+	UGameplayStatics::ClearSoundMixModifiers(this);
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.f);
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
+    
+	UE_LOG(LogTemp, Warning, TEXT("AudioDevice MasterClass DefaultVolume: %.2f"), MasterClass->Properties.Volume);
 }
 
 void USettingsManager::ApplyVolumeBGM(float Value)
