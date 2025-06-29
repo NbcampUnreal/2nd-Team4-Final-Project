@@ -1,9 +1,11 @@
 #include "Character/CharacterArmorComponent.h"
-
-#include "MediaSampleSink.h"
 #include "Item/ItemBase.h"
 #include "Character/DW_CharacterBase.h"
 #include "Character/DW_Warrior.h"
+#include "DW_GameInstance.h"
+#include "Item/ItemDataManager.h"
+#include "Item/ItemData.h"
+#include "Engine/DataTable.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
 	: Helmet(nullptr), Armor(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
@@ -19,36 +21,50 @@ void UCharacterArmorComponent::BeginPlay()
 
 void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
-	//@TODO : ItemBase 의 코드를 통해 현재 장착하려는 아이템이 어느 부위인지 구분짓기
-	ECharacterArmor ItemType = StaticCast<ECharacterArmor>(Item->ItemCode);
+	if (Item == nullptr) return;
+
+	UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance());
+	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)return;
+
+	FItemData* ItemData = GameInstance->GetItemDataManager()->ItemBaseDataTable->FindRow<FItemData>(
+		FName(*Item->ItemCode),
+		TEXT("Lookup ItemCode")
+	);
+
+	if (!ItemData || ItemData->ItemType != EItemType::Equipment)
+	{
+		return;
+	}
+
+	ECharacterArmor ItemType = static_cast<ECharacterArmor>(ItemData->EquipSlot);
 
 	if (ItemType == ECharacterArmor::Helmet)
 	{
 		Helmet = Item;
 		Character->Helmet->SetSkeletalMeshAsset(GetArmorSkeletalMesh(Helmet));
 	}
-	if (ItemType == ECharacterArmor::Armor)
+	else if (ItemType == ECharacterArmor::Armor)
 	{
 		Armor = Item;
 		GetArmorSkeletalMesh(Armor);
 	}
-	if (ItemType == ECharacterArmor::Glove)
+	else if (ItemType == ECharacterArmor::Glove)
 	{
 		Glove = Item;
 		GetArmorSkeletalMesh(Glove);
 	}
-	if (ItemType == ECharacterArmor::Boots)
+	else if (ItemType == ECharacterArmor::Boots)
 	{
 		Boots = Item;
 		GetArmorSkeletalMesh(Boots);
 	}
-	if (ItemType == ECharacterArmor::Weapon)
+	else if (ItemType == ECharacterArmor::Weapon)
 	{
 		Weapon = Item;
 		Character->SetWeapon(GetWeaponActor(Item));
 
-		//@TODO : 무기 종류를 ItemBase 를 통해 구분하여 캐릭터에게 현재 장착한 무기의 타입 지정해주기
-		int32 WeaponType = Item->ItemCode / 10000;
+		// 무기 타입 결정
+		int32 WeaponType = FCString::Atoi(*Item->ItemCode) / 10000;
 		if (ADW_Warrior* Warrior = Cast<ADW_Warrior>(Character))
 		{
 			Warrior->SetWeaponType(WeaponType);
@@ -60,32 +76,36 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) const
 {
-	check(IsValid(ItemTable));
+	FString ItemCodeStr = Item->ItemCode;
+	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
 
-	//@TODO : ItemTable 에서 SkeletalMesh 가져오는 로직 작성
-	FName RowName(FString::FromInt(Item->ItemCode / 10000));
-	const FString ContextString(TEXT("ItemTable	Lookup"));
-	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
-	if (ItemDataRow == nullptr)
+	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
 	{
-		return nullptr;
+		Character->SetWeaponType(1);
+	}
+	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+	{
+		Character->SetWeaponType(0);
 	}
 
-	return nullptr; // StaticCast<USkeletalMesh*>(ItemDataRow->ItemMesh);
+	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
+	return nullptr; // ItemData.ItemMesh;
 }
 
 AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
 {
-	check(IsValid(ItemTable));
+	FString ItemCodeStr = Item->ItemCode;
+	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
 
-	//@TODO : ItemTable 에서 무기 액터 가져오는 로직 작성
-	FName RowName(FString::FromInt(Item->ItemCode / 10000));
-	const FString ContextString(TEXT("ItemTable	Lookup"));
-	FItemData* ItemDataRow = ItemTable->FindRow<FItemData>(RowName, ContextString);
-	if (ItemDataRow == nullptr)
+	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
 	{
-		return nullptr;
+		Character->SetWeaponType(1);
 	}
-
-	return nullptr; // StaticCast<AActor*>(ItemDataRow->ItemMesh);
+	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+	{
+		Character->SetWeaponType(0);
+	}
+	
+	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
+	return nullptr; // ItemData.ItemMesh;
 }

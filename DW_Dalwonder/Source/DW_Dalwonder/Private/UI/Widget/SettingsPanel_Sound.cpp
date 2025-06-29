@@ -11,29 +11,37 @@ void USettingsPanel_Sound::NativeConstruct()
 	{
 		if (USettingsManager* SM = GI->GetSettingsManager())
 		{
-			// 저장된 값 반영
+			// 저장된 값 반영 + UI에 슬라이더 표시
 			if (VolumeMaster)
 			{
-				VolumeMaster->SavedValue = SM->GetVolumeMaster();
+				const float Value = SM->GetVolumeMaster();
+				VolumeMaster->SavedValue = Value;
 				VolumeMaster->bHasSavedValue = true;
+				VolumeMaster->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeBGM)
 			{
-				VolumeBGM->SavedValue = SM->GetVolumeBGM();
+				const float Value = SM->GetVolumeBGM();
+				VolumeBGM->SavedValue = Value;
 				VolumeBGM->bHasSavedValue = true;
+				VolumeBGM->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeSFX)
 			{
-				VolumeSFX->SavedValue = SM->GetVolumeSFX();
+				const float Value = SM->GetVolumeSFX();
+				VolumeSFX->SavedValue = Value;
 				VolumeSFX->bHasSavedValue = true;
+				VolumeSFX->SetSliderAndDisplay(Value);
 			}
 
 			if (VolumeUI)
 			{
-				VolumeUI->SavedValue = SM->GetVolumeUI();
+				const float Value = SM->GetVolumeUI();
+				VolumeUI->SavedValue = Value;
 				VolumeUI->bHasSavedValue = true;
+				VolumeUI->SetSliderAndDisplay(Value);
 			}
 		}
 	}
@@ -122,6 +130,7 @@ void USettingsPanel_Sound::HandleVolumeUIChanged(float NewValue)
 // 실시간 반영
 void USettingsPanel_Sound::ApplyVolumeMasterRuntime(float NewValue)
 {
+	
 	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
 	{
 		if (USettingsManager* SM = GI->GetSettingsManager())

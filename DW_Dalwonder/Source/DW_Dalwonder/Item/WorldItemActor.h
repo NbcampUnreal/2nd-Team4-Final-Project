@@ -50,7 +50,7 @@ public:
     UPROPERTY(VisibleAnywhere)
     class USphereComponent* DetectionSphere;
 
-    void SetItemCode(int NewItemCode);
+    void SetItemCode(FString NewItemCode);
 
     // 플레이어 감지 
     UFUNCTION()

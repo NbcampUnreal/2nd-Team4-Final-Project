@@ -9,19 +9,33 @@
 #include "Components/Image.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/FogOfWarManager.h"
+#include "UI/Widget/SettingsManager.h"
 #include "DW_SkillManager.h"
 
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
-    // // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = false;
 }
 
 void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
+    {
+        if (USettingsManager* SM = GI->GetSettingsManager())
+        {
+            FTimerHandle TimerHandle;
+            GetWorld()->GetTimerManager().SetTimer(TimerHandle, [SM]()
+            {
+                SM->ApplyVolumeMaster(SM->GetVolumeMaster());
+                SM->ApplyVolumeBGM(SM->GetVolumeBGM());
+                SM->ApplyVolumeSFX(SM->GetVolumeSFX());
+                SM->ApplyVolumeUI(SM->GetVolumeUI());
+            }, 0.1f, false);
+        }
+    }
+    
     if (!SkillManager)
     {
         SkillManager = NewObject<UDW_SkillManager>(this);

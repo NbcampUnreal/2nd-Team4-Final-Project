@@ -43,7 +43,7 @@ void UPlayerInfoWidget::NativeConstruct()
                 {
                     if (Armor->Weapon)
                     {
-                        FString ItemCodeStr = FString::FromInt(Armor->Weapon->ItemCode);
+                        FString ItemCodeStr = Armor->Weapon->ItemCode;
                         if (ItemCodeStr.Len() > 3)
                         {
                             FString WeaponCodeStr = ItemCodeStr.Mid(3);

@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "CharacterArmorComponent.generated.h"
 
+class UItemDataManager;
+
 UENUM(BlueprintType)
 enum class ECharacterArmor : uint8
 {
@@ -54,7 +56,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	ADW_CharacterBase* Character;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
-	UDataTable* ItemTable;
-	
+	UPROPERTY()
+	UItemDataManager* ItemDataManager;
 };
