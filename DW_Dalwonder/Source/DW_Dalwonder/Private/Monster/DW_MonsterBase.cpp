@@ -457,15 +457,17 @@ void ADW_MonsterBase::Dead()
 			for (const FDropItemData& ItemData : DropData->DropItems)
 			{
 				EItemGrade CurrentGrade;
-				int32 EnchantLevel, ItemRowID;
+				int32 EnchantLevel;
+				FString ItemRowID_FString; 
 				bool bIsSuccess;
-				UItemTranslator::ParseItemCode(ItemData.ItemCode, CurrentGrade, EnchantLevel, ItemRowID, bIsSuccess);
+				
+				UItemTranslator::ParseItemCode(ItemData.ItemCode, CurrentGrade, EnchantLevel, ItemRowID_FString, bIsSuccess);
+				
 				if (bIsSuccess && static_cast<int32>(CurrentGrade) > static_cast<int32>(HighestGrade))
 				{
 					HighestGrade = CurrentGrade;
 				}
 			}
-    
 			FString VFX_Path;
 			switch (HighestGrade)
 			{
@@ -754,4 +756,7 @@ void ADW_MonsterBase::DestroySpawnedVFX()
 		
 		SpawnedVFX = nullptr; 
 	}
+}
+void ADW_MonsterBase::IncreaseMastery(UDataTable* NewDataTable)
+{
 }
