@@ -8,7 +8,25 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
+#include "InputActionValue.h"
 #include "UI/Widget/BossHUDWidget.h"
+
+const FName ADW_PlayerController::Action_Move = TEXT("Move");
+const FName ADW_PlayerController::Action_Look = TEXT("Look");
+const FName ADW_PlayerController::Action_Jump = TEXT("Jump");
+const FName ADW_PlayerController::Action_Attack = TEXT("Attack");
+const FName ADW_PlayerController::Action_Interact = TEXT("Interact");
+const FName ADW_PlayerController::Action_ESC = TEXT("ESC");
+const FName ADW_PlayerController::Action_Guard = TEXT("Guard");
+const FName ADW_PlayerController::Action_Dodge = TEXT("Dodge");
+const FName ADW_PlayerController::Action_Lockon = TEXT("Lockon");
+const FName ADW_PlayerController::Action_Skill = TEXT("Skill");
+const FName ADW_PlayerController::Action_Skill1 = TEXT("Skill1");
+const FName ADW_PlayerController::Action_Skill2 = TEXT("Skill2");
+const FName ADW_PlayerController::Action_Skill3 = TEXT("Skill3");
+const FName ADW_PlayerController::Action_Ride = TEXT("Ride");
 
 ADW_PlayerController::ADW_PlayerController()
 	: InputMappingContext(nullptr),
@@ -43,6 +61,21 @@ void ADW_PlayerController::BeginPlay()
 			}
 		}
 	}
+
+	ActionMap.Add(Action_Move, MoveAction);
+	ActionMap.Add(Action_Look, LookAction);
+	ActionMap.Add(Action_Jump, JumpAction);
+	ActionMap.Add(Action_Attack, AttackAction);
+	ActionMap.Add(Action_Interact, InteractAction);
+	ActionMap.Add(Action_ESC, ESCAction);
+	ActionMap.Add(Action_Guard, GuardAction);
+	ActionMap.Add(Action_Dodge, DodgeAction);
+	ActionMap.Add(Action_Lockon, LockonAction);
+	ActionMap.Add(Action_Skill, SkillAction);
+	ActionMap.Add(Action_Skill1, UseSkill1Action);
+	ActionMap.Add(Action_Skill2, UseSkill2Action);
+	ActionMap.Add(Action_Skill3, UseSkill3Action);
+	ActionMap.Add(Action_Ride, RideAction);
 
     GetWorldTimerManager().SetTimer(ObstructionTraceTimerHandle, this, &ADW_PlayerController::UpdateObstructionCheck, 0.1f, true);
 }
@@ -273,4 +306,156 @@ void ADW_PlayerController::UpdateObstructionCheck()
     /*DrawDebugLine(GetWorld(), CameraLocation, PlayerLocation, FColor::Red, false, 0.1f, 0, 1.f);
     DrawDebugSphere(GetWorld(), CameraLocation, TraceRadius, 12, FColor::Green, false, 0.1f);*/
 #endif
+}
+
+void ADW_PlayerController::ApplyCustomKeyBindings(const TMap<FName, FKey>& KeyMap)
+{
+	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		EnhancedInput->ClearActionBindings();
+
+		for (const TPair<FName, FKey>& Pair : KeyMap)
+		{
+			const FName& ActionName = Pair.Key;
+			UInputAction* Action = FindActionByName(ActionName);
+			if (!Action) continue;
+
+			if (ActionName == Action_Move)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMove);
+			}
+			else if (ActionName == Action_Look)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleLook);
+			}
+			else if (ActionName == Action_Jump)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleJump);
+			}
+			else if (ActionName == Action_Attack)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleAttack);
+			}
+			else if (ActionName == Action_Interact)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleInteract);
+			}
+			else if (ActionName == Action_ESC)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
+			}
+			else if (ActionName == Action_Guard)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleGuardStart);
+				EnhancedInput->BindAction(Action, ETriggerEvent::Completed, this, &ADW_PlayerController::HandleGuardEnd);
+			}
+			else if (ActionName == Action_Dodge)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleDodge);
+			}
+			else if (ActionName == Action_Lockon)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleLockon);
+			}
+			else if (ActionName == Action_Skill)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Started, this, &ADW_PlayerController::HandleSkill);
+			}
+			else if (ActionName == Action_Skill1)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleSkill1);
+			}
+			else if (ActionName == Action_Skill2)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleSkill2);
+			}
+			else if (ActionName == Action_Skill3)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleSkill3);
+			}
+			else if (ActionName == Action_Ride)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleRide);
+			}
+		}
+	}
+}
+
+void ADW_PlayerController::HandleMove(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Move: %s"), *Value.ToString());
+}
+
+void ADW_PlayerController::HandleLook(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Look: %s"), *Value.ToString());
+}
+
+void ADW_PlayerController::HandleJump()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Jump"));
+}
+
+void ADW_PlayerController::HandleAttack()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Attack"));
+}
+
+void ADW_PlayerController::HandleInteract()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Interact"));
+}
+
+void ADW_PlayerController::HandleGuardStart()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Guard Start"));
+}
+
+void ADW_PlayerController::HandleGuardEnd()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Guard End"));
+}
+
+void ADW_PlayerController::HandleDodge()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Dodge"));
+}
+
+void ADW_PlayerController::HandleLockon()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Lockon"));
+}
+
+void ADW_PlayerController::HandleSkill()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Skill"));
+}
+
+void ADW_PlayerController::HandleSkill1()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Skill 1"));
+}
+
+void ADW_PlayerController::HandleSkill2()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Skill 2"));
+}
+
+void ADW_PlayerController::HandleSkill3()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Skill 3"));
+}
+
+void ADW_PlayerController::HandleRide()
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] Ride"));
+}
+
+UInputAction* ADW_PlayerController::FindActionByName(FName ActionName) const
+{
+	if (const TObjectPtr<UInputAction>* Found = ActionMap.Find(ActionName))
+	{
+		return Found->Get();
+	}
+	return nullptr;
 }
