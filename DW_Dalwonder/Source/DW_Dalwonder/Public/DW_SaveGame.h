@@ -66,9 +66,12 @@ public:
 	UPROPERTY()
 	TArray<uint8> CompressedFogBits;
 
-	// 감도
+	// UI 컨트롤러
 	UPROPERTY()
 	float SavedMouseSensitivity = 1.0f;
+
+	UPROPERTY()
+	TMap<FName, FKey> SavedKeyMap;
 
 	// UI 그래픽
 	UPROPERTY(BlueprintReadWrite)

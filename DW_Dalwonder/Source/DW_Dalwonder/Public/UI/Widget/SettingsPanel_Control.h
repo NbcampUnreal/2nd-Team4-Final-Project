@@ -10,6 +10,7 @@
 /**
  * 
  */
+class UButton;
 
 UCLASS()
 class DW_DALWONDER_API USettingsPanel_Control : public UUserWidget
@@ -21,8 +22,14 @@ protected:
 
 	UFUNCTION()
 	void HandleMouseSensitivityChanged(float NewValue);
+	
 	UFUNCTION()
-	void HandleKeyChanged(FName ActionName, FKey NewKey);
+	void HandleKeyBindChanged(FName ActionName, FKey NewKey);
+	
+	UFUNCTION()
+	void HandleResetKeyBindings();
+	UFUNCTION()
+	void RefreshKeyDisplayAll();
 
 	UPROPERTY(meta = (BindWidget))
 	USettingRowSlider* MouseSensitivity;
@@ -73,4 +80,6 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	class USettingRow_KeyBind* KeyBind_Ride;
 	
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_ResetKeys;
 };
