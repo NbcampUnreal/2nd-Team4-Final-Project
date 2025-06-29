@@ -45,7 +45,7 @@ public:
     TSubclassOf<UUserWidget> InteractionWidgetClass; // 여기에 UInteractionprompt의 Blueprint 클래스를 지정합니다.
     
     // 아이템 시각적 표시 
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* MeshComponent;
 
     // 감지 범위 
