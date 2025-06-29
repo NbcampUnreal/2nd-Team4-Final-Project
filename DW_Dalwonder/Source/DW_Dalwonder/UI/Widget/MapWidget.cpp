@@ -39,6 +39,8 @@ void UMapWidget::NativeConstruct()
     FogImage->SetBrushFromMaterial(FogMaterialInstance);
     FogImage->SetRenderScale(FVector2D(ZoomLevel, ZoomLevel));
 
+    SetZoom(ZoomLevel);
+
     // 플레이어 마커 위치 주기적 갱신
     GetWorld()->GetTimerManager().SetTimer(
         MarkerUpdateTimerHandle,
@@ -47,6 +49,17 @@ void UMapWidget::NativeConstruct()
         0.05f,
         true
     );
+}
+
+void UMapWidget::NativeDestruct()
+{
+    Super::NativeDestruct();
+
+    // 타이머 정리
+    if (GetWorld())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(MarkerUpdateTimerHandle);
+    }
 }
 
 void UMapWidget::UpdatePlayerMarker()
@@ -61,17 +74,21 @@ void UMapWidget::UpdatePlayerMarker()
 
     float TextureWorldSize = FogManager->GetTextureSize() * FogManager->GetPixelSize();
 
-    // 월드 좌표 → 정규화된 UV 좌표
+    // UV 계산
     float U = Relative.Y / TextureWorldSize;
     float V = 1.0f - (Relative.X / TextureWorldSize);
-
     FVector2D UV = FVector2D(U, V).ClampAxes(0.f, 1.f);
 
-    // 마커 위치 계산
+    // 중심 기준 줌 보정
     FVector2D LocalMapSize = MapImageSize * ZoomLevel;
-    FVector2D MarkerPos = UV * LocalMapSize + CurrentOffset;
+    FVector2D MarkerPos = UV * LocalMapSize;
 
-    // 마커 위치 적용
+    // 중앙 기준 확대 보정: 전체 사이즈 변화의 절반만큼 밀림
+    FVector2D ZoomOffset = (MapImageSize * (ZoomLevel - 1.0f)) * -0.5f;
+
+    // 최종 위치
+    MarkerPos += CurrentOffset + ZoomOffset;
+
     PlayerMarker->SetRenderTransform(FWidgetTransform{
         MarkerPos,
         FVector2D(1.f, 1.f),
@@ -109,6 +126,7 @@ FReply UMapWidget::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointe
 
     if (MapImage) MapImage->SetRenderTransform(NewTransform);
     if (FogImage) FogImage->SetRenderTransform(NewTransform);
+    SetZoom(ZoomLevel);
 
     return FReply::Handled();
 }
