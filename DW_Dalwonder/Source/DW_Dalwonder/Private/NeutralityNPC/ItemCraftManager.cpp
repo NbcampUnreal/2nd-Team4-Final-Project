@@ -1,12 +1,17 @@
 #include "NeutralityNPC/ItemCraftManager.h"
 #include "NeutralityNPC/ItemCraftTable.h"
 #include "Inventory/InventoryComponent.h"
-
+#include "Item/EItemGrade.h"
 
 UItemCraftManager::UItemCraftManager()
 	: CraftDataTable(nullptr)
 {
-	
+	ItemGradeProbability = {
+	{EItemGrade::Normal, 60.f},
+	{EItemGrade::Rare, 25.f},
+	{EItemGrade::Unique, 14.f},
+	{EItemGrade::Legendary, 1.f}
+	};
 }
 
 bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent* Inventory, int32 Quantity)
@@ -39,14 +44,44 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 	}
 
 	// 확률에 따른 제작 성공
-	float BonusChance = 0.f;	// 스타캐처 보너스 확률
 	float RandomFloat = FMath::FRand();
-	if (RandomFloat >  CraftRecipe->CraftProbability + BonusChance)
+	if (RandomFloat >  CraftRecipe->CraftProbability)
 	{
 		return false;
 	}
 
 	// 제작 성공 시 아이템 지급
+	float StarcatcherChance = 0.f;	// 스타캐처 보너스 확률
+	EItemGrade ItemGrade = GetItemGrade(StarcatcherChance);
+	TargetItem->ItemGrade = ItemGrade;
 	Inventory->AddItem(TargetItem, Quantity);
 	return true;
+}
+
+EItemGrade UItemCraftManager::GetItemGrade(float BonusChance)
+{
+	float TotalChance = 0.f;
+	for (auto Chance : ItemGradeProbability)
+	{
+		TotalChance += Chance.Value;
+	}
+
+	if (TotalChance <= 0.f)
+	{
+		return EItemGrade::UnKnown;
+	}
+	
+	float RandomFloat = FMath::FRandRange(0.f, TotalChance);
+	float CumulativeChance = 0.f;
+
+	for (auto Chance : ItemGradeProbability)
+	{
+		CumulativeChance += Chance.Value;
+		if (RandomFloat <= CumulativeChance + BonusChance)
+		{
+			return Chance.Key;
+		}
+	}
+
+	return EItemGrade::UnKnown;
 }

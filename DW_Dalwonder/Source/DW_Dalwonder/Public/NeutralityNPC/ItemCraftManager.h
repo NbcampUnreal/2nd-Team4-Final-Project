@@ -7,7 +7,7 @@
 
 class UInventoryComponent;
 class UItemBase;
-struct FInventorySlot;
+enum class EItemGrade;
 
 UCLASS()
 class DW_DALWONDER_API UItemCraftManager : public UObject
@@ -18,8 +18,13 @@ public:
 	UItemCraftManager();
 
 	bool TryCraftItem(UItemBase* TargetItem, UInventoryComponent* Inventory, int32 Quantity);
+
+	EItemGrade GetItemGrade(float BonusChance);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
 	UDataTable* CraftDataTable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
+	TMap<EItemGrade, float> ItemGradeProbability;
 };
