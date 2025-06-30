@@ -54,7 +54,7 @@ void UItemTranslator::ParseItemCode(
     }
 
     // --- 규칙 적용: 2번째 자리수 = 등급 ---
-    FString GradeString = ItemCode.Mid(1, 1); // 2번째 글자 (인덱스 1)를 1개 가져옴
+    FString GradeString = ItemCode.Left(1); // 2번째 글자 (인덱스 1)를 1개 가져옴
     
     // 등급 부분이 숫자인지 확인
     if (!GradeString.IsNumeric())
