@@ -484,11 +484,21 @@ void ADW_MonsterBase::Dead()
 				if (VFX_ToSpawn)
 				{
 					SpawnedVFX = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_ToSpawn, GetActorLocation());
+
+if (SpawnedVFX)
+{
+	GetWorld()->GetTimerManager().SetTimer(
+					DestroyVFXTimerHandle,    // 타이머를 식별할 핸들
+					this,                     // 함수를 호출할 객체 (자기 자신)
+					&ADW_MonsterBase::DestroySpawnedVFX, // 10초 뒤에 호출할 함수
+					10.0f,                    // 지연 시간 (초)
+					false                     // 반복하지 않음
+				);
+}
 				}
 			}
-		}
-	}
-	
+				}
+}
 	// 3. 마지막으로 사망 애니메이션을 재생하고 AI를 정지시킵니다.
 	if (IsValid(DeadMontage))
 	{
