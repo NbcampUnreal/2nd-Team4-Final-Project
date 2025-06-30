@@ -954,6 +954,11 @@ void ADW_CharacterBase::UseActiveSkillSlot3()
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
+	if (bIsInvincible)
+	{
+		return;
+	}
+	
 	if (CurrentCombatState != ECharacterCombatState::Dead)
 	{
 		SetCombatState(ECharacterCombatState::Hit);
@@ -1015,6 +1020,7 @@ void ADW_CharacterBase::Dead()
 	StatComponent->StopConsumeHealth();
 	StatComponent->StopConsumeStamina();
 	bCanRideVehicle = false;
+	bCanControl = false;
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{
