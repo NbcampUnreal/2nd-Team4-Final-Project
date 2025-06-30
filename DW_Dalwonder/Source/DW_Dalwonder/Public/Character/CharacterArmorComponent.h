@@ -61,4 +61,7 @@ public:
 
 	UPROPERTY()
 	UItemDataManager* ItemDataManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+	UDataTable* ItemDataTable;
 };

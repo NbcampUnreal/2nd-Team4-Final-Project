@@ -88,14 +88,50 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 UStaticMesh* UCharacterArmorComponent::GetItemStaticMesh(UItemBase* Item) const
 {
-	FString ItemCodeStr = Item->ItemCode;
-	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
-	return ItemData.ItemMesh.Get();
+	if (ItemDataTable)
+	{
+		static const FString ContextString(TEXT("Item Lookup"));
+		const TMap<FName, uint8*>& RowMap = ItemDataTable->GetRowMap();
+
+		for (const TPair<FName, uint8*>& RowPair : RowMap)
+		{
+			const FItemData* RowData = reinterpret_cast<FItemData*>(RowPair.Value);
+			if (RowData && RowData->ItemID == Item->ItemBaseData.ItemID)
+			{
+				Item->ItemBaseData = *RowData;
+
+				if (RowData->ItemMesh.Get())
+				{
+					return RowData->ItemMesh.Get();
+				}
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 USkeletalMesh* UCharacterArmorComponent::GetItemSkeletalMesh(UItemBase* Item) const
 {
-	FString ItemCodeStr = Item->ItemCode;
-	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
-	return ItemData.ItemSkMesh.Get();
+	if (ItemDataTable)
+	{
+		static const FString ContextString(TEXT("Item Lookup"));
+		const TMap<FName, uint8*>& RowMap = ItemDataTable->GetRowMap();
+
+		for (const TPair<FName, uint8*>& RowPair : RowMap)
+		{
+			const FItemData* RowData = reinterpret_cast<FItemData*>(RowPair.Value);
+			if (RowData && RowData->ItemID == Item->ItemBaseData.ItemID)
+			{
+				Item->ItemBaseData = *RowData;
+
+				if (RowData->ItemMesh.Get())
+				{
+					return RowData->ItemSkMesh.Get();
+				}
+			}
+		}
+	}
+
+	return nullptr;
 }
