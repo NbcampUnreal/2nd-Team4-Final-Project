@@ -1,7 +1,9 @@
 #include "Character/CharacterStatComponent.h"
 #include "Character/DW_CharacterBase.h"
+#include "CharacterStatSaveData.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "DW_GameInstance.h"
 
 UCharacterStatComponent::UCharacterStatComponent()
 {
@@ -18,8 +20,15 @@ void UCharacterStatComponent::BeginPlay()
 	RecalculateAllTotalStats();
 
 	// Health와 Stamina를 TotalMaxHealth/TotalMaxStamina로 초기화
-	Health = TotalMaxHealth;
-	Stamina = TotalMaxStamina;
+    // 초기화 조건 추가 (처음 시작한 경우만)
+    if (const auto* GI = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance()))
+    {
+        if (GI->bIsNewGame)
+        {
+            Health = TotalMaxHealth;
+            Stamina = TotalMaxStamina;
+        }
+    }
 
     // UI 업데이트를 위해 초기 값 브로드캐스트
     OnHealthChanged.Broadcast(Health, TotalMaxHealth);
@@ -354,7 +363,7 @@ void UCharacterStatComponent::RecalculateAllTotalStats()
 void UCharacterStatComponent::RecalculateTotalMaxHealth()
 {
     float OldTotalMaxHealth = TotalMaxHealth;
-    TotalMaxHealth = BaseMaxHealth + EquipmentBonusMaxHealth + BuffBonusMaxHealth;
+    TotalMaxHealth = BaseMaxHealth + EquipmentBonusMaxHealth + BuffBonusMaxHealth + AttrBonusMaxHealth;
 
     // 캐릭터가 버프 등으로 최대 체력이 낮아질 때 현재 체력이 갑자기 줄어드는 것을 방지
     SetHealth(Health);
@@ -367,13 +376,13 @@ void UCharacterStatComponent::RecalculateTotalMaxHealth()
 
 void UCharacterStatComponent::RecalculateTotalHealthGenRate()
 {
-	TotalHealthGenRate = BaseHealthGenRate + EquipmentBonusHealthGenRate + BuffBonusHealthGenRate;
+    TotalHealthGenRate = BaseHealthGenRate + EquipmentBonusHealthGenRate + BuffBonusHealthGenRate + AttrBonusHealthRegen;
 }
 
 void UCharacterStatComponent::RecalculateTotalMaxStamina()
 {
     float OldTotalMaxStamina = TotalMaxStamina;
-    TotalMaxStamina = BaseMaxStamina + EquipmentBonusMaxStamina + BuffBonusMaxStamina;
+    TotalMaxStamina = BaseMaxStamina + EquipmentBonusMaxStamina + BuffBonusMaxStamina + AttrBonusMaxStamina;
     SetStamina(Stamina); // SetStamina 내부에서 클램프 처리
 
     if (TotalMaxStamina != OldTotalMaxStamina)
@@ -384,7 +393,7 @@ void UCharacterStatComponent::RecalculateTotalMaxStamina()
 
 void UCharacterStatComponent::RecalculateTotalStaminaGenRate()
 {
-    TotalStaminaGenRate = BaseStaminaGenRate + EquipmentBonusStaminaGenRate + BuffBonusStaminaGenRate;
+	TotalStaminaGenRate = BaseStaminaGenRate + EquipmentBonusStaminaGenRate + BuffBonusStaminaGenRate + AttrBonusStaminaRegen;
 }
 
 void UCharacterStatComponent::RecalculateTotalAttack()
@@ -394,7 +403,7 @@ void UCharacterStatComponent::RecalculateTotalAttack()
 
 void UCharacterStatComponent::RecalculateTotalDefense()
 {
-    TotalDefense = BaseDefense + EquipmentBonusDefense + BuffBonusDefense;
+	TotalDefense = BaseDefense + EquipmentBonusDefense + BuffBonusDefense + AttrBonusDefense;
 }
 
 void UCharacterStatComponent::RecalculateTotalAttackSpeed()
@@ -404,12 +413,12 @@ void UCharacterStatComponent::RecalculateTotalAttackSpeed()
 
 void UCharacterStatComponent::RecalculateTotalWalkSpeed()
 {
-    TotalWalkSpeed = BaseWalkSpeed + EquipmentBonusWalkSpeed + BuffBonusWalkSpeed;
+	TotalWalkSpeed = BaseWalkSpeed + EquipmentBonusWalkSpeed + BuffBonusWalkSpeed + AttrBonusMoveSpeed;
 }
 
 void UCharacterStatComponent::RecalculateTotalMaxWeight()
 {
-    TotalMaxWeight = BaseMaxWeight + EquipmentBonusMaxWeight + BuffBonusMaxWeight; // 버프 무게는 보통 없음
+	TotalMaxWeight = BaseMaxWeight + EquipmentBonusMaxWeight + BuffBonusMaxWeight + AttrBonusMaxCarryWeight;
     SetCurrentWeight(CurrentWeight); // 현재 무게를 새로운 최대 무게에 클램프
 }
 
@@ -490,6 +499,40 @@ void UCharacterStatComponent::ApplyStatBuff(EConsumableEffectType EffectType, fl
     }
 
     // 모든 총합 스탯이 변경될 수 있으므로 다시 알림
+    OnTotalStatsRecalculated.Broadcast();
+}
+
+void UCharacterStatComponent::SetAttrBonus(EAttrType Type, float Bonus)
+{
+    switch (Type)
+    {
+    case EAttrType::MaxStamina:
+        AttrBonusMaxStamina = Bonus;
+        break;
+    case EAttrType::MaxHealth:
+        AttrBonusMaxHealth = Bonus;
+        break;
+    case EAttrType::Defense:
+        AttrBonusDefense = Bonus;
+        break;
+    case EAttrType::StaminaRegen:
+        AttrBonusStaminaRegen = Bonus;
+        break;
+    case EAttrType::HealthRegen:
+        AttrBonusHealthRegen = Bonus;
+        break;
+    case EAttrType::MaxCarryWeight:
+        AttrBonusMaxCarryWeight = Bonus;
+        break;
+    case EAttrType::MoveSpeed:
+        AttrBonusMoveSpeed = Bonus;
+        break;
+    }
+
+    // 전체 갱신 한번
+    RecalculateAllTotalStats();
+
+	// 속성 보너스가 변경되면 관련 총합 스탯을 다시 계산
     OnTotalStatsRecalculated.Broadcast();
 }
 

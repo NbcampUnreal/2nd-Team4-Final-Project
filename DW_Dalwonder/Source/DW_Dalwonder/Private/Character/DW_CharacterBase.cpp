@@ -68,8 +68,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
+	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 
 	// SceneCaptureComponent 초기화
 	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));

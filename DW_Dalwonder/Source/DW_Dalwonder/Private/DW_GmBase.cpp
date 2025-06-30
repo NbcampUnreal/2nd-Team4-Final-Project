@@ -6,9 +6,7 @@
 #include "DW_PortalArrivalActor.h"
 #include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
-#include "Components/Image.h"
 #include "GameFramework/Character.h"
-#include "UI/Widget/FogOfWarManager.h"
 #include "UI/Widget/SettingsManager.h"
 #include "DW_SkillManager.h"
 
@@ -68,43 +66,11 @@ void ADW_GmBase::BeginPlay()
 
     GI->LastPortalType = EPortalType::None;
 
-
-    //안개
-
-    // FogManager = GetWorld()->SpawnActor<AFogOfWarManager>();
-    //
-    // APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-    // if (PC && PC->GetPawn())
-    // {
-    //     FVector Location = PC->GetPawn()->GetActorLocation();
-    //     FogManager->GridOrigin = FVector2d(Location.X, Location.Y);
-    //     FogManager->InitFog();
-    // }
-    //
-    // FogMaterialInstance = UMaterialInstanceDynamic::Create(FogMaterialBase, this);
-    // if (!FogMaterialInstance)
-    // {
-    //     return;
-    // }
-    //
-    // FogMaterialInstance->SetTextureParameterValue("FogTexture", FogManager->GetFogTexture());
-    //
-    // if (FogOverlayWidgetClass)
-    // {
-    //     FogWidget = CreateWidget<UUserWidget>(GetWorld(), FogOverlayWidgetClass);
-    //     if (FogWidget)
-    //     {
-    //         FogWidget->AddToViewport();
-    //
-    //         UImage* FogImage = Cast<UImage>(FogWidget->GetWidgetFromName(TEXT("FogImage")));
-    //         if (FogImage && FogMaterialInstance)
-    //         {
-    //             FogImage->SetBrushFromMaterial(FogMaterialInstance);
-    //         }
-    //     }
-    // }
-
-    //안개
+    // 게임 로드시 저장 데이터 적용
+    if (!GI->bIsNewGame)
+    {
+        GI->ApplyLoadedData();
+    }
 }
 
 void ADW_GmBase::Tick(float DeltaTime)

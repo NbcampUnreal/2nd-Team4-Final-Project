@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Delegates/DelegateCombinations.h"
 #include "Item/ItemData.h"
+#include "EAttrType.h"
 #include "CharacterStatComponent.generated.h"
 
 // 스탯 변경을 알리는 델리게이트 (UI 업데이트 등에 사용)
@@ -51,6 +52,9 @@ public:
 	// 버프 적용 함수
 	UFUNCTION(BlueprintCallable, Category = "Stat | Buffs")
 	void ApplyStatBuff(EConsumableEffectType EffectType, float Amount, float Duration);
+
+	// 속성 보너스 관련 함수
+	void SetAttrBonus(EAttrType Type, float Bonus);
 
 protected:
 	void RemoveStatBuff(EConsumableEffectType EffectType, float Amount);
@@ -338,6 +342,27 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stat | Equipment Bonus")
 	float EquipmentBonusWalkSpeed = 0.f;
 
+	// --- 속성 보너스 스탯 (속성 시스템에 의한 보너스) ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusMaxStamina = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusMaxHealth = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusDefense = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusStaminaRegen = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusHealthRegen = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusMaxCarryWeight = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AttrBonus")
+	float AttrBonusMoveSpeed = 0.f;
 
 	// --- 타이머 핸들 및 관련 멤버 변수 ---
 	UPROPERTY()
@@ -351,4 +376,7 @@ protected:
 
 	UPROPERTY()
 	ADW_CharacterBase* Character;
+
+	/*UPROPERTY()
+	class UDW_AttributeComponent* Attr;*/
 };
