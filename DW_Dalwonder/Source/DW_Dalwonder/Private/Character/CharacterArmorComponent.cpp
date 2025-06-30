@@ -40,27 +40,27 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	if (ItemType == EEquipSlotType::Helmet)
 	{
 		Helmet = Item;
-		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Helmet));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Helmet));
 	}
 	else if (ItemType == EEquipSlotType::Chest)
 	{
 		Armor = Item;
-		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Armor));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Armor));
 	}
 	else if (ItemType == EEquipSlotType::Legs)
 	{
 		Pants = Item;
-		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Pants));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Pants));
 	}
 	else if (ItemType == EEquipSlotType::Gloves)
 	{
 		Glove = Item;
-		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Glove));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Glove));
 	}
 	else if (ItemType == EEquipSlotType::Boots)
 	{
 		Boots = Item;
-		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Boots));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Boots));
 	}
 	else if (ItemType == EEquipSlotType::Weapon)
 	{
@@ -87,4 +87,11 @@ UStaticMesh* UCharacterArmorComponent::GetItemStaticMesh(UItemBase* Item) const
 	FString ItemCodeStr = Item->ItemCode;
 	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
 	return ItemData.ItemMesh.Get();
+}
+
+USkeletalMesh* UCharacterArmorComponent::GetItemSkeletalMesh(UItemBase* Item) const
+{
+	FString ItemCodeStr = Item->ItemCode;
+	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
+	return ItemData.ItemSkMesh.Get();
 }
