@@ -308,6 +308,8 @@ public:
 		AActor* DamageCauser
 	) override;
 
+	void RemoveDropVFX();
+
 	// 플레이어 캐릭터를 캐스팅합니다.
 	virtual void CastPlayerCharacter() override;
 
