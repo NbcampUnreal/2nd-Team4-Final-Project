@@ -13,11 +13,9 @@ void UDW_AttributeComponent::BeginPlay()
 
     if (AActor* Owner = GetOwner())
     {
-        StatComponent = Owner->FindComponentByClass<UCharacterStatComponent>();
         if (!StatComponent)
         {
-            UE_LOG(LogTemp, Error, TEXT("[Attribute] StatComponent not found on %s"), *Owner->GetName());
-            return;
+            StatComponent = Owner->FindComponentByClass<UCharacterStatComponent>();
         }
 
         // StatComponent에서 Base값 가져와서 AttributeComponent에 복사
@@ -29,12 +27,24 @@ void UDW_AttributeComponent::BeginPlay()
         BaseStaminaRegen = StatComponent->GetBaseStaminaGenRate();
         BaseDefense = StatComponent->GetBaseDefense();
 
-		// 추가데미지는 공격력 관련
-        /*BaseDamageToLowHPEnemies = StatComponent->GetAttack();
-        BaseDamageToHighHPEnemies = StatComponent->GetAttack();
-        BaseDamageToNormalEnemies = StatComponent->GetAttack();
-        BaseDamageToBoss = StatComponent->GetAttack();*/
+        // Attribute값 Stat으로 보내기
+        StatComponent->SetAttrBonus(EAttrType::MaxHealth, BonusMaxHealth);
+        StatComponent->SetAttrBonus(EAttrType::MaxStamina, BonusMaxStamina);
+        StatComponent->SetAttrBonus(EAttrType::StaminaRegen, BonusStaminaRegen);
+        StatComponent->SetAttrBonus(EAttrType::HealthRegen, BonusHealthRegen);
+        StatComponent->SetAttrBonus(EAttrType::Defense, BonusDefense);
     }
+}
+
+void UDW_AttributeComponent::ApplyAllBonusToStat()
+{
+    if (!StatComponent) return;
+
+    StatComponent->SetAttrBonus(EAttrType::MaxHealth, BonusMaxHealth);
+    StatComponent->SetAttrBonus(EAttrType::MaxStamina, BonusMaxStamina);
+    StatComponent->SetAttrBonus(EAttrType::HealthRegen, BonusHealthRegen);
+    StatComponent->SetAttrBonus(EAttrType::StaminaRegen, BonusStaminaRegen);
+    StatComponent->SetAttrBonus(EAttrType::Defense, BonusDefense);
 }
 
 void UDW_AttributeComponent::ClearAllBonuses()

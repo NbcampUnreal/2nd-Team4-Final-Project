@@ -5,6 +5,7 @@
 #include "Engine/GameInstance.h"
 #include "TmpSaveData.h"
 #include "UI/Component/QuestDatabase.h"
+#include "BitmaskFogData.h"
 #include "DW_GameInstance.generated.h"
 
 class UDW_SaveGame;
@@ -44,6 +45,14 @@ public:
     //Getter
 	UItemDataManager* GetItemDataManager() const { return ItemDataManager; }
 
+    //지도 Getter, Setter
+    /** 밝힌 그리드 비트마스크에 기록 */
+    UFUNCTION(BlueprintCallable)
+    void RevealGrid(FName MapName, int32 X, int32 Y);
+
+    /** 비트마스크를 그리드 집합으로 변환 */
+    UFUNCTION(BlueprintCallable)
+    void GetRevealedGridSet(FName MapName, TSet<FIntPoint>& OutGridSet) const;
 public:
 
     UPROPERTY()
@@ -74,6 +83,10 @@ private:
     // 맵 이동용 임시저장데이터
     UPROPERTY()
     FTmpSaveData CachedTempSaveData;
+
+    // 지도 저장(Key : 맵이름, Value : BitmaskFogData)
+    UPROPERTY()
+    TMap<FName, FBitmaskFogData> RevealedFogMap;
 
 protected:
     UPROPERTY()
