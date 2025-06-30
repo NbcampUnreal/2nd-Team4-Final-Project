@@ -15,7 +15,7 @@ class DW_DALWONDER_API UArachnidChangeTrace : public UAnimNotify
 	GENERATED_BODY()
 	
 public:
-	// 0 : Front, 1 : Right, 2 : Left
+	// 0 : Front, 1 : Right, 2 : Left, 3 : Rush
 	UPROPERTY(EditAnywhere, Category = "Value")
 	int32 Value = 0;
 
