@@ -5,7 +5,6 @@
 #include "UI/Widget/CustomButtonWidget.h"
 #include "UI/Widget/SavedGameWidget.h"
 #include "DW_GmBase.h"
-#include "DW_GmInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "TimerManager.h"
@@ -25,7 +24,7 @@ void UMainWidget::NativeConstruct()
 		// 저장 파일 존재 여부 확인
 		const FString SaveSlotName = TEXT("DW_SaveData");
 		const int32 UserIndex = 0;
-
+		//없으면 비활성화
 		if (!UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
 		{
 			ContinueGameButton->SetIsEnabled(false);
