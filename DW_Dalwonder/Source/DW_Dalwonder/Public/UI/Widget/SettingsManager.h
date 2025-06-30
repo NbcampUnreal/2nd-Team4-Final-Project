@@ -1,54 +1,90 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DW_SaveGame.h"
+#include "InputMappingContext.h"
+#include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 #include "UObject/NoExportTypes.h"
+#include "DW_SaveGame.h"
+#include "InputAction.h"
 #include "SettingsManager.generated.h"
 
 /**
- * 
+ * 게임 설정을 관리하는 객체
+ * GameInstance에서 소유하며, UI 및 시스템 연동에 사용됨
  */
 UCLASS()
 class DW_DALWONDER_API USettingsManager : public UObject
 {
 	GENERATED_BODY()
+
 public:
+	// 생성자 및 초기화
 	USettingsManager();
-	/** 초기화 (GameInstance에서 호출) */
 	void Initialize();
 
-	/** 현재 설정값 적용 */
-	void ApplySettings();
-
-	/** 설정 저장 */
+	// 저장 & 불러오기
+	void SaveToSlot();
 	void SaveSettingsTo(UDW_SaveGame* Save);
-
-	/** 설정 로드 */
 	void LoadSettings();
 	void LoadSettingsFrom(UDW_SaveGame* Save);
+	void ApplySettings();
 
-	/** 개별 적용 함수 예시 */
+	// 그래픽 설정
 	void ApplyWindowMode(int32 ModeIndex);
 	void ApplyVSync(bool bEnable);
 	void ApplyResolution(FIntPoint Resolution);
 	void ApplyFrameLimit(float FPS);
 	void ApplyMotionBlur(bool bEnable);
 	void ApplyShadows(bool bEnable);
-	void ApplyMouseSensitivity(float InSensitivity);
+
+	// 오디오 설정
 	void ApplyVolumeMaster(float Value);
 	void ApplyVolumeBGM(float Value);
 	void ApplyVolumeSFX(float Value);
 	void ApplyVolumeUI(float Value);
-	void SaveToSlot();
 
-	USoundMix* MasterMix = nullptr;
-	USoundClass* MasterClass = nullptr;
-	USoundClass* BGMClass = nullptr;
-	USoundClass* SFXClass = nullptr;
-	USoundClass* UIClass = nullptr;
+	void SetVolumeMaster(float Value);
+	void SetVolumeBGM(float Value);
+	void SetVolumeSFX(float Value);
+	void SetVolumeUI(float Value);
 
+	// 컨트롤 설정
+	void ApplyMouseSensitivity(float InSensitivity);
+	void SetMouseSensitivity(float NewSensitivity);
+	float GetMouseSensitivity() const;
+
+	void SetCustomKey(FName ActionName, FKey NewKey);
+	FKey GetKeyForAction(FName ActionName) const;
+	FKey GetDefaultKeyForAction(FName ActionName) const;
+	TMap<FName, FKey> GetDefaultKeyMap() const;
+	void ResetKeyBindingsToDefault();
+	void ApplyKeyBindingsToInputSystem();
+	UInputAction* GetInputActionByName(FName ActionName) const;
+	
+	/** Enhanced Input 매핑을 위한 컨텍스트 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputMappingContext* DefaultMappingContext;
+
+	/** 액션 이름을 키로 하는 InputAction 맵 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TMap<FName, UInputAction*> InputActionMap;
+
+	// Getter 함수들
+	int32 GetWindowModeIndex() const;
+	FIntPoint GetResolution() const;
+	float GetFrameRateLimit() const;
+	bool IsVSyncEnabled() const;
+	bool IsMotionBlurEnabled() const;
+	bool IsShadowEnabled() const;
+
+	float GetVolumeMaster() const;
+	float GetVolumeBGM() const;
+	float GetVolumeSFX() const;
+	float GetVolumeUI() const;
+	USoundMix* GetMasterMix() const;
+
+protected:
+	// 에셋 (디자인 타임에 할당 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	TSoftObjectPtr<USoundMix> MasterMixAsset;
 
@@ -65,41 +101,40 @@ public:
 	TSoftObjectPtr<USoundClass> UIClassAsset;
 
 private:
-	/** 저장용 내부 변수들 */
-	int32 WindowModeIndex;
-	FIntPoint ResolutionValue;
+	// 로드된 사운드 클래스 및 믹스 (런타임에만 필요)
+	UPROPERTY()
+	USoundMix* MasterMix = nullptr;
 
+	UPROPERTY()
+	USoundClass* MasterClass = nullptr;
+
+	UPROPERTY()
+	USoundClass* BGMClass = nullptr;
+
+	UPROPERTY()
+	USoundClass* SFXClass = nullptr;
+
+	UPROPERTY()
+	USoundClass* UIClass = nullptr;
+
+	// 설정값 저장용 내부 변수
+	int32 WindowModeIndex = 0;
+	FIntPoint ResolutionValue = { 1920, 1080 };
+	float FrameRateLimit = 60.0f;
+	bool bVSyncEnabled = false;
+	bool bMotionBlurEnabled = true;
+	bool bShadowEnabled = true;
+
+	// 컨트롤
 	float MouseSensitivity = 1.0f;
+
+	// 오디오
 	float VolumeMaster = 100.f;
 	float VolumeBGM = 100.f;
 	float VolumeSFX = 100.f;
 	float VolumeUI = 100.f;
-	float FrameRateLimit;
-	bool bVSyncEnabled;
-	bool bMotionBlurEnabled;
-	bool bShadowEnabled;
 
-	
-public:
-	// 그래픽
-    int32 GetWindowModeIndex() const { return WindowModeIndex; }
-    FIntPoint GetResolution() const { return ResolutionValue; }
-	float GetFrameRateLimit() const { return FrameRateLimit; }
-    bool IsVSyncEnabled() const { return bVSyncEnabled; }
-    bool IsMotionBlurEnabled() const { return bMotionBlurEnabled; }
-    bool IsShadowEnabled() const { return bShadowEnabled; }
-	// 컨트롤러
-	float GetMouseSensitivity() const { return MouseSensitivity; }
-	void SetMouseSensitivity(float NewSensitivity) { MouseSensitivity = NewSensitivity; }
-	// 사운드
-	USoundMix* GetMasterMix() const { return MasterMix; }
-	float GetVolumeMaster() const { return VolumeMaster; }
-	float GetVolumeBGM() const { return VolumeBGM; }
-	float GetVolumeSFX() const { return VolumeSFX; }
-	float GetVolumeUI() const { return VolumeUI; }
-	void SetVolumeMaster(float Value);
-	void SetVolumeBGM(float Value);
-	void SetVolumeSFX(float Value);
-	void SetVolumeUI(float Value);
-
+	// 키 매핑
+	UPROPERTY()
+	TMap<FName, FKey> CustomKeyMap;
 };

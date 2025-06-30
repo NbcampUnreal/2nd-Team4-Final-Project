@@ -155,4 +155,7 @@ void UDW_SkillManager::ApplySkillEffect(const FSkillData& SkillData, int32 Delta
     else if (Prefix == TEXT("nor")) AddBonus(AttrComp->BonusDamageToNormalEnemies, AttrComp->BaseDamageToNormalEnemies);
     else if (Prefix == TEXT("bos")) AddBonus(AttrComp->BonusDamageToBoss, AttrComp->BaseDamageToBoss);
     else if (Prefix == TEXT("las")) AttrComp->bHasLastStandSkill = true;
+
+    // 스탯 갱신해주기(추가뎀 같은 경우는 데미지에서 따로 계산)
+	AttrComp->ApplyAllBonusToStat();
 }

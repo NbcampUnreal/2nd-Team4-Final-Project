@@ -9,6 +9,7 @@
 #include "EngineUtils.h"
 #include "Landscape.h"
 #include "Character/DW_CharacterBase.h"
+#include "DW_GameInstance.h"
 
 // Sets default values
 AFogManager::AFogManager()
@@ -23,6 +24,8 @@ void AFogManager::BeginPlay()
     Super::BeginPlay();
 
     InitFog();
+
+    ApplyRevealedFogFromGameInstance();
 
     // 일정 주기로 TryRevealFog 실행(위치 확인하고 안개밝히기)
     GetWorld()->GetTimerManager().SetTimer(
@@ -99,32 +102,14 @@ void AFogManager::TryRevealFog()
         LastRevealedGrid = CurrentGrid;
 
         UpdateFogAtPlayerLocation(WorldLocation);
-        RevealedGrids.Add(CurrentGrid);
 
-        UE_LOG(LogTemp, Log, TEXT("Revealed Grid: (%d, %d)"), GridX, GridY);
+        // BitMask저장
+        if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+        {
+            FName MapName = FName(FPackageName::GetShortName(GetWorld()->GetMapName()));
+            GI->RevealGrid(MapName, CurrentGrid.X, CurrentGrid.Y);
+        }
     }
-
-    //ADW_CharacterBase* PlayerChar = Cast<ADW_CharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-    //if (!PlayerChar) return;
-
-    //FVector WorldLocation = PlayerChar->GetActorLocation();
-    //FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
-
-    //int32 GridX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
-    //int32 GridY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
-
-    //FIntPoint CurrentGrid(GridX, GridY);
-
-    //// 새로운 셀에 도달한 경우에만 밝히기
-    //if (CurrentGrid != LastRevealedGrid)
-    //{
-    //    LastRevealedGrid = CurrentGrid;
-
-    //    UpdateFogAtPlayerLocation(WorldLocation);
-    //    RevealedGrids.Add(CurrentGrid);
-
-    //    UE_LOG(LogTemp, Log, TEXT("Revealed Grid: (%d, %d)"), GridX, GridY);
-    //}
 }
 
 void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
@@ -159,37 +144,24 @@ void AFogManager::UpdateFogAtPlayerLocation(const FVector& WorldLocation)
     }
 
     UpdateTexture();
+}
 
-    //FVector2D RelativeLocation = FVector2D(WorldLocation.X, WorldLocation.Y) + GridOrigin;
+void AFogManager::ApplyRevealedFogFromGameInstance()
+{
+    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        FName MapName = FName(FPackageName::GetShortName(GetWorld()->GetMapName()));
 
-    //int32 CenterX = FMath::FloorToInt(RelativeLocation.X / PixelSize);
-    //int32 CenterY = FMath::FloorToInt(RelativeLocation.Y / PixelSize);
-    //int32 RadiusInPixels = FMath::CeilToInt(RevealRadius / PixelSize);
+        TSet<FIntPoint> GridSet;
+        GI->GetRevealedGridSet(MapName, GridSet);
 
-    //for (int32 Y = -RadiusInPixels; Y <= RadiusInPixels; ++Y)
-    //{
-    //    for (int32 X = -RadiusInPixels; X <= RadiusInPixels; ++X)
-    //    {
-    //        int32 GridX = CenterX + X;
-    //        int32 GridY = CenterY + Y;
-
-    //        float DistSqr = X * X + Y * Y;
-    //        if (DistSqr > RadiusInPixels * RadiusInPixels)
-    //            continue;
-
-    //        // 좌표 보정
-    //        int32 TextureX = GridY;
-    //        int32 TextureY = TextureSize - GridX - 1;
-
-    //        if (TextureX < 0 || TextureY < 0 || TextureX >= TextureSize || TextureY >= TextureSize)
-    //            continue;
-
-    //        int32 Index = TextureY * TextureSize + TextureX;
-    //        Pixels[Index] = FColor::White;
-    //    }
-    //}
-
-    //UpdateTexture();
+        for (const FIntPoint& Grid : GridSet)
+        {
+            FVector2D WorldXY = FVector2D(Grid) * PixelSize + GridOrigin;
+            FVector WorldPos = FVector(WorldXY.X, WorldXY.Y, 0.f);
+            UpdateFogAtPlayerLocation(WorldPos);
+        }
+    }
 }
 
 void AFogManager::UpdateTexture()

@@ -132,6 +132,34 @@ void UDissolveComponent::DissolveStart(int32 NiagaraIndex, int32 TextureIndex, f
 
 }
 
+void UDissolveComponent::ArachnidUndead(int32 NiagaraIndex, int32 TextureIndex, float Duration)
+{
+	if (!MeshComp) return;
+
+	SetComponentTickEnabled(false);
+
+	if (DissolveNiagaraSystems[NiagaraIndex])
+	{
+		NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			DissolveNiagaraSystems[NiagaraIndex],
+			MeshComp,
+			NAME_None, //FName("pelvis")
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::SnapToTarget,
+			false
+		);
+	}
+
+	NiagaraComp->SetVariableFloat(FName("Amount"), 0.5f);
+
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(ArachnidTimer, this, &UDissolveComponent::ArachnidUndeadEnd, DissolveDuration, false);
+	}
+
+}
+
 void UDissolveComponent::DissolveZero()
 {
 	bIsDissolveFirst = false;
@@ -147,5 +175,10 @@ void UDissolveComponent::DissolveEnd()
 {
 	//PrimaryComponentTick.bCanEverTick = false;
 	SetComponentTickEnabled(false);
+}
+
+void UDissolveComponent::ArachnidUndeadEnd()
+{
+	//NiagaraComp->SetVariableFloat(FName("Amount"), 0.f);
 }
 

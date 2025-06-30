@@ -46,11 +46,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UndeadOff();
 
+	void SpawnDecal(UMaterialInterface* DecalMaterial);
+
 protected:
 	void Dead() override;
 
 protected:
+	void DissolveLogic();
+	void DestroyLogic();
+
 	void Undead();
+
+	void UndeadEffect();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
@@ -69,6 +76,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arachnid")
 	float RotationDot;
 
+public:
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+	class UDissolveComponent* DissolveComponent;
+
 protected:
 	bool bCanRotate = true;
 	bool bIsJumping = false;
@@ -85,5 +96,8 @@ protected:
 	float CurrentYaw;
 	
 	FTimerHandle UndeadTimerHandle;
+	FTimerHandle UndeadEffectTimerHandle;
+	FTimerHandle DeadTimerHandle;
+	FTimerHandle DissolveTimerHandle;
 
 };

@@ -9,6 +9,8 @@
 #include "ItemBase.h"
 #include "WorldItemActor.generated.h"
 
+class ADW_MonsterBase;
+
 class UWidgetComponent;
 class UStaticMeshComponent;
 
@@ -43,7 +45,7 @@ public:
     TSubclassOf<UUserWidget> InteractionWidgetClass; // 여기에 UInteractionprompt의 Blueprint 클래스를 지정합니다.
     
     // 아이템 시각적 표시 
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* MeshComponent;
 
     // 감지 범위 
@@ -68,7 +70,13 @@ public:
     // 실제 상호작용 처리
     void Interact(class ADW_CharacterBase* PlayerCharacter);
 
+    void SetOwnerMonster(ADW_MonsterBase* InOwnerMonster);
+    
 	int32 GetItemCount() const { return ItemCount; }
 
     void SetItemCount(int32 changevalue) { ItemCount = changevalue; }
+
+protected:
+    UPROPERTY()
+    TObjectPtr<ADW_MonsterBase> OwnerMonster;
 };

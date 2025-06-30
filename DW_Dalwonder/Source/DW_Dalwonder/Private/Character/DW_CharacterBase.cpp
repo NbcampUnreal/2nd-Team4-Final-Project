@@ -68,8 +68,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
+	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 
 	// SceneCaptureComponent 초기화
 	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));
@@ -194,13 +194,37 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
 		{
-			if (PlayerController->MoveAction)
+			if (PlayerController->MoveForwardAction)
 			{
 				EnhancedInputComponent->BindAction(
-					PlayerController->MoveAction,
+					PlayerController->MoveForwardAction,
 					ETriggerEvent::Triggered,
 					this,
-					&ADW_CharacterBase::Move);
+					&ADW_CharacterBase::MoveForward);
+			}
+			if (PlayerController->MoveBackwardAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveBackwardAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveBackward);
+			}
+			if (PlayerController->MoveLeftAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveLeftAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveLeft);
+			}
+			if (PlayerController->MoveRightAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveRightAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveRight);
 			}
 
 			if (PlayerController->LookAction)
@@ -340,27 +364,62 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
-void ADW_CharacterBase::Move(const FInputActionValue& Value)
+void ADW_CharacterBase::MoveForward(const FInputActionValue& Value)
 {
-	if (!Controller) return;
+	if (!Controller || !bCanControl) return;
 
-	if (!bCanControl) return;
+	const float AxisValue = Value.Get<float>();
+	if (FMath::IsNearlyZero(AxisValue)) return;
 
-	FVector2D MoveInput = Value.Get<FVector2D>();
-	FRotator ControlRotation = Controller->GetControlRotation();
-	FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
-	
-	if (!FMath::IsNearlyZero(MoveInput.X))
-	{
-		FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(ForwardVector, MoveInput.X);
-	}
-	if (!FMath::IsNearlyZero(MoveInput.Y))
-	{
-		FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(RightVector, MoveInput.Y);
-	}
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(Direction, AxisValue);
 }
+
+void ADW_CharacterBase::MoveBackward(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = -Value.Get<float>(); // 반전
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(Direction, AxisValue);
+}
+
+void ADW_CharacterBase::MoveLeft(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = -Value.Get<float>(); // 반전
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	AddMovementInput(Direction, AxisValue);
+}
+
+void ADW_CharacterBase::MoveRight(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = Value.Get<float>();
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	AddMovementInput(Direction, AxisValue);
+}
+
 
 void ADW_CharacterBase::Look(const FInputActionValue& Value)
 {
@@ -572,6 +631,22 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 				}
 			}
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
+		}
+	}
+}
+
+void ADW_CharacterBase::SetWeaponMesh(UStaticMesh* WeaponMesh)
+{
+	if (IsValid(Weapon) && IsValid(WeaponMesh))
+	{
+		AActor* WeaponActor = Weapon->GetChildActor();
+		if (IsValid(WeaponActor))
+		{
+			UStaticMeshComponent* StaticMesh = WeaponActor->FindComponentByClass<UStaticMeshComponent>();
+			if (IsValid(StaticMesh))
+			{
+				StaticMesh->SetStaticMesh(WeaponMesh);
+			}
 		}
 	}
 }
