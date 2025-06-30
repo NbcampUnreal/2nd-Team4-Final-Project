@@ -36,25 +36,8 @@ protected:
 	UStaticMesh* GetItemStaticMesh(UItemBase* Item) const;
 
 	USkeletalMesh* GetItemSkeletalMesh(UItemBase* Item) const;
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Helmet;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Armor;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Pants;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Glove;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Boots;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
-	UItemBase* Weapon;
-
+public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	ADW_CharacterBase* Character;
 
