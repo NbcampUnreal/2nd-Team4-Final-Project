@@ -35,6 +35,7 @@ protected:
 
 	UStaticMesh* GetItemStaticMesh(UItemBase* Item) const;
 
+	USkeletalMesh* GetItemSkeletalMesh(UItemBase* Item) const;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
 	UItemBase* Helmet;
