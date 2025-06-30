@@ -491,7 +491,7 @@ if (SpawnedVFX)
 					DestroyVFXTimerHandle,    // 타이머를 식별할 핸들
 					this,                     // 함수를 호출할 객체 (자기 자신)
 					&ADW_MonsterBase::DestroySpawnedVFX, // 10초 뒤에 호출할 함수
-					10.0f,                    // 지연 시간 (초)
+					1.0f,                    // 지연 시간 (초)
 					false                     // 반복하지 않음
 				);
 }
