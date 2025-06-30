@@ -29,11 +29,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DissolveStart(int32 NiagaraIndex, int32 TextureIndex, float Duration);
 
+	UFUNCTION(BlueprintCallable)
+	void ArachnidUndead(int32 NiagaraIndex, int32 TextureIndex, float Duration);
+
 protected:
 	// 디졸브가 시작한 시점에서 Duration만큼이 지난 뒤 실행할 함수.
 	void DissolveZero();
 	// DissolveZero가 실행되고 1초에 걸쳐 완전히 이펙트를 끝낼 함수.
 	void DissolveEnd();
+
+	void ArachnidUndeadEnd();
 
 public:
 	// 디졸브 텍스쳐입니다. 머터리얼과 나이아가라 시스템 모두 할당됩니다.
@@ -85,6 +90,7 @@ private:
 	float EndValue = 0.f;
 	float EndValue_NS = -1.f;
 
+	FTimerHandle ArachnidTimer;
 	FTimerHandle ZeroTimer;
 	FTimerHandle EndTimer;
 	
