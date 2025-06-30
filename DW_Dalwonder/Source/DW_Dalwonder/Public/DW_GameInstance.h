@@ -67,6 +67,9 @@ public:
     UPROPERTY(BlueprintReadWrite, Category = "Game Start Type")
     bool bIsNewGame = true; // 기본값은 새 게임
 
+    UPROPERTY(BlueprintReadWrite)
+    bool bIsOpenLevel = false; // 기본값은 맵이동X
+
     UPROPERTY()
     FName PendingLevelName;
 

@@ -20,13 +20,16 @@ void UCharacterStatComponent::BeginPlay()
 	RecalculateAllTotalStats();
 
 	// Health와 Stamina를 TotalMaxHealth/TotalMaxStamina로 초기화
-    // 초기화 조건 추가 (처음 시작한 경우만)
-    if (const auto* GI = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance()))
+    // 초기화 조건 추가 (처음 시작한 경우만) + 맵이동시에도 호출할필요도 없음
+    if (const UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance()))
     {
         if (GI->bIsNewGame)
         {
-            Health = TotalMaxHealth;
-            Stamina = TotalMaxStamina;
+            if (!GI->bIsOpenLevel)
+            {
+                Health = TotalMaxHealth;
+                Stamina = TotalMaxStamina;
+            }
         }
     }
 

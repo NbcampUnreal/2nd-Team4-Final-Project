@@ -4,6 +4,7 @@
 
 
 UItemCraftManager::UItemCraftManager()
+	: CraftDataTable(nullptr)
 {
 	
 }
@@ -20,21 +21,27 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 		return false;
 	}
 
-	// 인벤토리에 충분한 양의 재료가 있는지 확인
+	// 인벤토리에 충분한 양의 재료가 있는지 확인 후 소진
 	for (FCraftItemData& Ingredient : CraftRecipe->IngredientItems)
 	{
-		
-	}
+		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemClass);
+		if (ItemIndex == -1)
+		{
+			return false;
+		}
 
-	// 인벤토리에서 재료 소진
-	for (const FCraftItemData& Ingredient : CraftRecipe->IngredientItems)
-	{
-		//Inventory->DropItemInSlot(Ingredient.ItemClass, Ingredient.Amount);
+		if (Inventory->InventorySlots[ItemIndex].Quantity < Ingredient.Amount)
+		{
+			return false;
+		}
+
+		Inventory->DropItemInSlot(ItemIndex, Ingredient.Amount);
 	}
 
 	// 확률에 따른 제작 성공
+	float BonusChance = 0.f;	// 스타캐처 보너스 확률
 	float RandomFloat = FMath::FRand();
-	if (RandomFloat > CraftRecipe->CraftProbability)
+	if (RandomFloat >  CraftRecipe->CraftProbability + BonusChance)
 	{
 		return false;
 	}

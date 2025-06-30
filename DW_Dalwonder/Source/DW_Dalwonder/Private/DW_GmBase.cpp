@@ -66,8 +66,13 @@ void ADW_GmBase::BeginPlay()
 
     GI->LastPortalType = EPortalType::None;
 
-    // 게임 로드시 저장 데이터 적용
-    if (!GI->bIsNewGame)
+    // 맵이동시 ApplyTempDataAfterLevelLoad 기본값 false라서 게임 시작시에는 영향 X
+    if (GI->bIsOpenLevel)
+    {
+        GI->ApplyTempDataAfterLevelLoad();
+        GI->bIsOpenLevel = false;
+    }
+	else if (!GI->bIsNewGame)   // 게임 불러오면 동작 새게임에는 영향 X
     {
         GI->ApplyLoadedData();
     }

@@ -381,23 +381,49 @@ void UDW_GameInstance::CacheTempDataBeforeLevelChange()
     CachedTempSaveData.PlayerLocation = Player->GetActorLocation();
     CachedTempSaveData.PlayerRotation = Player->GetActorRotation();
 
-    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    if (UCharacterStatComponent* StatComp = Player->FindComponentByClass<UCharacterStatComponent>())
     {
-        Attr->SaveData(CachedTempSaveData.TempAttributes);
+		FTmpCharacterStatData& TempStatData = CachedTempSaveData.TempStatData;
+        TempStatData.Health = StatComp->GetHealth();
+        TempStatData.Stamina = StatComp->GetStamina();
+
+		TempStatData.CurrentWeight = StatComp->GetCurrentWeight();
+		TempStatData.BaseMaxHealth = StatComp->GetBaseMaxHealth();
+		TempStatData.BaseHealthGenRate = StatComp->GetBaseHealthGenRate();
+		TempStatData.BaseMaxStamina = StatComp->GetBaseMaxStamina();
+		TempStatData.BaseStaminaGenRate = StatComp->GetBaseStaminaGenRate();
+		TempStatData.BaseAttack = StatComp->GetBaseAttack();
+		TempStatData.BaseDefense = StatComp->GetBaseDefense();
+		TempStatData.BaseAttackSpeed = StatComp->GetBaseAttackSpeed();
+		TempStatData.BaseWalkSpeed = StatComp->GetBaseWalkSpeed();
+		TempStatData.BaseMaxWeight = StatComp->GetBaseMaxWeight();
+		TempStatData.EquipmentBonusMaxHealth = StatComp->GetEquipmentBonusMaxHealth();
+		TempStatData.EquipmentBonusHealthGenRate = StatComp->GetEquipmentBonusHealthGenRate();
+		TempStatData.EquipmentBonusMaxStamina = StatComp->GetEquipmentBonusMaxStamina();
+		TempStatData.EquipmentBonusStaminaGenRate = StatComp->GetEquipmentBonusStaminaGenRate();
+		TempStatData.EquipmentBonusAttack = StatComp->GetEquipmentBonusAttack();
+		TempStatData.EquipmentBonusDefense = StatComp->GetEquipmentBonusDefense();
+		TempStatData.EquipmentBonusAttackSpeed = StatComp->GetEquipmentBonusAttackSpeed();
+		TempStatData.EquipmentBonusWalkSpeed = StatComp->GetEquipmentBonusWalkSpeed();
+		TempStatData.EquipmentBonusMaxWeight = StatComp->GetEquipmentBonusMaxWeight();
     }
 
-    if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+    if (UDW_SkillComponent* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
     {
-        CachedTempSaveData.TempSkillStates = Skill->SkillStateMap;
+		CachedTempSaveData.TempSkillData.SkillStates = Skill->SkillStateMap;
+		CachedTempSaveData.TempSkillData.CurrentSP = Skill->CurrentSP;
+		CachedTempSaveData.TempSkillData.LevelUpCount = Skill->LevelUpCount;
+		CachedTempSaveData.TempSkillData.CurrentMastery = Skill->CurrentMastery;
+		CachedTempSaveData.TempSkillData.MaxMastery = Skill->MaxMastery;
     }
 
-    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    if (UQuestManagerComponent* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
     {
         CachedTempSaveData.TempAcceptedQuests = Quest->GetActiveQuests();
         CachedTempSaveData.TempCompletedQuests = Quest->GetCompletedQuests();
     }
 
-    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
     {
         CachedTempSaveData.TempInventory.TempInventorySlots = Inv->InventorySlots;
         CachedTempSaveData.TempInventory.TempInventorySlotQuantity = Inv->InventorySlotQuantity;
@@ -410,7 +436,7 @@ void UDW_GameInstance::CacheTempDataBeforeLevelChange()
         }
     }
 
-    if (auto* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
+    if (UCharacterArmorComponent* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
     {
         CachedTempSaveData.TempArmor.Helmet = TSoftObjectPtr<UItemBase>(Armor->Helmet);
         CachedTempSaveData.TempArmor.Armor = TSoftObjectPtr<UItemBase>(Armor->Armor);
@@ -446,19 +472,9 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
 {
 	check(Player); // Player가 nullptr이 아니어야 함
 
-    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    if (UCharacterStatComponent* Stat = Player->FindComponentByClass<UCharacterStatComponent>())
     {
-        Attr->LoadData(CachedTempSaveData.TempAttributes);
-        if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
-        {
-            Skill->SkillStateMap = CachedTempSaveData.TempSkillStates;
-            Skill->ApplyAllSkillBonuses(Attr);
-        }
-    }
-
-    if (auto* Stat = Player->FindComponentByClass<UCharacterStatComponent>())
-    {
-        const auto& In = CachedTempSaveData.TempStatData;
+        const FTmpCharacterStatData& In = CachedTempSaveData.TempStatData;
         Stat->SetHealth(In.Health);
         Stat->SetStamina(In.Stamina);
         Stat->SetCurrentWeight(In.CurrentWeight);
@@ -482,15 +498,32 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         Stat->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
         Stat->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
         Stat->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
+
+        Stat->RecalculateAllTotalStats();
+        Stat->SetHealth(In.Health);
     }
 
-    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    if (UDW_AttributeComponent* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    {
+        if (UDW_SkillComponent* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+        {
+			// 스킬 상태 복원
+			Skill->CurrentSP = CachedTempSaveData.TempSkillData.CurrentSP;
+			Skill->LevelUpCount = CachedTempSaveData.TempSkillData.LevelUpCount;
+			Skill->CurrentMastery = CachedTempSaveData.TempSkillData.CurrentMastery;
+			Skill->MaxMastery = CachedTempSaveData.TempSkillData.MaxMastery;
+            Skill->SkillStateMap = CachedTempSaveData.TempSkillData.SkillStates;
+            Skill->ApplyAllSkillBonuses(Attr);
+        }
+    }
+
+    if (UQuestManagerComponent* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
     {
         Quest->AcceptedQuests = CachedTempSaveData.TempAcceptedQuests;
         Quest->CompletedQuests = CachedTempSaveData.TempCompletedQuests;
     }
 
-    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
     {
         Inv->InventorySlots = CachedTempSaveData.TempInventory.TempInventorySlots;
         Inv->InventorySlotQuantity = CachedTempSaveData.TempInventory.TempInventorySlotQuantity;
@@ -505,7 +538,7 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         }
     }
 
-    if (auto* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
+    if (UCharacterArmorComponent* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
     {
         Armor->Helmet = CachedTempSaveData.TempArmor.Helmet.Get();
         Armor->Armor = CachedTempSaveData.TempArmor.Armor.Get();

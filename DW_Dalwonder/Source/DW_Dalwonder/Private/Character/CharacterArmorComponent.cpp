@@ -7,7 +7,7 @@
 #include "Engine/DataTable.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
-	: Helmet(nullptr), Armor(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
+	: Helmet(nullptr), Armor(nullptr), Pants(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
 {
 	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
@@ -18,13 +18,16 @@ void UCharacterArmorComponent::BeginPlay()
 
 }
 
-void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
+bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
-	if (Item == nullptr) return;
+	if (Item == nullptr) return false;
 
 	UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance());
-	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)return;
-
+	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)
+	{
+		return false;
+	}
+	
 	FItemData* ItemData = GameInstance->GetItemDataManager()->ItemBaseDataTable->FindRow<FItemData>(
 		FName(*Item->ItemCode),
 		TEXT("Lookup ItemCode")
@@ -32,7 +35,7 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 	if (!ItemData || ItemData->ItemType != EItemType::Equipment)
 	{
-		return;
+		return false;
 	}
 
 	EEquipSlotType ItemType = ItemData->EquipSlot;
@@ -40,27 +43,27 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	if (ItemType == EEquipSlotType::Helmet)
 	{
 		Helmet = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Helmet));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Chest)
 	{
 		Armor = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Armor));
+		Character->Armor->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Legs)
 	{
 		Pants = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Pants));
+		Character->Pants->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Gloves)
 	{
 		Glove = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Glove));
+		Character->Glove->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Boots)
 	{
 		Boots = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Boots));
+		Character->Boots->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Weapon)
 	{
@@ -80,6 +83,7 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	}
 
 	Character->UpdateSkeletalMesh();
+	return true;
 }
 
 UStaticMesh* UCharacterArmorComponent::GetItemStaticMesh(UItemBase* Item) const
