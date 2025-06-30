@@ -21,7 +21,9 @@ class DW_DALWONDER_API UMapWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+    // 시작 및 종료
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
 
 	/** 마우스 휠 이벤트 처리 */
     virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

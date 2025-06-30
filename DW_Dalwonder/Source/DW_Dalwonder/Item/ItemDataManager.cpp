@@ -90,7 +90,7 @@ FItemData UItemDataManager::GetItemBaseData(FName ItemID, bool& bOutSuccess)
 	return FItemData();
 }
 
-const FItemData* UItemDataManager::GetItemData(FString InRowID) const
+const FItemData* UItemDataManager::GetItemData(const FString& InItemID) const
 {
     if (!ItemBaseDataTable) return nullptr;
 
