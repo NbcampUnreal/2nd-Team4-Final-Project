@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
+#include "DW_GameInstance.h"
 #include "EngineUtils.h"
 #include "Character/DW_PlayerController.h"
 #include "Character/DW_AnimInstanceBase.h"
@@ -26,6 +27,7 @@
 #include "UI/Widget/LockOnWidget.h"
 #include "Tracks/MovieSceneMaterialTrack.h"
 #include "Item/Interactionprompt.h"
+#include "UI/Widget/SettingsManager.h"
 #include "Components/WidgetComponent.h"
 
 
@@ -192,13 +194,37 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
 		{
-			if (PlayerController->MoveAction)
+			if (PlayerController->MoveForwardAction)
 			{
 				EnhancedInputComponent->BindAction(
-					PlayerController->MoveAction,
+					PlayerController->MoveForwardAction,
 					ETriggerEvent::Triggered,
 					this,
-					&ADW_CharacterBase::Move);
+					&ADW_CharacterBase::MoveForward);
+			}
+			if (PlayerController->MoveBackwardAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveBackwardAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveBackward);
+			}
+			if (PlayerController->MoveLeftAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveLeftAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveLeft);
+			}
+			if (PlayerController->MoveRightAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->MoveRightAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::MoveRight);
 			}
 
 			if (PlayerController->LookAction)
@@ -338,36 +364,83 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
-void ADW_CharacterBase::Move(const FInputActionValue& Value)
+void ADW_CharacterBase::MoveForward(const FInputActionValue& Value)
 {
-	if (!Controller) return;
+	if (!Controller || !bCanControl) return;
 
-	if (!bCanControl) return;
+	const float AxisValue = Value.Get<float>();
+	if (FMath::IsNearlyZero(AxisValue)) return;
 
-	FVector2D MoveInput = Value.Get<FVector2D>();
-	FRotator ControlRotation = Controller->GetControlRotation();
-	FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
-	
-	if (!FMath::IsNearlyZero(MoveInput.X))
-	{
-		FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(ForwardVector, MoveInput.X);
-	}
-	if (!FMath::IsNearlyZero(MoveInput.Y))
-	{
-		FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(RightVector, MoveInput.Y);
-	}
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(Direction, AxisValue);
 }
+
+void ADW_CharacterBase::MoveBackward(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = -Value.Get<float>(); // 반전
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(Direction, AxisValue);
+}
+
+void ADW_CharacterBase::MoveLeft(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = -Value.Get<float>(); // 반전
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	AddMovementInput(Direction, AxisValue);
+}
+
+void ADW_CharacterBase::MoveRight(const FInputActionValue& Value)
+{
+	if (!Controller || !bCanControl) return;
+
+	const float AxisValue = Value.Get<float>();
+	if (FMath::IsNearlyZero(AxisValue)) return;
+
+	const FRotator ControlRotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0.f, ControlRotation.Yaw, 0.f);
+
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	AddMovementInput(Direction, AxisValue);
+}
+
 
 void ADW_CharacterBase::Look(const FInputActionValue& Value)
 {
 	if (bIsLockOn) return;
-	
+
 	FVector2D LookInput = Value.Get<FVector2D>();
 
-	AddControllerYawInput(LookInput.X);
-	AddControllerPitchInput(LookInput.Y);
+	float Sensitivity = 1.f;
+	if (UWorld* World = GetWorld())
+	{
+		if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(World->GetGameInstance()))
+		{
+			if (const USettingsManager* SM = GI->GetSettingsManager())
+			{
+				Sensitivity = SM->GetMouseSensitivity();
+			}
+		}
+	}
+
+	AddControllerYawInput(LookInput.X * Sensitivity);
+	AddControllerPitchInput(LookInput.Y * Sensitivity);
 }
 
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)
@@ -534,7 +607,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttackSpeed());
 				}
 				else
 				{
@@ -550,7 +623,7 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 			{
 				if (CurrentCombatState == ECharacterCombatState::Attacking || CurrentCombatState == ECharacterCombatState::ComboWindow)
 				{
-					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttack());
+					AnimInstance->Montage_Play(Montage, StatComponent->GetTotalAttackSpeed());
 				}
 				else
 				{
@@ -558,6 +631,22 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 				}
 			}
 			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, Montage);
+		}
+	}
+}
+
+void ADW_CharacterBase::SetWeaponMesh(UStaticMesh* WeaponMesh)
+{
+	if (IsValid(Weapon) && IsValid(WeaponMesh))
+	{
+		AActor* WeaponActor = Weapon->GetChildActor();
+		if (IsValid(WeaponActor))
+		{
+			UStaticMeshComponent* StaticMesh = WeaponActor->FindComponentByClass<UStaticMeshComponent>();
+			if (IsValid(StaticMesh))
+			{
+				StaticMesh->SetStaticMesh(WeaponMesh);
+			}
 		}
 	}
 }
@@ -1527,6 +1616,8 @@ void ADW_CharacterBase::UpdateFootstepSurface()
 
 void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 {
+	if (bIsRidingVehicle) return;
+	
 	const FVector NewFootLocation = GetMesh()->GetSocketLocation(FootSocketName);
 	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
 	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
@@ -1545,6 +1636,35 @@ void ADW_CharacterBase::SpawnFootstepEffect(const FName FootSocketName) const
 			if (GetMesh()->DoesSocketExist(FootSocketName))
 			{
 				FootLocation = GetMesh()->GetSocketLocation(FootSocketName);
+			}
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());
+		}
+	}
+}
+
+void ADW_CharacterBase::SpawnFootstepEffect_H(const FName FootSocketName) const
+{
+	if (!bIsRidingVehicle) return;
+	
+	const FVector NewFootLocation = Vehicle->GetSocketLocation(FootSocketName);
+	const FVector NewTraceStart = NewFootLocation + FVector(0, 0, 100);
+	const FVector NewTraceEnd = NewFootLocation - FVector(0, 0, 500);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetMesh()->GetOwner());
+	Params.bReturnPhysicalMaterial = true;
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, NewTraceStart, NewTraceEnd, ECC_Visibility, Params))
+	{
+		if (UNiagaraSystem* const* FoundSystem = FootstepVFXMap.Find(CurrentSurfaceType))
+		{
+			FVector FootLocation = Hit.ImpactPoint;
+
+			if (Vehicle->DoesSocketExist(FootSocketName))
+			{
+				FootLocation = Vehicle->GetSocketLocation(FootSocketName);
 			}
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *FoundSystem, FootLocation, Hit.ImpactNormal.Rotation());

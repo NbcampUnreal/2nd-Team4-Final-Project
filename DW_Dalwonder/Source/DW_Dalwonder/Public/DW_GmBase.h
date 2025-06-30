@@ -7,6 +7,8 @@
 #include "DW_GmBase.generated.h"
 
 class UUserWidget;
+class UDataTable;
+class UDW_SkillManager;
 
 UCLASS()
 class DW_DALWONDER_API ADW_GmBase : public AGameModeBase
@@ -17,6 +19,8 @@ public:
     ADW_GmBase();
 
     virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 
     UFUNCTION(BlueprintCallable, Category = "UI") // UI 전체 관리
     void SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass);
@@ -36,6 +40,29 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void CloseLastPopupUI();
 
+	//안개
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Fog")
+	TSubclassOf<UUserWidget> FogOverlayWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Fog")
+	class UMaterialInterface* FogMaterialBase;
+
+private:
+	UPROPERTY()
+	class UUserWidget* FogWidget;
+	
+	UPROPERTY()
+	class UMaterialInstanceDynamic* FogMaterialInstance;
+	
+	UPROPERTY()
+	class AFogOfWarManager* FogManager;
+
+	//안개
+
+public:
+
     //차례로 닫고 마지막 ESC닫기용
     UUserWidget* CloseLastPopupUI_AndReturn();
 
@@ -51,9 +78,19 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> BossHUDWidgetClass;
 	
-	// UUserWidget* ActiveResultWidget;
+    // SkillManager 접근용 Getter
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    UDW_SkillManager* GetSkillManager() const { return SkillManager; }
 
 protected:
     UPROPERTY()
     UUserWidget* CurrentWidget;
+
+    // SkillManager 인스턴스
+    UPROPERTY()
+    UDW_SkillManager* SkillManager;
+
+    // SkillData 테이블
+    UPROPERTY(EditDefaultsOnly, Category = "Skill")
+    UDataTable* SkillDataTable;
 };

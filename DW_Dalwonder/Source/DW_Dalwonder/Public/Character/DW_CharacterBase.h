@@ -79,7 +79,16 @@ public:
 	// 📌 입력 처리 관련 함수
 	// -----------------------------
 	UFUNCTION()
-	void Move(const FInputActionValue& Value);             // 이동 입력
+	void MoveForward(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void MoveBackward(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void MoveLeft(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void MoveRight(const FInputActionValue& Value);           // 이동 입력
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);             // 마우스/패드 시점 회전 입력
@@ -109,7 +118,7 @@ public:
 	
 	AActor* GetWeapon() const { return Weapon->GetChildActor(); }
 
-	void SetWeapon(AActor* NewWeapon) { Weapon->SetChildActorClass(NewWeapon->GetClass()); }
+	void SetWeaponMesh(UStaticMesh* WeaponMesh);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void SetWeaponType(int32 NewWeaponType);
@@ -464,7 +473,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnFootstepEffect(const FName FootSocketName) const;
-
+	UFUNCTION(BlueprintCallable)
+	void SpawnFootstepEffect_H(const FName FootSocketName) const;
 
 protected:	
 	UPROPERTY(VisibleAnywhere, Category = "Item")

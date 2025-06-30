@@ -85,27 +85,39 @@ FItemData UItemDataManager::GetItemBaseData(FName ItemID, bool& bOutSuccess)
         }
     }
 #if WITH_EDITOR
-    UE_LOG(LogTemp, Warning, TEXT("Failed to find ItemBaseData for ItemID: %s"), *ItemID.ToString());
+    //UE_LOG(LogTemp, Warning, TEXT("Failed to find ItemBaseData for ItemID: %s"), *ItemID.ToString());
 #endif
 	return FItemData();
 }
 
-const FItemData* UItemDataManager::GetItemData(int32 InRowID) const
+const FItemData* UItemDataManager::GetItemData(const FString& InItemID) const
 {
-    if (ItemBaseDataTable)
+    if (!ItemBaseDataTable) return nullptr;
+
+    const TArray<FName> RowNames = ItemBaseDataTable->GetRowNames();
+
+    for (const FName& RowName : RowNames)
     {
-        FName RowName = FName(*FString::FromInt(InRowID));
-        return ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemData"));
+        const FItemData* RowData = ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemDataByItemID"));
+        if (RowData && RowData->ItemID == InRowID)
+        {
+            return RowData;
+        }
     }
-    UE_LOG(LogTemp, Warning, TEXT("UItemDataManager: ItemDataTable is null. Cannot get item data for RowID %d."), InRowID);
+    // if (ItemBaseDataTable)
+    // {
+    //     FName RowName = FName(*InRowID);
+    //     return ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemData"));
+    // }
+    //UE_LOG(LogTemp, Warning, TEXT("UItemDataManager: ItemDataTable is null. Cannot get item data for RowID %d."), InRowID);
     return nullptr;
 }
 
-FItemData UItemDataManager::GetItemDataFromCode(int32 ItemCode)
+FItemData UItemDataManager::GetItemDataFromCode(FString ItemCode)
 {
     EItemGrade ParsedGrade;
     int32 ParsedEnchantLevel;
-    int32 ParsedRowID;
+    FString ParsedRowID;
     bool bSuccess;
 
     UItemTranslator::ParseItemCode(ItemCode, ParsedGrade, ParsedEnchantLevel, ParsedRowID, bSuccess);
@@ -120,7 +132,7 @@ FItemData UItemDataManager::GetItemDataFromCode(int32 ItemCode)
         else
         {
 #if WITH_EDITOR
-            UE_LOG(LogTemp, Warning, TEXT("GetItemDataFromCode: Could not find item data for RowID %d (ItemCode: %d)."), ParsedRowID, ItemCode);
+            //UE_LOG(LogTemp, Warning, TEXT("GetItemDataFromCode: Could not find item data for RowID %d (ItemCode: %d)."), ParsedRowID, ItemCode);
 #endif
             return FItemData(); // 데이터 없으면 빈 FItemData 반환
         }
@@ -128,17 +140,17 @@ FItemData UItemDataManager::GetItemDataFromCode(int32 ItemCode)
     else
     {
 #if WITH_EDITOR
-        UE_LOG(LogTemp, Error, TEXT("GetItemDataFromCode: Failed to parse ItemCode %d."), ItemCode);
+        //UE_LOG(LogTemp, Error, TEXT("GetItemDataFromCode: Failed to parse ItemCode %d."), ItemCode);
 #endif
         return FItemData(); // 파싱 실패 시 빈 FItemData 반환
     }
 }
 
-EItemGrade UItemDataManager::GetItemGradeFromCode(int32 ItemCode)
+EItemGrade UItemDataManager::GetItemGradeFromCode(FString ItemCode)
 {
     EItemGrade ParsedGrade = EItemGrade::Normal; // 기본값
     int32 ParsedEnchantLevel;
-    int32 ParsedRowID;
+    FString ParsedRowID;
     bool bSuccess;
 
     UItemTranslator::ParseItemCode(ItemCode, ParsedGrade, ParsedEnchantLevel, ParsedRowID, bSuccess);
@@ -146,18 +158,18 @@ EItemGrade UItemDataManager::GetItemGradeFromCode(int32 ItemCode)
     if (!bSuccess)
     {
 #if WITH_EDITOR
-        UE_LOG(LogTemp, Error, TEXT("GetItemGradeFromCode: Failed to parse ItemCode %d. Returning EItemGrade::Normal."), ItemCode);
+        //UE_LOG(LogTemp, Error, TEXT("GetItemGradeFromCode: Failed to parse ItemCode %d. Returning EItemGrade::Normal."), ItemCode);
 #endif
         return EItemGrade::Normal; // 파싱 실패 시 기본 등급 반환
     }
     return ParsedGrade;
 }
 
-int32 UItemDataManager::GetEnchantLevelFromCode(int32 ItemCode)
+int32 UItemDataManager::GetEnchantLevelFromCode(FString ItemCode)
 {
     EItemGrade ParsedGrade;
     int32 ParsedEnchantLevel = 0; // 기본값
-    int32 ParsedRowID;
+    FString ParsedRowID;
     bool bSuccess;
 
     UItemTranslator::ParseItemCode(ItemCode, ParsedGrade, ParsedEnchantLevel, ParsedRowID, bSuccess);
@@ -165,7 +177,7 @@ int32 UItemDataManager::GetEnchantLevelFromCode(int32 ItemCode)
     if (!bSuccess)
     {
 #if WITH_EDITOR
-        UE_LOG(LogTemp, Error, TEXT("GetEnchantLevelFromCode: Failed to parse ItemCode %d. Returning 0."), ItemCode);
+        //UE_LOG(LogTemp, Error, TEXT("GetEnchantLevelFromCode: Failed to parse ItemCode %d. Returning 0."), ItemCode);
 #endif
         return 0; // 파싱 실패 시 기본 강화 레벨 반환
     }

@@ -23,4 +23,11 @@ struct FAttributeSaveData
     UPROPERTY() float BaseLongswordXPMod;
     UPROPERTY() float BaseGreatswordXPMod;
     UPROPERTY() float BaseDefense;
+	UPROPERTY() float BaseLongswordDamageMod;
+	UPROPERTY() float BaseGreatswordDamageMod;
+	UPROPERTY() float BaseDamageToLowHPEnemies;
+	UPROPERTY() float BaseDamageToHighHPEnemies;
+	UPROPERTY() float BaseDamageToNormalEnemies;
+	UPROPERTY() float BaseDamageToBoss;
+	UPROPERTY() bool  bHasLastStandSkill; // 마지막 저항 스킬 여부
 };

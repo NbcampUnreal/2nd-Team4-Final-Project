@@ -7,6 +7,8 @@
 #include "Character/DW_CharacterBase.h"
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BrainComponent.h"
+#include "AIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
 
@@ -263,6 +265,17 @@ void ABossArachnid::UndeadOff()
 
 void ABossArachnid::Dead()
 {
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->StopAllMontages(0.f); 
+		GetMesh()->Stop();
+	}
+
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		AIC->GetBrainComponent()->StopLogic(TEXT("Dead")); 
+	}
+
 	Super::Dead();
 
 	bShouldTurn = false;
@@ -275,7 +288,7 @@ void ABossArachnid::Undead()
 {
 	if (!bIsUndead) return;
 
-	MonsterHP += MonsterMaxHP / 20.f;
+	MonsterHP = FMath::Min(MonsterHP + MonsterMaxHP / 20.f, MonsterMaxHP);
 
 	if (GetWorld())
 	{

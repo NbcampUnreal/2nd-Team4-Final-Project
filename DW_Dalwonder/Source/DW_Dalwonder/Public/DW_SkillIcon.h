@@ -8,6 +8,8 @@ class UImage;
 class UTextBlock;
 class UButton;
 class UDW_SkillComponent;
+class UDW_SkillTooltip;
+class UDW_SkillManager;
 
 UCLASS()
 class DW_DALWONDER_API UDW_SkillIcon : public UUserWidget
@@ -18,6 +20,10 @@ public:
 
     virtual void NativeConstruct() override;
 
+	// Mouse interaction functions
+    void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+    void NativeOnMouseLeave(const FPointerEvent& InMouseEvent);
+
     UPROPERTY(BlueprintReadWrite)
     FName SkillID;
 
@@ -27,10 +33,21 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
     UMaterialInterface* DotMaterial;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ToolTip")
+    TSubclassOf<UDW_SkillTooltip> TooltipWidgetClass;
+    UDW_SkillTooltip* ActiveTooltip = nullptr;
+
     UFUNCTION()
     void UpdateIcon();
 
+    UFUNCTION()
+    void SetCanActivate(bool bEnable);
+
     UImage* GetIconImage() const { return IconImage; }
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    UDW_SkillManager* SkillManager;
 
 protected:
     UFUNCTION()
@@ -63,6 +80,9 @@ protected:
     UPROPERTY(meta = (BindWidget))
     UImage* LevelSpot05;
 
+    
+
 private:
     bool bUnlocked = false;
+    bool bCanActivate = true;
 };

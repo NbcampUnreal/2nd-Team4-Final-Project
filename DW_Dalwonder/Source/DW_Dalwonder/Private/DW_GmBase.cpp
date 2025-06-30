@@ -6,23 +6,42 @@
 #include "DW_PortalArrivalActor.h"
 #include "UI/Widget/ResultWidget.h"
 #include "DW_SaveGame.h"
+#include "Components/Image.h"
 #include "GameFramework/Character.h"
+#include "UI/Widget/FogOfWarManager.h"
+#include "UI/Widget/SettingsManager.h"
+#include "DW_SkillManager.h"
 
 ADW_GmBase::ADW_GmBase()
 {
     CurrentWidget = nullptr;
-    // // 자동 Pawn 스폰 막기
-    // bStartPlayersAsSpectators = false;
 }
 
 void ADW_GmBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    /*if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
     {
-        GI->ApplyLoadedData();
-    }*/
+        if (USettingsManager* SM = GI->GetSettingsManager())
+        {
+            FTimerHandle TimerHandle;
+            GetWorld()->GetTimerManager().SetTimer(TimerHandle, [SM]()
+            {
+                SM->ApplyVolumeMaster(SM->GetVolumeMaster());
+                SM->ApplyVolumeBGM(SM->GetVolumeBGM());
+                SM->ApplyVolumeSFX(SM->GetVolumeSFX());
+                SM->ApplyVolumeUI(SM->GetVolumeUI());
+            }, 0.1f, false);
+        }
+    }
+    
+    if (!SkillManager)
+    {
+        SkillManager = NewObject<UDW_SkillManager>(this);
+        // SkillDataTable 할당
+        SkillManager->Initialize(SkillDataTable);
+    }
 
     UWorld* World = GetWorld();
     if (!World) return;
@@ -48,6 +67,49 @@ void ADW_GmBase::BeginPlay()
     }
 
     GI->LastPortalType = EPortalType::None;
+
+
+    //안개
+
+    // FogManager = GetWorld()->SpawnActor<AFogOfWarManager>();
+    //
+    // APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    // if (PC && PC->GetPawn())
+    // {
+    //     FVector Location = PC->GetPawn()->GetActorLocation();
+    //     FogManager->GridOrigin = FVector2d(Location.X, Location.Y);
+    //     FogManager->InitFog();
+    // }
+    //
+    // FogMaterialInstance = UMaterialInstanceDynamic::Create(FogMaterialBase, this);
+    // if (!FogMaterialInstance)
+    // {
+    //     return;
+    // }
+    //
+    // FogMaterialInstance->SetTextureParameterValue("FogTexture", FogManager->GetFogTexture());
+    //
+    // if (FogOverlayWidgetClass)
+    // {
+    //     FogWidget = CreateWidget<UUserWidget>(GetWorld(), FogOverlayWidgetClass);
+    //     if (FogWidget)
+    //     {
+    //         FogWidget->AddToViewport();
+    //
+    //         UImage* FogImage = Cast<UImage>(FogWidget->GetWidgetFromName(TEXT("FogImage")));
+    //         if (FogImage && FogMaterialInstance)
+    //         {
+    //             FogImage->SetBrushFromMaterial(FogMaterialInstance);
+    //         }
+    //     }
+    // }
+
+    //안개
+}
+
+void ADW_GmBase::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
 }
 
 void ADW_GmBase::SwitchUI(TSubclassOf<UUserWidget> NewWidgetClass)

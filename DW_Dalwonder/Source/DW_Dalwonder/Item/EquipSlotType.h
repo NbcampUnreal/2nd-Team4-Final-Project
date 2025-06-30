@@ -11,6 +11,7 @@ enum class EEquipSlotType : uint8
 	Gloves		UMETA(DisplayName = "Gloves"),
 	Chest		UMETA(DisplayName = "Chest"),
 	Legs		UMETA(DisplayName = "Legs"),
-	Feet		UMETA(DisplayName = "Feet"),
+	Glove		UMETA(DisplayName = "Glove"),
+	Boots		UMETA(DisplayName = "Boots"),
 	MAX			UMETA(Hidden), // 최대값은 숨김 처리
 };

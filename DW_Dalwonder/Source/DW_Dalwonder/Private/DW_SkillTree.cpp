@@ -5,6 +5,8 @@
 #include "DW_SkillIcon.h"
 #include "DW_SkillComponent.h"
 #include "Character/DW_CharacterBase.h"
+#include "DW_GmBase.h"
+#include "DW_SkillManager.h"
 
 void UDW_SkillTree::NativeConstruct()
 {
@@ -22,20 +24,38 @@ void UDW_SkillTree::NativeConstruct()
         }
     }
 
+	// GameMode에서 SkillManager 할당
+    if (ADW_GmBase* GM = Cast<ADW_GmBase>(GetWorld()->GetAuthGameMode()))
+    {
+        SkillManager = GM->GetSkillManager();
+        UE_LOG(LogTemp, Warning, TEXT("UI.SkillManager: %p"), SkillManager);
+    }
+
     if (SkillComponent)
     {
         SkillComponent->OnSkillUpdated.AddDynamic(this, &UDW_SkillTree::RefreshAllIcons);
     }
 
     CreateSkillIcons();
+
+    // 기본 줌 적용
+    ApplyZoom();
 }
 
 void UDW_SkillTree::CreateSkillIcons()
 {
-    if (!SkillCanvasPanel || !SkillIconClass) return;
-    if (!SkillComponent || !SkillComponent->SkillDataTable) return;
+    UE_LOG(LogTemp, Warning, TEXT("CreateSkillIcons 진입"));
+    UE_LOG(LogTemp, Warning, TEXT("SkillManager: %s"), SkillManager ? TEXT("O") : TEXT("X"));
+    UE_LOG(LogTemp, Warning, TEXT("SkillComponent: %s"), SkillComponent ? TEXT("O") : TEXT("X"));
+    UE_LOG(LogTemp, Warning, TEXT("SkillDataTable: %s"), SkillManager && SkillManager->GetSkillDataTable() ? TEXT("O") : TEXT("X"));
 
-    UDataTable* SkillDataTable = SkillComponent->SkillDataTable;
+
+    // SkillManager와 SkillComponent가 유효해야 작업 가능
+    if (!SkillManager || !SkillComponent || !SkillManager->GetSkillDataTable() || !SkillCanvasPanel) return;
+
+    SkillCanvasPanel->ClearChildren();
+
+    UDataTable* SkillDataTable = SkillManager->GetSkillDataTable();
     TMap<FName, const FSkillData*> SkillDataMap;
 
     // -------------------------------
@@ -193,6 +213,7 @@ void UDW_SkillTree::CreateSkillIcons()
 
         Icon->SkillID = ID;
         Icon->SkillComponent = SkillComponent;
+        Icon->SkillManager = SkillManager;
         SkillCanvasPanel->AddChild(Icon);
 
         if (UCanvasPanelSlot* CanSlot = Cast<UCanvasPanelSlot>(Icon->Slot))
@@ -228,7 +249,10 @@ void UDW_SkillTree::CreateSkillIcons()
             }
         }
 
-        Icon->SetIsEnabled(bEnable);
+        //  초기 활성화 여부 판단 및 시각 반영
+        bool bColorEnable = SkillManager->CanUnlockSkill(ID, SkillComponent->SkillStateMap);
+        Icon->SetCanActivate(bColorEnable);
+
         Icon->UpdateIcon();
         Spawned.Add(ID);
     }
@@ -271,23 +295,29 @@ void UDW_SkillTree::RefreshAllIcons()
     }
 }
 
+void UDW_SkillTree::ApplyZoom()
+{
+    if (SkillCanvasPanel)
+    {
+        SkillCanvasPanel->SetRenderScale(FVector2D(CurrentZoom, CurrentZoom));
+    }
+}
+
 void UDW_SkillTree::UpdateSkillActivationStates()
 {
-    if (!SkillCanvasPanel || !SkillComponent || !SkillComponent->SkillDataTable)
-        return;
-    // 모든 스킬트리의 스킬 확인
+    // 필수 요소 확인
+    if (!SkillCanvasPanel || !SkillComponent || !SkillManager) return;
+
     for (UWidget* Child : SkillCanvasPanel->GetAllChildren())
     {
         if (UDW_SkillIcon* SkillIcon = Cast<UDW_SkillIcon>(Child))
         {
             const FName& SkillID = SkillIcon->SkillID;
-            const FSkillData* SkillData = SkillComponent->SkillDataTable->FindRow<FSkillData>(SkillID, TEXT("UpdateActivation"));
 
-            if (SkillData && !SkillData->PrerequisiteSkillID.IsNone())
-            {
-                int32 PrereqLevel = SkillComponent->GetSkillLevel(SkillData->PrerequisiteSkillID);
-                SkillIcon->SetIsEnabled(PrereqLevel > 0);
-            }
+            // 여기에서 판단 위임
+            bool bEnable = SkillManager->CanUnlockSkill(SkillID, SkillComponent->SkillStateMap);
+
+			SkillIcon->SetCanActivate(bEnable);
         }
     }
 }
@@ -348,4 +378,17 @@ FReply UDW_SkillTree::NativeOnMouseButtonUp(const FGeometry& InGeometry, const F
 {
     bIsDragging = false;
     return FReply::Handled().ReleaseMouseCapture();
+}
+
+FReply UDW_SkillTree::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+    const float Delta = InMouseEvent.GetWheelDelta();
+    const float ZoomStep = 0.1f;
+
+    CurrentZoom += Delta * ZoomStep;
+    CurrentZoom = FMath::Clamp(CurrentZoom, MinZoom, MaxZoom);
+
+    ApplyZoom();
+
+    return FReply::Handled();
 }

@@ -5,6 +5,7 @@
 #include "DW_AttributeComponent.generated.h"
 
 struct FAttributeSaveData;
+class UCharacterStatComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DW_DALWONDER_API UDW_AttributeComponent : public UActorComponent
@@ -13,6 +14,9 @@ class DW_DALWONDER_API UDW_AttributeComponent : public UActorComponent
 
 public:
     UDW_AttributeComponent();
+
+    UPROPERTY()
+    UCharacterStatComponent* StatComponent;
 
     /* ==================== Base ==================== */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseMaxStamina = 100.f;
@@ -24,6 +28,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseLongswordXPMod = 1.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseGreatswordXPMod = 1.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseDefense = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseLongswordDamageMod = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseGreatswordDamageMod = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseDamageToLowHPEnemies = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseDamageToHighHPEnemies = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseDamageToNormalEnemies = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base") float BaseDamageToBoss = 0.f;
 
     /* ==================== Bonus =================== */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusMaxStamina = 0.f;
@@ -35,6 +45,12 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusLongswordXPMod = 0.f;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusGreatswordXPMod = 0.f;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusDefense = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusLongswordDamageMod = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusGreatswordDamageMod = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusDamageToLowHPEnemies = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusDamageToHighHPEnemies = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusDamageToNormalEnemies = 0.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bonus") float BonusDamageToBoss = 0.f;
 
     /* ==================== Getter ================== */
     UFUNCTION(BlueprintCallable) float GetMaxStamina()      const { return BaseMaxStamina + BonusMaxStamina; }
@@ -46,6 +62,16 @@ public:
     UFUNCTION(BlueprintCallable) float GetLongswordXPMod()  const { return BaseLongswordXPMod + BonusLongswordXPMod; }
     UFUNCTION(BlueprintCallable) float GetGreatswordXPMod() const { return BaseGreatswordXPMod + BonusGreatswordXPMod; }
     UFUNCTION(BlueprintCallable) float GetDefense()         const { return BaseDefense + BonusDefense; }
+    UFUNCTION(BlueprintCallable) float GetLongswordDamageMod() const { return BaseLongswordDamageMod + BonusLongswordDamageMod; }
+    UFUNCTION(BlueprintCallable) float GetGreatswordDamageMod() const { return BaseGreatswordDamageMod + BonusGreatswordDamageMod; }
+    UFUNCTION(BlueprintCallable) float GetDamageToLowHPEnemies() const { return BaseDamageToLowHPEnemies + BonusDamageToLowHPEnemies; }
+    UFUNCTION(BlueprintCallable) float GetDamageToHighHPEnemies() const { return BaseDamageToHighHPEnemies + BonusDamageToHighHPEnemies; }
+    UFUNCTION(BlueprintCallable) float GetDamageToNormalEnemies() const { return BaseDamageToNormalEnemies + BonusDamageToNormalEnemies; }
+    UFUNCTION(BlueprintCallable) float GetDamageToBoss() const { return BaseDamageToBoss + BonusDamageToBoss; }
+
+	/* ==================== Skills ================== */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
+	bool bHasLastStandSkill = false;    // 마지막 저항 스킬 보유 여부
 
     void ClearAllBonuses();
 

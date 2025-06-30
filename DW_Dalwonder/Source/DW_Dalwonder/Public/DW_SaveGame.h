@@ -62,4 +62,46 @@ public:
     //방어구/무기 추가
     UPROPERTY(VisibleAnywhere, Category = "SaveData")
     FEquippedArmorSaveData SavedArmorData;
+
+	UPROPERTY()
+	TArray<uint8> CompressedFogBits;
+
+	// UI 컨트롤러
+	UPROPERTY()
+	float SavedMouseSensitivity = 1.0f;
+
+	UPROPERTY()
+	TMap<FName, FKey> SavedKeyMap;
+
+	// UI 그래픽
+	UPROPERTY(BlueprintReadWrite)
+	int32 SavedWindowMode;
+
+	UPROPERTY(BlueprintReadWrite)
+	FIntPoint SavedResolution;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bSavedVSync;
+	
+	UPROPERTY()
+	float SavedFrameRate;
+
+	UPROPERTY()
+	bool bSavedMotionBlur;
+
+	UPROPERTY()
+	bool bSavedShadow;
+	
+	// 사운드
+	UPROPERTY()
+	float SavedVolumeMaster = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeBGM = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeSFX = 100.f;
+
+	UPROPERTY()
+	float SavedVolumeUI = 100.f;
 };

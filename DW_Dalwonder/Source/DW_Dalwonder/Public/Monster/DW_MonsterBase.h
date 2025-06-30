@@ -7,6 +7,8 @@
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
 #include "Interface/BearableInterface.h"
+#include "NiagaraComponent.h"
+#include "CoreMinimal.h"
 #include "DW_MonsterBase.generated.h"
 
 
@@ -23,6 +25,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// 몬스터가 죽을 때 스폰한 이펙트 컴포넌트
+	UPROPERTY()
+	TObjectPtr<UNiagaraComponent> SpawnedVFX;
+	
 	virtual void Tick(float DeltaTime) override;
 
 public:
@@ -204,6 +210,9 @@ public:
 	// 데이터 테이블을 통해 몬스터 스탯을 설정합니다.
 	virtual void SetStats(UDataTable* NewDataTable) override;
 
+	// 데이터 테이블을 기반으로 숙련도를 획득합니다.
+	virtual void IncreaseMastery(UDataTable* NewDataTable) override;
+
 	// 몬스터의 이름을 반환합니다.
 	virtual FName GetMonsterName() const override;
 
@@ -288,7 +297,8 @@ public:
 	// 사망 함수입니다.
 	virtual void Dead() override;
 
-
+	// 스폰된 드롭 이펙트를 파괴합니다.
+	void DestroySpawnedVFX();
 
 	// 피격 시 호출됩니다.
 	virtual float TakeDamage(

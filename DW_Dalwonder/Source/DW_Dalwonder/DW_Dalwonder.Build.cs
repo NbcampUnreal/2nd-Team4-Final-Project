@@ -8,9 +8,9 @@ public class DW_Dalwonder : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "Niagara" , "LevelSequence" , "MovieScene", "NavigationSystem", "MoviePlayer", "ChaosSolverEngine", "GeometryCollectionEngine", "PhysicsCore" , "MediaAssets"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "Niagara" , "LevelSequence" , "MovieScene", "NavigationSystem", "MoviePlayer", "ChaosSolverEngine", "GeometryCollectionEngine", "PhysicsCore" , "MediaAssets" , "Landscape" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Eigen" });
 
 		// Uncomment if you are using Slate UI
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "AnimGraphRuntime" });

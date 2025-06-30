@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "CharacterArmorComponent.generated.h"
 
+class UItemDataManager;
+
 UENUM(BlueprintType)
 enum class ECharacterArmor : uint8
 {
@@ -31,9 +33,7 @@ protected:
 
 	void EquipArmor(UItemBase* Item);
 
-	USkeletalMesh* GetArmorSkeletalMesh(UItemBase* Item) const;
-	
-	AActor* GetWeaponActor(UItemBase* Item) const;
+	UStaticMesh* GetItemStaticMesh(UItemBase* Item) const;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
@@ -41,6 +41,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
 	UItemBase* Armor;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
+	UItemBase* Pants;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
 	UItemBase* Glove;
@@ -54,7 +57,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	ADW_CharacterBase* Character;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
-	UDataTable* ItemTable;
-	
+	UPROPERTY()
+	UItemDataManager* ItemDataManager;
 };

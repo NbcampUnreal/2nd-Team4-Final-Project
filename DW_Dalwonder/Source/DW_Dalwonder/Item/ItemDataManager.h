@@ -34,15 +34,15 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
     FItemData GetItemBaseData(FName ItemID, bool& bOutSuccess);
 
-    const FItemData* GetItemData(int32 InRowID) const;
+    const FItemData* GetItemData(const FString& InItemID) const;
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
-    FItemData GetItemDataFromCode(int32 ItemCode);
+    FItemData GetItemDataFromCode(FString ItemCode);
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
-    EItemGrade GetItemGradeFromCode(int32 ItemCode);
+    EItemGrade GetItemGradeFromCode(FString ItemCode);
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
-	int32 GetEnchantLevelFromCode(int32 ItemCode);
+	int32 GetEnchantLevelFromCode(FString ItemCode);
 
 };
