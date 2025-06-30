@@ -11,7 +11,7 @@ struct FCraftItemData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<UItemBase> ItemClass;
+	UItemBase* ItemClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Amount;
