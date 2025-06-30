@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DW_AttributeSaveData.h"
-#include "DW_SkillState.h"
+#include "TempSkillSaveData.h"
 #include "UI/Component/Struct/QuestData.h"
 #include "Inventory/InventoryComponent.h"
 #include "TmpInventoryData.h"
@@ -27,17 +27,13 @@ struct FTmpSaveData
     UPROPERTY()
     FRotator PlayerRotation;
 
-    // 속성 데이터 (AttributeComponent)
-    UPROPERTY()
-    FAttributeSaveData TempAttributes;
-
 	// 스탯 데이터 (CharacterStatComponent)
     UPROPERTY()
     FTmpCharacterStatData TempStatData;
 
-    // 스킬 트리 상태 (SkillComponent)
+    // 스킬 상태 (SkillComponent)
     UPROPERTY()
-    TMap<FName, FSkillState> TempSkillStates;
+    FTempSkillSaveData TempSkillData;
 
     // 퀘스트 상태 (QuestManagerComponent)
     UPROPERTY()
