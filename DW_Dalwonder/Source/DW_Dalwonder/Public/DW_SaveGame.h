@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 #include "DW_AttributeSaveData.h"
-#include "DW_SkillState.h"
 #include "UI/Component/Struct/QuestData.h"
 #include "Inventory/InventoryComponent.h"
 #include "InventorySlotSaveData.h"
-#include "TmpCharacterStatData.h"
+#include "CharacterStatSaveData.h"
 #include "QuestProgressSaveData.h"
 #include "EquippedArmorSaveData.h"
+#include "SkillSystemMetaData.h"
+#include "BitmaskFogData.h"
 #include "DW_SaveGame.generated.h"
 
 /**
@@ -31,17 +32,13 @@ public:
     UPROPERTY(VisibleAnywhere, Category = "SaveData")
     FRotator SavedPlayerRotation;
 
-    // 속성 데이터 (AttributeComponent)
-    UPROPERTY(VisibleAnywhere, Category = "SaveData")
-    FAttributeSaveData SavedAttributes;
-
     // 스탯 데이터 (CharacterStatComponent)
     UPROPERTY(VisibleAnywhere, Category = "SaveData")
-    FTmpCharacterStatData SaveStatData;
+	FCharacterStatSaveData SavedCharacterStat;
 
     // 스킬 트리 상태 (SkillComponent)
-    UPROPERTY(VisibleAnywhere, Category = "SaveData")
-    TMap<FName, FSkillState> SavedSkillStates;
+	UPROPERTY(VisibleAnywhere, Category = "SaveData")
+	FSkillSystemSaveData SavedSkillData;
 
     // 진행 중인 퀘스트
     UPROPERTY()
@@ -63,8 +60,9 @@ public:
     UPROPERTY(VisibleAnywhere, Category = "SaveData")
     FEquippedArmorSaveData SavedArmorData;
 
+	/** 맵별 Bitmask 저장된 안개 정보 */
 	UPROPERTY()
-	TArray<uint8> CompressedFogBits;
+	TMap<FName, FBitmaskFogData> SavedFogMap;
 
 	// UI 컨트롤러
 	UPROPERTY()

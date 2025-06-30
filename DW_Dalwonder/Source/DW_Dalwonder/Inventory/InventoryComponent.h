@@ -3,8 +3,27 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Inventory/InventorySlot.h"
+#include "Delegates/DelegateCombinations.h"
+#include "UObject/NoExportTypes.h"
 #include "Item/EquipSlotType.h"
+#include "Item/EquippableItem.h"
 #include "InventoryComponent.generated.h"
+
+USTRUCT(BlueprintType) // 블루프린트에서 사용 가능하도록 BlueprintType 지정
+struct FEquippedItemsMapWrapper
+{
+    GENERATED_BODY()
+
+public:
+    // 장착된 아이템들을 저장하는 TMap
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipped Items")
+    TMap<EEquipSlotType, UEquippableItem*> EquippedItemsMap; // 이 맵이 델리게이트를 통해 전달될 실제 데이터
+
+    // 기본 생성자 (필요하다면)
+    FEquippedItemsMapWrapper() {}
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquippedItemsUpdated, const FEquippedItemsMapWrapper&, EquippedItemsWrapper);
 
 class UCharacterStatComponent;
 
@@ -22,11 +41,14 @@ public:
 
     // 인벤토리 최대 슬롯 수
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 InventorySlotQuantity = 2;
+    int32 InventorySlotQuantity = 60;
 
     // 장착된 아이템들 (장비 슬롯 타입 -> 아이템 인스턴스)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory | Equipped")
     TMap<EEquipSlotType, UEquippableItem*> EquippedItems;
+
+    UPROPERTY(BlueprintAssignable, Category = "Inventory | Events")
+    FOnEquippedItemsUpdated OnEquippedItemsUpdated;
 
 protected:
     // 캐릭터의 스탯 컴포넌트 참조
