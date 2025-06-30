@@ -83,6 +83,9 @@ struct FItemData : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     TSoftObjectPtr<UStaticMesh> ItemMesh;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    TSoftObjectPtr<USkeletalMesh> ItemSkMesh;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
     TSoftObjectPtr<UTexture2D> Icon;
 
@@ -103,8 +106,4 @@ struct FItemData : public FTableRowBase
     // 장착 아이템 전용: 어떤 슬롯에 장착되는지
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Equipment")
     EEquipSlotType EquipSlot;
-    
-    // 무기 전용: 캐릭터 스켈레톤에 부착될 소켓 이름
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data | Equipment")
-    FName AttachSocketName;
 };

@@ -6,7 +6,7 @@
 UENUM(BlueprintType)
 enum class EItemGrade : uint8
 {
-    // 이미지에 기반한 등급
+	UnKnown      UMETA(DisplayName = "알 수 없음"),
     Normal       UMETA(DisplayName = "노멀"),      
     Rare         UMETA(DisplayName = "레어"),      
     Unique       UMETA(DisplayName = "유니크"),    

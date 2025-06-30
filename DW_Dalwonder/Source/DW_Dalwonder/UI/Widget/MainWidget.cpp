@@ -44,7 +44,6 @@ void UMainWidget::OnNewGameClicked()
 	if (UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(UGameplayStatics::GetGameInstance(this)))
 	{
 		GameInstance->bIsNewGame = true;
-		//UGameplayStatics::OpenLevel(this, "LoadingMap");
 		UGameplayStatics::OpenLevel(this, "FC_Map_Medieval");
 	}
 
@@ -57,7 +56,7 @@ void UMainWidget::OnContinueGameClicked()
 	{
 		GameInstance->bIsNewGame = false;
 		GameInstance->LoadGameData(); // 게임로드
-		UGameplayStatics::OpenLevel(this, "LoadingMap");
+		UGameplayStatics::OpenLevel(this, "FC_Map_Medieval");
 	}
 
 	RemoveFromParent();
