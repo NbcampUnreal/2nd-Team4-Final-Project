@@ -2,7 +2,6 @@
 #include "Item/ConsumableItem.h" 
 #include "Item/EquippableItem.h" 
 #include "Character/CharacterStatComponent.h"
-#include "GameFramework/Character.h" 
 #include "Engine/Engine.h" 
 
 UInventoryComponent::UInventoryComponent()
@@ -153,6 +152,24 @@ bool UInventoryComponent::AddItem(UItemBase* ItemTemplate, int32& QuantityToAdd)
         return false;
     }
     return true; // 모든 아이템 추가 성공
+}
+
+int32 UInventoryComponent::FindItemSlotIndex(UItemBase* Item)
+{
+    if (!IsValid(Item)) return -1;
+    
+    for (int32 i = 0; i < InventorySlots.Num(); i++)
+    {
+        if (!InventorySlots[i].IsEmpty() && InventorySlots[i].Quantity > 0)
+        {
+            if (InventorySlots[i].IsSameItemType(Item))
+            {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 bool UInventoryComponent::UseItemInSlot(int32 SlotIndex)
