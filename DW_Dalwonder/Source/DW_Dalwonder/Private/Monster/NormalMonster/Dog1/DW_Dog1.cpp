@@ -2,16 +2,20 @@
 
 
 #include "Monster/NormalMonster/Dog1/DW_Dog1.h"
+#include "Components/CapsuleComponent.h"
 
 
 // Sets default values
 ADW_Dog1::ADW_Dog1()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
-	TraceStart->SetupAttachment(GetMesh(), TEXT("bip01_r_hand"));
-	TraceEnd->SetupAttachment(GetMesh(), TEXT("bip01_l_hand"));
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	TraceStart->SetupAttachment(GetMesh(), TEXT("bone08"));
+	TraceEnd->SetupAttachment(GetMesh(), TEXT("bone04"));
 }
 
 // Called when the game starts or when spawned
