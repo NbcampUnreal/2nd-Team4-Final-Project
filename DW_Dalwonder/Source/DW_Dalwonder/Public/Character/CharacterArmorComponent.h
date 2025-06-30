@@ -28,10 +28,10 @@ class DW_DALWONDER_API UCharacterArmorComponent : public UActorComponent
 public:
 	UCharacterArmorComponent();
 
+	bool EquipArmor(UItemBase* Item);
+
 protected:
 	virtual void BeginPlay() override;
-
-	void EquipArmor(UItemBase* Item);
 
 	UStaticMesh* GetItemStaticMesh(UItemBase* Item) const;
 

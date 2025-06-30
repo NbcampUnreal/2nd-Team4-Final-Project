@@ -18,13 +18,16 @@ void UCharacterArmorComponent::BeginPlay()
 
 }
 
-void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
+bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
-	if (Item == nullptr) return;
+	if (Item == nullptr) return false;
 
 	UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance());
-	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)return;
-
+	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)
+	{
+		return false;
+	}
+	
 	FItemData* ItemData = GameInstance->GetItemDataManager()->ItemBaseDataTable->FindRow<FItemData>(
 		FName(*Item->ItemCode),
 		TEXT("Lookup ItemCode")
@@ -32,7 +35,7 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 	if (!ItemData || ItemData->ItemType != EItemType::Equipment)
 	{
-		return;
+		return false;
 	}
 
 	EEquipSlotType ItemType = ItemData->EquipSlot;
@@ -80,6 +83,7 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 	}
 
 	Character->UpdateSkeletalMesh();
+	return true;
 }
 
 UStaticMesh* UCharacterArmorComponent::GetItemStaticMesh(UItemBase* Item) const
