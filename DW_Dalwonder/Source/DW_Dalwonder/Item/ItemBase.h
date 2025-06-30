@@ -78,6 +78,10 @@ public:
     UFUNCTION(BlueprintPure, Category = "Item Info")
     float GetItemWeight() const { return ItemBaseData.Weight; }
 
+    // 아이템의 무게를 반환하는 함수
+    UFUNCTION(BlueprintPure, Category = "Item Info")
+    EEquipSlotType GetItemSlotType() const { return ItemBaseData.EquipSlot; }
+
     // 아이템의 최대 스택 사이즈를 반환하는 함수
     UFUNCTION(BlueprintPure, Category = "Item Info")
     int32 GetMaxStackSize() const { return ItemBaseData.MaxStackSize; }

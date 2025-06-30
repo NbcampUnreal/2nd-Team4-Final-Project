@@ -76,7 +76,7 @@ bool UConsumableItem::UseItem(AActor* Instigator)
     }
 
     // 부모 클래스의 UseItem 함수를 호출하여 기본 동작(로그 출력)을 실행합니다.
-    Super::UseItem(Instigator);
+    //Super::UseItem(Instigator);
 
     return bEffectApplied; // 하나라도 효과가 적용되었다면 true 반환
 }

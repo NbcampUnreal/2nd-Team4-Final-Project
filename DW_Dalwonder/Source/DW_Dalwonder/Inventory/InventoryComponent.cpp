@@ -166,8 +166,18 @@ bool UInventoryComponent::UseItemInSlot(int32 SlotIndex)
         return false;
     }
 
-    UItemBase* ItemToUse = InventorySlots[SlotIndex].ItemBase;
-    if (!ItemToUse) return false;
+    UItemBase* ItemBaseInstance = InventorySlots[SlotIndex].ItemBase; // 먼저 UItemBase*로 가져옵니다.
+    if (!ItemBaseInstance) return false;
+
+    UConsumableItem* ItemToUse = Cast<UConsumableItem>(ItemBaseInstance);
+    if (!ItemToUse) // 캐스팅 실패 시, 즉 소비 아이템이 아닐 경우
+    {
+#if WITH_EDITOR
+        UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::UseItemInSlot - Item %s in slot %d is not a consumable item. Cannot use."),
+            *ItemBaseInstance->ItemBaseData.ItemName.ToString(), SlotIndex);
+#endif
+        return false;
+    }
 
     // 아이템 사용 로직 호출 (Instigator는 인벤토리 컴포넌트의 Owner)
     bool bUsedSuccessfully = ItemToUse->UseItem(GetOwner());
@@ -279,14 +289,37 @@ bool UInventoryComponent::EquipItemInSlot(int32 SlotIndex)
     // 3. 새 아이템 장착
     if (ItemToEquip->EquipItem(GetOwner())) // 새 아이템의 EquipItem 로직 호출 (외형 변경)
     {
-        EquippedItems.Add(TargetSlot, ItemToEquip); // 장착 맵에 추가
-        InventorySlots[SlotIndex].ItemBase->MarkAsGarbage(); // 인벤토리에서 제거될 아이템 가비지 컬렉션 대상 지정
-        InventorySlots[SlotIndex].ItemBase = nullptr; // 인벤토리 슬롯 비우기
-        InventorySlots[SlotIndex].Quantity = 0; // 수량 0으로 설정
+        EquippedItems.Add(TargetSlot, ItemToEquip);
+
+        InventorySlots[SlotIndex].ItemBase = nullptr;
+        InventorySlots[SlotIndex].Quantity = 0;
+        
+#if WITH_EDITOR
+        // ... (DEBUG 로그 출력 부분) ...
+        UE_LOG(LogTemp, Log, TEXT("--- EquippedItems Map Status After Equip ---"));
+        for (const auto& Pair : EquippedItems)
+        {
+            FString ItemName = TEXT("INVALID_ITEM_NULL");
+            if (IsValid(Pair.Value))
+            {
+                ItemName = Pair.Value->ItemBaseData.ItemName.ToString();
+            }
+
+            FString EquipSlotName = UEnum::GetValueAsString(TEXT("/Script/DW_Dalwonder.EEquipSlotType"), Pair.Key);
+
+            UE_LOG(LogTemp, Log, TEXT("  Slot: %s, Item: %s"),
+                *EquipSlotName,
+                *ItemName);
+        }
+        UE_LOG(LogTemp, Log, TEXT("------------------------------------------"));
+#endif 
 
 #if WITH_EDITOR
         UE_LOG(LogTemp, Log, TEXT("UInventoryComponent::EquipItemInSlot - Equipped %s to %s slot. Inventory slot %d cleared."), *ItemToEquip->ItemBaseData.ItemName.ToString(), *UEnum::GetValueAsString(TargetSlot), SlotIndex);
 #endif 
+        FEquippedItemsMapWrapper Wrapper;
+        Wrapper.EquippedItemsMap = EquippedItems; // 현재 맵을 래퍼에 복사
+        OnEquippedItemsUpdated.Broadcast(Wrapper);
         return true;
     }
     else
@@ -320,7 +353,9 @@ bool UInventoryComponent::UnequipItemFromSlot(EEquipSlotType EquipSlotType)
 #if WITH_EDITOR
             UE_LOG(LogTemp, Log, TEXT("UInventoryComponent::UnequipItemFromSlot - Unequipped %s from %s slot and moved to inventory."), *ItemToUnequip->ItemBaseData.ItemName.ToString(), *UEnum::GetValueAsString(EquipSlotType));
 #endif 
-            EquippedItems.Add(EquipSlotType, ItemToUnequip);
+            FEquippedItemsMapWrapper Wrapper;
+            Wrapper.EquippedItemsMap = EquippedItems; // 현재 맵을 래퍼에 복사
+            OnEquippedItemsUpdated.Broadcast(Wrapper);
             //UI 업데이트 이벤트 디스패치
             return true;
         }
@@ -333,6 +368,9 @@ bool UInventoryComponent::UnequipItemFromSlot(EEquipSlotType EquipSlotType)
 #endif 
             EquippedItems.Add(EquipSlotType, ItemToUnequip); // 장착 맵에 다시 추가
 			ItemToUnequip->EquipItem(GetOwner()); // 아이템을 다시 장착 상태로 유지
+            FEquippedItemsMapWrapper Wrapper;
+            Wrapper.EquippedItemsMap = EquippedItems; // 현재 맵을 래퍼에 복사
+            OnEquippedItemsUpdated.Broadcast(Wrapper);
             return false; // 인벤토리 부족으로 인해 해제 실패
         }
     }

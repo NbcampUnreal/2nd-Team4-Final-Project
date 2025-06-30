@@ -8,6 +8,7 @@ enum class EEquipSlotType : uint8
 	None		UMETA(DisplayName = "None"),
 	Weapon		UMETA(DisplayName = "Weapon"),
 	Helmet		UMETA(DisplayName = "Helmet"),
+	Gloves		UMETA(DisplayName = "Gloves"),
 	Chest		UMETA(DisplayName = "Chest"),
 	Legs		UMETA(DisplayName = "Legs"),
 	Feet		UMETA(DisplayName = "Feet"),
