@@ -28,13 +28,15 @@ class DW_DALWONDER_API UCharacterArmorComponent : public UActorComponent
 public:
 	UCharacterArmorComponent();
 
+	bool EquipArmor(UItemBase* Item);
+
 protected:
 	virtual void BeginPlay() override;
 
-	void EquipArmor(UItemBase* Item);
-
 	UStaticMesh* GetItemStaticMesh(UItemBase* Item) const;
 
+	USkeletalMesh* GetItemSkeletalMesh(UItemBase* Item) const;
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
 	UItemBase* Helmet;
@@ -53,7 +55,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Armor")
 	UItemBase* Weapon;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
 	ADW_CharacterBase* Character;
 

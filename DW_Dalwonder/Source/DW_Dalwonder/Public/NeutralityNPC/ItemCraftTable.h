@@ -6,6 +6,18 @@
 #include "ItemCraftTable.generated.h"
 
 USTRUCT(BlueprintType)
+struct FCraftItemData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UItemBase> ItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Amount;
+};
+
+USTRUCT(BlueprintType)
 struct FCraftItemTable : public FTableRowBase
 {
 	GENERATED_BODY();
@@ -14,7 +26,7 @@ struct FCraftItemTable : public FTableRowBase
 	FString ItemCode;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<UItemBase*, int32> IngredientItems;
+	TArray<FCraftItemData> IngredientItems;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CraftProbability;
