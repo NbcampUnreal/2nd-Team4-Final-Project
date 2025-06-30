@@ -34,7 +34,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
     FItemData GetItemBaseData(FName ItemID, bool& bOutSuccess);
 
-    const FItemData* GetItemData(FString InRowID) const;
+    const FItemData* GetItemData(const FString& InItemID) const;
 
     UFUNCTION(BlueprintCallable, Category = "Item Data Manager")
     FItemData GetItemDataFromCode(FString ItemCode);
