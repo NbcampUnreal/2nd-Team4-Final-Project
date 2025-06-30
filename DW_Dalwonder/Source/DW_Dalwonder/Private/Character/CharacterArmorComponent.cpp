@@ -52,7 +52,7 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 		Pants = Item;
 		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Pants));
 	}
-	else if (ItemType == EEquipSlotType::Glove)
+	else if (ItemType == EEquipSlotType::Gloves)
 	{
 		Glove = Item;
 		//Character->Helmet->SetSkeletalMeshAsset(GetItemStaticMesh(Glove));
