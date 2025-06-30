@@ -4,9 +4,13 @@
 #include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
 #include "AudioDevice.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 #include "Character/DW_PlayerController.h"
-#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 
 USettingsManager::USettingsManager()
 {
@@ -14,31 +18,37 @@ USettingsManager::USettingsManager()
 	MasterClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_Master.SC_Master")));
 	BGMClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_BGM.SC_BGM")));
 	SFXClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_SFX.SC_SFX")));
-	UIClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI.SC_UI")));
+	UIClassAsset   = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI.SC_UI")));
+
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC(TEXT("/Game/Input/IMC_Default.IMC_Default"));
+	if (IMC.Succeeded())
+	{
+		DefaultMappingContext = IMC.Object;
+	}
 }
 
 void USettingsManager::Initialize()
 {
-	MasterMixAsset.LoadSynchronous();
-	MasterClassAsset.LoadSynchronous();
-	BGMClassAsset.LoadSynchronous();
-	SFXClassAsset.LoadSynchronous();
-	UIClassAsset.LoadSynchronous();
+	// 에셋 로드
+	MasterMix = MasterMixAsset.LoadSynchronous();
+	MasterClass = MasterClassAsset.LoadSynchronous();
+	BGMClass = BGMClassAsset.LoadSynchronous();
+	SFXClass = SFXClassAsset.LoadSynchronous();
+	UIClass = UIClassAsset.LoadSynchronous();
 
-	MasterMix = MasterMixAsset.Get();
-	MasterClass = MasterClassAsset.Get();
-	BGMClass = BGMClassAsset.Get();
-	SFXClass = SFXClassAsset.Get();
-	UIClass = UIClassAsset.Get();
-
+	// 저장값 로드 또는 기본값 설정
 	LoadSettings();
 
+	if (CustomKeyMap.Num() == 0)
+	{
+		CustomKeyMap = GetDefaultKeyMap();
+	}
+
+	// 오디오 즉시 반영
 	ApplyVolumeMaster(VolumeMaster);
 	ApplyVolumeBGM(VolumeBGM);
 	ApplyVolumeSFX(VolumeSFX);
 	ApplyVolumeUI(VolumeUI);
-
-	UE_LOG(LogTemp, Warning, TEXT("Settings initialized: MasterVol=%.2f"), VolumeMaster);
 }
 
 void USettingsManager::ApplySettings()
@@ -56,6 +66,24 @@ void USettingsManager::ApplySettings()
 	}
 }
 
+void USettingsManager::SaveToSlot()
+{
+	if (UDW_SaveGame* Save = Cast<UDW_SaveGame>(UGameplayStatics::CreateSaveGameObject(UDW_SaveGame::StaticClass())))
+	{
+		SaveSettingsTo(Save);
+		for (const auto& Pair : CustomKeyMap)
+		{
+			if (Pair.Key.IsNone())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[SettingsManager] Skipping save for None key: %s"), *Pair.Value.ToString());
+				continue;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("Saving KeyMap - %s: %s"), *Pair.Key.ToString(), *Pair.Value.ToString());
+		}
+		UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
+	}
+}
+
 void USettingsManager::SaveSettingsTo(UDW_SaveGame* Save)
 {
 	Save->SavedWindowMode = WindowModeIndex;
@@ -69,32 +97,21 @@ void USettingsManager::SaveSettingsTo(UDW_SaveGame* Save)
 	Save->SavedVolumeBGM = VolumeBGM;
 	Save->SavedVolumeSFX = VolumeSFX;
 	Save->SavedVolumeUI = VolumeUI;
-
-	UE_LOG(LogTemp, Warning, TEXT("[Save] Master: %.2f / BGM: %.2f / SFX: %.2f / UI: %.2f"),
-		VolumeMaster, VolumeBGM, VolumeSFX, VolumeUI);
-}
-
-void USettingsManager::SaveToSlot()
-{
-	UDW_SaveGame* Save = Cast<UDW_SaveGame>(UGameplayStatics::CreateSaveGameObject(UDW_SaveGame::StaticClass()));
-	if (!Save) return;
-
-	SaveSettingsTo(Save);
-	UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
+	Save->SavedKeyMap = CustomKeyMap;
 }
 
 void USettingsManager::LoadSettings()
 {
 	if (UGameplayStatics::DoesSaveGameExist(TEXT("Default"), 0))
 	{
-		UDW_SaveGame* Save = Cast<UDW_SaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("Default"), 0));
-		if (Save)
+		if (UDW_SaveGame* Save = Cast<UDW_SaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("Default"), 0)))
 		{
 			LoadSettingsFrom(Save);
 			return;
 		}
 	}
 
+	// 기본값
 	WindowModeIndex = 0;
 	ResolutionValue = FIntPoint(1920, 1080);
 	FrameRateLimit = 60.f;
@@ -105,27 +122,29 @@ void USettingsManager::LoadSettings()
 
 void USettingsManager::LoadSettingsFrom(UDW_SaveGame* Save)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Load] Master: %.2f / BGM: %.2f / SFX: %.2f / UI: %.2f"),
-		Save->SavedVolumeMaster, Save->SavedVolumeBGM, Save->SavedVolumeSFX, Save->SavedVolumeUI);
-
 	ApplyWindowMode(Save->SavedWindowMode);
 	ApplyResolution(Save->SavedResolution);
 	ApplyVSync(Save->bSavedVSync);
 	ApplyFrameLimit(Save->SavedFrameRate);
 	ApplyMotionBlur(Save->bSavedMotionBlur);
 	ApplyShadows(Save->bSavedShadow);
+
 	MouseSensitivity = Save->SavedMouseSensitivity;
+
 	SetVolumeMaster(Save->SavedVolumeMaster);
 	SetVolumeBGM(Save->SavedVolumeBGM);
 	SetVolumeSFX(Save->SavedVolumeSFX);
 	SetVolumeUI(Save->SavedVolumeUI);
+
 	ApplyVolumeMaster(Save->SavedVolumeMaster);
 	ApplyVolumeBGM(Save->SavedVolumeBGM);
 	ApplyVolumeSFX(Save->SavedVolumeSFX);
 	ApplyVolumeUI(Save->SavedVolumeUI);
 
-	UE_LOG(LogTemp, Warning, TEXT("[LoadSettingsFrom] ApplyVolumeMaster %.2f"), VolumeMaster);
+	CustomKeyMap = Save->SavedKeyMap;
 }
+
+// ===== 그래픽 설정 =====
 
 void USettingsManager::ApplyWindowMode(int32 ModeIndex)
 {
@@ -136,20 +155,17 @@ void USettingsManager::ApplyWindowMode(int32 ModeIndex)
 		EWindowMode::Type Mode = EWindowMode::Fullscreen;
 		switch (ModeIndex)
 		{
-		case 0: Mode = EWindowMode::Fullscreen; break;
 		case 1: Mode = EWindowMode::WindowedFullscreen; break;
 		case 2: Mode = EWindowMode::Windowed; break;
 		}
 		Settings->SetFullscreenMode(Mode);
-		Settings->ApplySettings(false);
 	}
 }
 
 void USettingsManager::ApplyVSync(bool bEnable)
 {
 	bVSyncEnabled = bEnable;
-	IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.VSync"));
-	if (CVar)
+	if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.VSync")))
 	{
 		CVar->Set(bEnable ? 1 : 0);
 	}
@@ -161,7 +177,6 @@ void USettingsManager::ApplyResolution(FIntPoint InResolution)
 	if (UGameUserSettings* Settings = GEngine->GetGameUserSettings())
 	{
 		Settings->SetScreenResolution(InResolution);
-		Settings->ApplySettings(false);
 	}
 }
 
@@ -171,15 +186,13 @@ void USettingsManager::ApplyFrameLimit(float FPS)
 	if (UGameUserSettings* Settings = GEngine->GetGameUserSettings())
 	{
 		Settings->SetFrameRateLimit(FPS);
-		Settings->ApplySettings(false);
 	}
 }
 
 void USettingsManager::ApplyMotionBlur(bool bEnable)
 {
 	bMotionBlurEnabled = bEnable;
-	IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MotionBlurQuality"));
-	if (CVar)
+	if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MotionBlurQuality")))
 	{
 		CVar->Set(bEnable ? 1 : 0);
 	}
@@ -188,100 +201,74 @@ void USettingsManager::ApplyMotionBlur(bool bEnable)
 void USettingsManager::ApplyShadows(bool bEnable)
 {
 	bShadowEnabled = bEnable;
-	IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("sg.ShadowQuality"));
-	if (CVar)
+	if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("sg.ShadowQuality")))
 	{
 		CVar->Set(bEnable ? 3 : 0);
 	}
 }
 
-void USettingsManager::ApplyMouseSensitivity(float InSensitivity)
-{
-	MouseSensitivity = InSensitivity;
-}
+// ===== 오디오 설정 =====
 
 void USettingsManager::ApplyVolumeMaster(float Value)
 {
 	VolumeMaster = Value;
-
 	UGameplayStatics::ClearSoundMixModifiers(this);
 	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, MasterClass, Value / 100.f, 1.f);
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
-    
-	UE_LOG(LogTemp, Warning, TEXT("AudioDevice MasterClass DefaultVolume: %.2f"), MasterClass->Properties.Volume);
 }
 
 void USettingsManager::ApplyVolumeBGM(float Value)
 {
 	VolumeBGM = Value;
-
-	if (!MasterMix || !BGMClass)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeBGM] Failed - MasterMix or BGMClass is null"));
-		return;
-	}
-
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, BGMClass, Value / 100.f, 1.0f, 0.0f, true);
+	if (!MasterMix || !BGMClass) return;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, BGMClass, Value / 100.f, 1.f, 0.f, true);
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
 }
 
 void USettingsManager::ApplyVolumeSFX(float Value)
 {
 	VolumeSFX = Value;
-
-	if (!MasterMix || !SFXClass)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeSFX] Failed - MasterMix or SFXClass is null"));
-		return;
-	}
-
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, SFXClass, Value / 100.f, 1.0f, 0.0f, true);
+	if (!MasterMix || !SFXClass) return;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, SFXClass, Value / 100.f, 1.f, 0.f, true);
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
 }
 
 void USettingsManager::ApplyVolumeUI(float Value)
 {
 	VolumeUI = Value;
-
-	if (!MasterMix || !UIClass)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeUI] Failed - MasterMix or UIClass is null"));
-		return;
-	}
-
-	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.0f, 0.0f, true);
+	if (!MasterMix || !UIClass) return;
+	UGameplayStatics::SetSoundMixClassOverride(this, MasterMix, UIClass, Value / 100.f, 1.f, 0.f, true);
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
-
-	UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeUI] Value = %.2f"), Value);
-	UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeUI] MasterMix = %s"), MasterMix ? *MasterMix->GetName() : TEXT("nullptr"));
-	UE_LOG(LogTemp, Warning, TEXT("[ApplyVolumeUI] UIClass = %s"), UIClass ? *UIClass->GetName() : TEXT("nullptr"));
 }
 
-void USettingsManager::SetVolumeMaster(float Value)
+void USettingsManager::SetVolumeMaster(float Value) { VolumeMaster = Value; }
+void USettingsManager::SetVolumeBGM(float Value)    { VolumeBGM = Value; }
+void USettingsManager::SetVolumeSFX(float Value)    { VolumeSFX = Value; }
+void USettingsManager::SetVolumeUI(float Value)     { VolumeUI = Value; }
+
+// ===== 컨트롤 설정 =====
+
+void USettingsManager::ApplyMouseSensitivity(float InSensitivity)
 {
-	VolumeMaster = Value;
+	MouseSensitivity = InSensitivity;
 }
 
-void USettingsManager::SetVolumeBGM(float Value)
-{
-	VolumeBGM = Value;
-}
+float USettingsManager::GetMouseSensitivity() const { return MouseSensitivity; }
 
-void USettingsManager::SetVolumeSFX(float Value)
+void USettingsManager::SetMouseSensitivity(float NewSensitivity)
 {
-	VolumeSFX = Value;
-}
-
-void USettingsManager::SetVolumeUI(float Value)
-{
-	VolumeUI = Value;
+	MouseSensitivity = NewSensitivity;
 }
 
 void USettingsManager::SetCustomKey(FName ActionName, FKey NewKey)
 {
+	if (ActionName.IsNone())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SettingsManager] Ignored SetCustomKey with None ActionName, Key: %s"), *NewKey.ToString());
+		return;
+	}
 	CustomKeyMap.FindOrAdd(ActionName) = NewKey;
 
-	// PlayerController에 적용
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
@@ -290,3 +277,114 @@ void USettingsManager::SetCustomKey(FName ActionName, FKey NewKey)
 		}
 	}
 }
+
+FKey USettingsManager::GetKeyForAction(FName ActionName) const
+{
+	if (const FKey* Found = CustomKeyMap.Find(ActionName))
+	{
+		return *Found;
+	}
+	return EKeys::Invalid;
+}
+
+FKey USettingsManager::GetDefaultKeyForAction(FName ActionName) const
+{
+	const TMap<FName, FKey> DefaultMap = GetDefaultKeyMap();
+	if (const FKey* Found = DefaultMap.Find(ActionName))
+	{
+		return *Found;
+	}
+	return EKeys::Invalid;
+}
+
+TMap<FName, FKey> USettingsManager::GetDefaultKeyMap() const
+{
+	TMap<FName, FKey> DefaultMap;
+
+	DefaultMap.Add(ADW_PlayerController::Action_Jump, EKeys::SpaceBar);
+	DefaultMap.Add(ADW_PlayerController::Action_Interact, EKeys::E);
+	DefaultMap.Add(ADW_PlayerController::Action_Attack, EKeys::LeftMouseButton);
+	DefaultMap.Add(ADW_PlayerController::Action_Guard, EKeys::RightMouseButton);
+	DefaultMap.Add(ADW_PlayerController::Action_ESC, EKeys::Zero);
+	DefaultMap.Add(ADW_PlayerController::Action_Lockon, EKeys::MiddleMouseButton);
+	DefaultMap.Add(ADW_PlayerController::Action_Dodge, EKeys::LeftShift);
+	DefaultMap.Add(ADW_PlayerController::Action_Skill, EKeys::R);
+	DefaultMap.Add(ADW_PlayerController::Action_Skill1, EKeys::One);
+	DefaultMap.Add(ADW_PlayerController::Action_Skill2, EKeys::Two);
+	DefaultMap.Add(ADW_PlayerController::Action_Skill3, EKeys::Three);
+	DefaultMap.Add(ADW_PlayerController::Action_Ride, EKeys::G);
+	DefaultMap.Add(ADW_PlayerController::Action_MoveForward, EKeys::W);
+	DefaultMap.Add(ADW_PlayerController::Action_MoveBackward, EKeys::S);
+	DefaultMap.Add(ADW_PlayerController::Action_MoveLeft, EKeys::A);
+	DefaultMap.Add(ADW_PlayerController::Action_MoveRight, EKeys::D);
+
+	return DefaultMap;
+}
+
+void USettingsManager::ResetKeyBindingsToDefault()
+{
+	CustomKeyMap = GetDefaultKeyMap();
+
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
+		{
+			DWPC->ApplyCustomKeyBindings(CustomKeyMap);
+		}
+	}
+
+	SaveToSlot();
+}
+
+void USettingsManager::ApplyKeyBindingsToInputSystem()
+{
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ULocalPlayer* LocalPlayer = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+			{
+				Subsystem->ClearAllMappings();
+
+				for (const TPair<FName, FKey>& Pair : CustomKeyMap)
+				{
+					if (Pair.Key.IsNone() || !Pair.Value.IsValid())
+						continue;
+
+					if (UInputAction* InputAction = GetInputActionByName(Pair.Key))
+					{
+						// 예시 Context: 반드시 유효한 MappingContext를 먼저 지정해야 함
+						if (UInputMappingContext* MappingContext = DefaultMappingContext)
+						{
+							Subsystem->AddPlayerMappedKey(Pair.Key, Pair.Value, FModifyContextOptions());
+							UE_LOG(LogTemp, Warning, TEXT("[EnhancedInput] %s -> %s"), *Pair.Key.ToString(), *Pair.Value.ToString());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+UInputAction* USettingsManager::GetInputActionByName(FName ActionName) const
+{
+	if (InputActionMap.Contains(ActionName))
+	{
+		return InputActionMap[ActionName];
+	}
+	return nullptr;
+}
+
+
+float USettingsManager::GetVolumeMaster() const { return VolumeMaster; }
+float USettingsManager::GetVolumeBGM() const { return VolumeBGM; }
+float USettingsManager::GetVolumeSFX() const { return VolumeSFX; }
+float USettingsManager::GetVolumeUI() const { return VolumeUI; }
+
+int32 USettingsManager::GetWindowModeIndex() const { return WindowModeIndex; }
+FIntPoint USettingsManager::GetResolution() const { return ResolutionValue; }
+float USettingsManager::GetFrameRateLimit() const { return FrameRateLimit; }
+
+bool USettingsManager::IsVSyncEnabled() const { return bVSyncEnabled; }
+bool USettingsManager::IsMotionBlurEnabled() const { return bMotionBlurEnabled; }
+bool USettingsManager::IsShadowEnabled() const { return bShadowEnabled; }

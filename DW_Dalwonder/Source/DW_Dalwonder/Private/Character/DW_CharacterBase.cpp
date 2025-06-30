@@ -635,6 +635,22 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 	}
 }
 
+void ADW_CharacterBase::SetWeaponMesh(UStaticMesh* WeaponMesh)
+{
+	if (IsValid(Weapon) && IsValid(WeaponMesh))
+	{
+		AActor* WeaponActor = Weapon->GetChildActor();
+		if (IsValid(WeaponActor))
+		{
+			UStaticMeshComponent* StaticMesh = WeaponActor->FindComponentByClass<UStaticMeshComponent>();
+			if (IsValid(StaticMesh))
+			{
+				StaticMesh->SetStaticMesh(WeaponMesh);
+			}
+		}
+	}
+}
+
 void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
 {
 	if (WeaponType == NewWeaponType)
