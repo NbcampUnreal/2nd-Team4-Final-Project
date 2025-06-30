@@ -7,7 +7,7 @@
 
 class UInventoryComponent;
 class UItemBase;
-enum class EItemGrade;
+enum class EItemGrade : uint8;
 
 UCLASS()
 class DW_DALWONDER_API UItemCraftManager : public UObject
