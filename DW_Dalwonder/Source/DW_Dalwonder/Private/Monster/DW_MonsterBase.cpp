@@ -508,7 +508,6 @@ void ADW_MonsterBase::Dead()
 	}
 }
 
-
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {

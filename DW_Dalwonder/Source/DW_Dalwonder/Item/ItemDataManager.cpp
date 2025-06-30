@@ -99,7 +99,7 @@ const FItemData* UItemDataManager::GetItemData(const FString& InItemID) const
     for (const FName& RowName : RowNames)
     {
         const FItemData* RowData = ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemDataByItemID"));
-        if (RowData && RowData->ItemID == InRowID)
+        if (RowData && RowData->ItemID == InItemID)
         {
             return RowData;
         }
