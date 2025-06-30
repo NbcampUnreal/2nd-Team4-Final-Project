@@ -7,6 +7,7 @@
 #include "Engine/DataTable.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
+	: Helmet(nullptr), Armor(nullptr), Pants(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
 {
 	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
@@ -41,26 +42,32 @@ bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 	if (ItemType == EEquipSlotType::Helmet)
 	{
+		Helmet = Item;
 		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Chest)
 	{
+		Armor = Item;
 		Character->Armor->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Legs)
 	{
+		Pants = Item;
 		Character->Pants->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Gloves)
 	{
+		Glove = Item;
 		Character->Glove->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Boots)
 	{
+		Boots = Item;
 		Character->Boots->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
 	else if (ItemType == EEquipSlotType::Weapon)
 	{
+		Weapon = Item;
 		Character->SetWeaponMesh(GetItemStaticMesh(Item));
 
 		// 무기 타입 결정
