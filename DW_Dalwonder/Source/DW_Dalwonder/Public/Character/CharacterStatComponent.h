@@ -27,12 +27,12 @@ protected:
 
 public:
 	// --- 주요 스탯 변경 함수 ---
-	void ConsumeHealth(float ConsumeRate);
-	void ConsumeStamina(float ConsumeRate);
-	void StopConsumeHealth();
-	void StopConsumeStamina();
-	void StartHealthRegen();
-	void StartStaminaRegen();
+	void StartHealthTimer(float Rate, bool bSwitch);
+	void StartStaminaTimer(float Rate, bool bSwitch);
+	void StopHealthTimer();
+	void StopStaminaTimer();
+	void ChangeHealthTick(float Rate, bool bSwitch);
+	void ChangeStaminaTick(float Rate, bool bSwitch);
 
 	// 모든 총합 스탯을 다시 계산하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Stat")

@@ -527,7 +527,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = StatComponent->GetSprintSpeed();
 		}
-		GetCharacterStatComponent()->ConsumeStamina(2.f);
+		GetCharacterStatComponent()->StartStaminaTimer(2.f, false);
 	}
 	else
 	{
@@ -539,8 +539,7 @@ void ADW_CharacterBase::Sprint(bool bOnSprint)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = (StatComponent->GetTotalWalkSpeed());
 		}
-		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->StartStaminaRegen();
+		GetCharacterStatComponent()->StopStaminaTimer();
 	}
 }
 
@@ -796,7 +795,7 @@ void ADW_CharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 
 float ADW_CharacterBase::TakeDamage(float DamageAmount,FDamageEvent const& DamageEvent,AController* EventInstigator,AActor* DamageCauser)
 {
-	float ActualDamage = DamageAmount;
+	float ActualDamage = DamageAmount - (StatComponent->GetTotalDefense() * 0.5f);
 
 	if (CurrentCombatState == ECharacterCombatState::Dead)
 	{
@@ -908,13 +907,14 @@ void ADW_CharacterBase::SetGuarding(bool bNewGuarding)
 
 	if (bIsGuarding)
 	{
-		GetCharacterStatComponent()->ConsumeStamina(2.f);
+		GetCharacterStatComponent()->StartStaminaTimer(2.f, false);
+		bCanControl = false;
 		PlayMontage(GuardMontage[WeaponType]);
 	}
 	else
 	{
-		GetCharacterStatComponent()->StopConsumeStamina();
-		GetCharacterStatComponent()->StartStaminaRegen();
+		GetCharacterStatComponent()->StopStaminaTimer();
+		bCanControl = true;
 		AnimInstance->Montage_Stop(0.25f, GuardMontage[WeaponType]);
 	}
 }
@@ -1043,8 +1043,8 @@ void ADW_CharacterBase::Landed(const FHitResult& Hit)
 void ADW_CharacterBase::Dead()
 {
 	DisableInput(Cast<APlayerController>(GetController()));
-	StatComponent->StopConsumeHealth();
-	StatComponent->StopConsumeStamina();
+	StatComponent->StopHealthTimer();
+	StatComponent->StopStaminaTimer();
 	bCanRideVehicle = false;
 	bCanControl = false;
 	
