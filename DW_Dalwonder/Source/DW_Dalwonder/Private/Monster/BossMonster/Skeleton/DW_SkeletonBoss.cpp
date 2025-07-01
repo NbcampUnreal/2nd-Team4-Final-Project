@@ -39,7 +39,7 @@ void ADW_SkeletonBoss::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ChangeFormTypeByRandom();
+	/*ChangeFormTypeByRandom();*/
 }
 
 void ADW_SkeletonBoss::Tick(float DeltaTime)
@@ -203,4 +203,24 @@ void ADW_SkeletonBoss::DoRagDoll()
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetSimulatePhysics(true);
+}
+
+void ADW_SkeletonBoss::ChangeToWarriorForm()
+{
+	ChangeFormType(ESkeletonFormType::Warrior);
+}
+
+void ADW_SkeletonBoss::ChangeToGreatWarriorForm()
+{
+	ChangeFormType(ESkeletonFormType::GreatWarrior);
+}
+
+void ADW_SkeletonBoss::ChangeToArcherForm()
+{
+	ChangeFormType(ESkeletonFormType::Archer);
+}
+
+void ADW_SkeletonBoss::ChangeToMageForm()
+{
+	ChangeFormType(ESkeletonFormType::Mage);
 }

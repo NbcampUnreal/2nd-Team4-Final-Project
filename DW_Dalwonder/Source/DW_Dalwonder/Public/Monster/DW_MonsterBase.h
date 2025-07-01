@@ -164,7 +164,7 @@ public:
 
 	// 트레이스 시 디버그 라인의 여부입니다.
 	UPROPERTY(EditAnywhere, Category = "Attack|Debug")
-	bool bDrawDebugTrace = true;
+	bool bDrawDebugTrace = false;
 
 	// 모르겠읍니다
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack|Debug")

@@ -92,4 +92,17 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void ChangeToWarriorForm();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeToGreatWarriorForm();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeToArcherForm();
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeToMageForm();
 };
