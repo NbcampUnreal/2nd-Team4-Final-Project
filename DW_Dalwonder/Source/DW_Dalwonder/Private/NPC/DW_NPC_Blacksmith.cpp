@@ -3,6 +3,8 @@
 #include "DW_SmiteUI.h"
 #include "Animation/AnimInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "NeutralityNPC/ItemEnhanceManager.h"
+#include "NeutralityNPC/ItemCraftManager.h"
 
 ADW_NPC_Blacksmith::ADW_NPC_Blacksmith()
 {
@@ -91,4 +93,46 @@ void ADW_NPC_Blacksmith::Interact_Implementation(AActor* Interactor)
 			}
 		}
 	}
+}
+
+void ADW_NPC_Blacksmith::HandleCraftAction()
+{
+	if (!CraftManager || !Inventory || !SelectedItem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CraftManager 또는 Inventory 또는 SelectedItem 누락"));
+		return;
+	}
+
+	const bool bSuccess = CraftManager->TryCraftItem(SelectedItem, Inventory, 1);
+	if (bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("제작 성공: %s"), *SelectedItem->ItemCode);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("제작 실패"));
+	}
+	
+	PlayEnhanceAnimation();
+}
+
+bool ADW_NPC_Blacksmith::HandleEnhanceLogic()
+{
+	// if (!EnhanceManager || !Inventory || !SelectedEnhanceItem)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("강화 데이터 누락"));
+	// 	return false;
+	// }
+
+	const bool bSuccess = EnhanceManager->TryEnhanceItem(SelectedEnhanceItem, Inventory);
+	if (bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("강화 성공"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("강화 실패"));
+	}
+
+	return bSuccess;
 }

@@ -14,35 +14,49 @@ void UDW_SmiteUI::NativeConstruct()
 	{
 		Button_Smite->OnClicked.AddDynamic(this, &UDW_SmiteUI::OnSmiteButtonClicked);
 	}
+
+	if (Button_Craft)
+	{
+		Button_Craft->OnClicked.AddDynamic(this, &UDW_SmiteUI::OnCraftButtonClicked);
+	}
+	
 	if (Button_Exit)
 	{
 		Button_Exit->OnClicked.AddDynamic(this, &UDW_SmiteUI::OnExitButtonClicked);
 	}
 }
 
-void UDW_SmiteUI::OnSmiteButtonClicked()
+void UDW_SmiteUI::OnCraftButtonClicked()
 {
-	// UI �����
 	this->SetVisibility(ESlateVisibility::Hidden);
 
-	// 강화 애니메이션 실행
 	if (ADW_NPC_Blacksmith* Blacksmith = Cast<ADW_NPC_Blacksmith>(RelatedNPC))
 	{
-		Blacksmith->HandleEnhancementAction();
-	}
-	
-	// ��ȭ ����/���� ���� ����
-	const bool bSuccess = FMath::RandBool();
-	if (bSuccess && SuccessSequence)
-	{
-		PlaySequence(SuccessSequence);
-	}
-	else if (FailSequence)
-	{
-		PlaySequence(FailSequence);
+		Blacksmith->HandleCraftAction();
 	}
 
-	// 2.5�� �� UI ����
+	GetWorld()->GetTimerManager().SetTimer(UnhideUITimerHandle, this, &UDW_SmiteUI::UnhideUI, 2.5f, false);
+}
+
+
+void UDW_SmiteUI::OnSmiteButtonClicked()
+{
+	this->SetVisibility(ESlateVisibility::Hidden);
+
+	if (ADW_NPC_Blacksmith* Blacksmith = Cast<ADW_NPC_Blacksmith>(RelatedNPC))
+	{
+		const bool bSuccess = Blacksmith->HandleEnhanceLogic();
+		if (bSuccess)
+		{
+			Blacksmith->HandleEnhancementAction();
+			PlaySequence(SuccessSequence);
+		}
+		else
+		{
+			PlaySequence(FailSequence);
+		}
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(UnhideUITimerHandle, this, &UDW_SmiteUI::UnhideUI, 2.5f, false);
 }
 

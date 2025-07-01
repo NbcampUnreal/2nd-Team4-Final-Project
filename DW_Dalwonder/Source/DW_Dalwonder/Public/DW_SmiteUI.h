@@ -15,12 +15,16 @@ class DW_DALWONDER_API UDW_SmiteUI : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	
 
 	UPROPERTY()
 	AActor* RelatedNPC;
 protected:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button_Smite;
+	
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_Craft;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enhance")
 	ULevelSequence* SuccessSequence;
@@ -31,6 +35,9 @@ protected:
 
 	UFUNCTION()
 	void OnSmiteButtonClicked();
+	
+	UFUNCTION()
+	void OnCraftButtonClicked();
 
 	UFUNCTION()
 	void OnExitButtonClicked();
