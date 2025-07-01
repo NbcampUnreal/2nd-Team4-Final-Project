@@ -10,8 +10,8 @@
 | 항목         | 내용                                                                             |
 | ---------- | ------------------------------------------------------------------------------ |
 | **엔진**     | Unreal Engine 5.4.4                                                            |
-| **장르**     | 싱글플레이 + 확장형 멀티 고려, 3인칭 액션 RPG                                                  |
-| **주요 기술**  | World Partition / Nanite / DLSS / Detour Crowd + RVO / EQS / Reflex            |
+| **장르**     | 싱글플레이 전용 3인칭 액션 RPG                                                            |
+| **주요 기술**  | World Partition / Nanite / DLSS / Reflex / Detour Crowd + RVO / EQS            |
 | **지원 플랫폼** | Windows 64bit (추가 플랫폼 지원 예정)                                                   |
 | **개발 기간**  | 2025년 5월 7일 \~ 7월 1일 (약 2개월)                                                   |
 | **핵심 시스템** | 콤보 전투 / 타이밍 패링 / 속성 무기 / 오픈월드 탐험 / 제작 및 강화 / 스킬 트리 / 인벤토리 시스템 / 동적 지도 / HUD 구성 |
@@ -22,14 +22,14 @@
 
 > *벤치마크 수치는 추후 업데이트 예정입니다.*
 
-| 구분      | 최소                                | 권장                      |
-| ------- | --------------------------------- | ----------------------- |
-| OS      | Windows 10 64-bit                 | Windows 11 64-bit       |
-| CPU     | 6-core Intel / AMD                | 8-core Intel / AMD      |
-| GPU     | GTX 1660 Super                    | RTX 3060 Ti (DLSS 사용 시) |
-| RAM     | 16 GB                             | 32 GB                   |
-| Storage | 30 GB SSD                         | NVMe SSD                |
-| IDE     | Rider 2024.1 / Visual Studio 2022 | 동일                      |
+| 구분      | 최소                                           | 권장                      |
+| ------- | -------------------------------------------- | ----------------------- |
+| OS      | Windows 10 64-bit                            | Windows 11 64-bit       |
+| CPU     | 6-core Intel / AMD                           | 8-core Intel / AMD      |
+| GPU     | GTX 1660 Super                               | RTX 3060 Ti (DLSS 사용 시) |
+| RAM     | 16 GB                                        | 32 GB                   |
+| Storage | 30 GB SSD                                    | NVMe SSD                |
+| IDE     | Rider 2024.1 / Visual Studio 2022 (최소·권장 동일) |                         |
 
 ---
 
@@ -75,8 +75,8 @@ start DalWondering.uproject
 
 ### 🎨 그래픽 렌더링 & 퍼포먼스
 
-* **DLSS**: 업스케일링, 프레임 생성, 레이 트레이싱까지 결합한 성능-비주얼 밸런싱
-* **Reflex**: 입력 지연 최소화, 타이밍 중심 액션 플레이에 최적화
+* **DLSS**: 해상도 업스케일링 및 프레임 생성으로 고해상도 퍼포먼스를 보장
+* **Reflex**: 입력 지연 최소화 → 패링/회피 중심 전투에서 타이밍 정밀도 향상
 
 ### 🦾 캐릭터 모션 & 전투 메카닉
 
@@ -86,13 +86,14 @@ start DalWondering.uproject
 ### 🧠 AI & NPC 로직
 
 * **Perception + EQS** 기반 적 감지 및 경로 탐색
-* **Detour Crowd + RVO** 기반 군중 AI와의 결합으로 유기적 전투 흐름 구현
+* **Detour Crowd + RVO** 기반 군중 AI를 통해 마을이나 도시 환경에서 자연스럽게 이동하는 NPC 행동 구현
 
 ### ⚒️ 아이템 제작·강화·성장 시스템
 
 * 몬스터 처치 → 숙련도 획득 → 스킬 트리 포인트 분배
 * 강화 성공/실패에 따른 외형 변화 및 파괴 위험, 제작 재료 루프 설계
-* **ItemCode 파싱 시스템**: 등급/강화 수치/RowID 인코딩으로 효율적 관리
+* **ItemCode 파싱 시스템**:
+  “등급/강화/RowID” 정보를 문자열로 인코딩하여 아이템을 통합 관리. 코드 파싱 후 `ItemDataManager`에서 세부 데이터 로딩.
 
 ### 🖥️ UI/UX & HUD 구성
 
@@ -111,11 +112,12 @@ start DalWondering.uproject
 /Interface      ─ 공통 인터페이스 (C++)
 /Maps           ─ 월드 Partition 레벨 구성
 /Monster        ─ 몬스터 AI 및 애셋
-/NeutralityNPC  ─ 중립 NPC
+/NeutralityNPC  ─ 중립 NPC (Detour Crowd 기반)
 /NPC            ─ 마을 NPC 및 상호작용
 /Projectile     ─ 투사체 관련 로직
 /Telegraph      ─ 공격 텔레그래프 비주얼 이펙트
 /UI             ─ 위젯 및 HUD
+/Core           ─ GameMode / GameInstance 등 전역 게임 흐름 관리
 ```
 
 ※ 추후 세부 폴더 구조 변경 가능
@@ -132,10 +134,10 @@ start DalWondering.uproject
   → 커스터마이징 가능한 로딩 화면 구현
 
 * **PCG / Landmass / Water / Volumetrics**
-  → 지형 및 환경 표현 강화 (절차적 생성, 수계 등)
+  → 절차적 필드·던전 자동 생성 및 수계 지형 표현 강화
 
 * **SkeletalMerging**
-  → 스켈레톤 메쉬 최적화 및 병합에 활용
+  → 파츠 교체형 캐릭터의 최적화 및 스켈레톤 병합 지원
 
 ---
 
@@ -153,13 +155,15 @@ start DalWondering.uproject
 * `[Fix]` : 버그 수정 또는 비효율 로직 개선
 * `[Update]` : 기존 로직·시스템 개선
 * `[Del]` : 불필요한 코드, 에셋 삭제
-* `[Check in]`, `[Check out]` : LFS Lock 파일 관리
+* `[Lock]`, `[Unlock]` : Git LFS 파일 관리용 Lock 메시지
 
 ---
 
 ## 🖋️ 코드 스타일 가이드
 
 * Epic 공식 UE Coding Standard 기반
+* 4-space 탭, PascalCase 클래스명, `b` 접두어 Bool, `U`/`F` 등 프리픽스 사용
+* 자동 정렬 도구: Rider UE Formatter / clang-format
 
 ---
 
