@@ -47,10 +47,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UCustomButtonWidget* ExitButton;
 
-	// 연결 위젯들
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> SavedGameWidgetClass;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	TSubclassOf<UUserWidget> OptionMenuWidgetClass;
 };

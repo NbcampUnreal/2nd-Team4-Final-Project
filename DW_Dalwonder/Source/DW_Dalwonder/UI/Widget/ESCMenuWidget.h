@@ -87,7 +87,4 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> OptionMenuWidgetClass;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-    TSubclassOf<UUserWidget> SavedGameWidgetClass;
 };
