@@ -112,7 +112,7 @@ start DalWondering.uproject
 /Interface      ─ 공통 인터페이스 (C++)
 /Maps           ─ 월드 Partition 레벨 구성
 /Monster        ─ 몬스터 AI 및 애셋
-/NeutralityNPC  ─ 중립 NPC (Detour Crowd 기반)
+/NeutralityNPC  ─ 중립 NPC
 /NPC            ─ 마을 NPC 및 상호작용
 /Projectile     ─ 투사체 관련 로직
 /Telegraph      ─ 공격 텔레그래프 비주얼 이펙트
@@ -162,8 +162,6 @@ start DalWondering.uproject
 ## 🖋️ 코드 스타일 가이드
 
 * Epic 공식 UE Coding Standard 기반
-* 4-space 탭, PascalCase 클래스명, `b` 접두어 Bool, `U`/`F` 등 프리픽스 사용
-* 자동 정렬 도구: Rider UE Formatter / clang-format
 
 ---
 
