@@ -24,11 +24,25 @@ void USettingRow_KeyBind::NativePreConstruct()
 void USettingRow_KeyBind::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	UE_LOG(LogTemp, Warning, TEXT("[KeyBindConstruct] Widget: %s | ActionName: %s"), *GetName(), *ActionName.ToString());
+
+	if (ActionName.IsNone())
+	{
+		FString WidgetName = GetName();
+		// 예: "KeyBind_MoveForward"에서 "MoveForward" 추출
+		FString Suffix;
+		if (WidgetName.Split(TEXT("KeyBind_"), nullptr, &Suffix))
+		{
+			ActionName = FName(*Suffix);
+			UE_LOG(LogTemp, Warning, TEXT("[KeyBindConstruct] 추론된 ActionName: %s"), *ActionName.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[KeyBindConstruct] 추론 실패 - 위젯 이름 확인 필요: %s"), *WidgetName);
+		}
+	}
 
 	SetIsFocusable(true);
-	
+
 	if (Text_KeyName)
 	{
 		Text_KeyName->SetText(FText::FromString(AssignedKey.GetDisplayName().ToString()));
@@ -42,18 +56,15 @@ void USettingRow_KeyBind::NativeConstruct()
 		Button_AssignKey->OnClicked.AddDynamic(this, &USettingRow_KeyBind::StartListeningForKey);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("NativeConstruct - ActionName: %s"), *ActionName.ToString());
 }
 
 void USettingRow_KeyBind::StartListeningForKey()
 {
 	if (ActionName.IsNone())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[StartListening] Blocked - ActionName is None"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[StartListening] ActionName: %s"), *ActionName.ToString());
 
 	bIsListeningForInput = true;
 	Text_KeyName->SetText(FText::FromString(TEXT("...")));
@@ -64,7 +75,6 @@ FReply USettingRow_KeyBind::NativeOnKeyDown(const FGeometry& InGeometry, const F
 {
 	if (bIsListeningForInput)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Pressed key: %s"), *InKeyEvent.GetKey().ToString());
 		bIsListeningForInput = false;
 
 		const FKey PressedKey = InKeyEvent.GetKey();

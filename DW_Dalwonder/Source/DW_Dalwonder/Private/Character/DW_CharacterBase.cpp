@@ -189,11 +189,26 @@ void ADW_CharacterBase::PostInitializeComponents()
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (auto* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		// 컨트롤러로 토글 요청
+		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+		{
+			EIC->BindAction(PC->ESCAction, ETriggerEvent::Started, PC, &ADW_PlayerController::ToggleESCMenu);
+		}
+	}
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
 		{
+			// EnhancedInputComponent->BindAction(
+			// 	PlayerController->ESCAction,
+			// 	ETriggerEvent::Started,
+			// 	PlayerController,
+			// 	&ADW_PlayerController::ToggleESCMenu
+			// );
 			if (PlayerController->MoveForwardAction)
 			{
 				EnhancedInputComponent->BindAction(
@@ -227,13 +242,22 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::MoveRight);
 			}
 
-			if (PlayerController->LookAction)
+			if (PlayerController->LookUpAction)
 			{
 				EnhancedInputComponent->BindAction(
-					PlayerController->LookAction,
+					PlayerController->LookUpAction,
 					ETriggerEvent::Triggered,
 					this,
-					&ADW_CharacterBase::Look);
+					&ADW_CharacterBase::LookUp);
+			}
+
+			if (PlayerController->TurnAction)
+			{
+				EnhancedInputComponent->BindAction(
+					PlayerController->TurnAction,
+					ETriggerEvent::Triggered,
+					this,
+					&ADW_CharacterBase::Turn);
 			}
 			
 			if (PlayerController->JumpAction)
@@ -363,7 +387,6 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 	}
 }
-
 void ADW_CharacterBase::MoveForward(const FInputActionValue& Value)
 {
 	if (!Controller || !bCanControl) return;
@@ -421,11 +444,11 @@ void ADW_CharacterBase::MoveRight(const FInputActionValue& Value)
 }
 
 
-void ADW_CharacterBase::Look(const FInputActionValue& Value)
+void ADW_CharacterBase::LookUp(const FInputActionValue& Value)
 {
 	if (bIsLockOn) return;
 
-	FVector2D LookInput = Value.Get<FVector2D>();
+	float YInput = Value.Get<float>();
 
 	float Sensitivity = 1.f;
 	if (UWorld* World = GetWorld())
@@ -439,8 +462,29 @@ void ADW_CharacterBase::Look(const FInputActionValue& Value)
 		}
 	}
 
-	AddControllerYawInput(LookInput.X * Sensitivity);
-	AddControllerPitchInput(LookInput.Y * Sensitivity);
+	AddControllerPitchInput(-YInput * Sensitivity);
+}
+
+void ADW_CharacterBase::Turn(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("[입력] TURN: %s"), *Value.ToString());
+	if (bIsLockOn) return;
+
+	float XInput = Value.Get<float>();
+
+	float Sensitivity = 1.f;
+	if (UWorld* World = GetWorld())
+	{
+		if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(World->GetGameInstance()))
+		{
+			if (const USettingsManager* SM = GI->GetSettingsManager())
+			{
+				Sensitivity = SM->GetMouseSensitivity();
+			}
+		}
+	}
+
+	AddControllerYawInput(XInput * Sensitivity);
 }
 
 void ADW_CharacterBase::StartJump(const FInputActionValue& Value)

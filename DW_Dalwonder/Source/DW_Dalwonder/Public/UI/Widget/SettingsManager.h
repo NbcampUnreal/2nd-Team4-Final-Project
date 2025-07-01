@@ -20,6 +20,7 @@ class DW_DALWONDER_API USettingsManager : public UObject
 public:
 	// 생성자 및 초기화
 	USettingsManager();
+	void AutoInitializeInputActionMap();
 	void Initialize();
 
 	// 저장 & 불러오기
@@ -76,12 +77,15 @@ public:
 	bool IsVSyncEnabled() const;
 	bool IsMotionBlurEnabled() const;
 	bool IsShadowEnabled() const;
+	void DebugPrintAllMappings();
 
 	float GetVolumeMaster() const;
 	float GetVolumeBGM() const;
 	float GetVolumeSFX() const;
 	float GetVolumeUI() const;
 	USoundMix* GetMasterMix() const;
+
+	TMap<FName, FKey> GetCustomKeyMap() const;
 
 protected:
 	// 에셋 (디자인 타임에 할당 가능)

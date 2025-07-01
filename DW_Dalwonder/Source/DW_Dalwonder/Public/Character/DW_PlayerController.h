@@ -56,7 +56,10 @@ public:
 	UInputAction* MoveRightAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LookAction;
+	UInputAction* LookUpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* TurnAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* JumpAction;
@@ -108,7 +111,8 @@ public:
 	static const FName Action_MoveBackward;
 	static const FName Action_MoveLeft;
 	static const FName Action_MoveRight;
-	static const FName Action_Look;
+	static const FName Action_LookUp;
+	static const FName Action_Turn;
 	static const FName Action_Jump;
 	static const FName Action_Attack;
 	static const FName Action_Interact;
@@ -135,7 +139,10 @@ public:
 	void HandleMoveRight(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void HandleLook(const FInputActionValue& Value);
+	void HandleLookUp(const FInputActionValue& Value);
+	
+	UFUNCTION()
+	void HandleTurn(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void HandleJump();

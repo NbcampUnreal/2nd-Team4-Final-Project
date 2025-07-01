@@ -74,6 +74,8 @@ protected:
 public:
 	// ▶ 플레이어 입력 바인딩 (InputAction → 함수 연결)
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+
 
 	// -----------------------------
 	// 📌 입력 처리 관련 함수
@@ -91,7 +93,10 @@ public:
 	void MoveRight(const FInputActionValue& Value);           // 이동 입력
 
 	UFUNCTION()
-	void Look(const FInputActionValue& Value);             // 마우스/패드 시점 회전 입력
+	void LookUp(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Turn(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void StartJump(const FInputActionValue& Value);        // 점프 시작

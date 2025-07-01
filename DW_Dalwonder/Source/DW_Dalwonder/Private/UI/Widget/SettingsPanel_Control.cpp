@@ -39,6 +39,9 @@ void USettingsPanel_Control::NativeConstruct()
 			SetupKeyBind(KeyBind_MoveBackward,  ADW_PlayerController::Action_MoveBackward, "Move Backward");
 			SetupKeyBind(KeyBind_MoveLeft,      ADW_PlayerController::Action_MoveLeft,     "Move Left");
 			SetupKeyBind(KeyBind_MoveRight,     ADW_PlayerController::Action_MoveRight,    "Move Right");
+			
+			SetupKeyBind(KeyBind_LookUp, ADW_PlayerController::Action_LookUp, "Look Up");
+			SetupKeyBind(KeyBind_Turn,   ADW_PlayerController::Action_Turn,   "Turn");
 
 			// 기본 액션
 			SetupKeyBind(KeyBind_Jump,      ADW_PlayerController::Action_Jump,      "Jump");
@@ -68,7 +71,7 @@ void USettingsPanel_Control::NativeConstruct()
 		if (KeyBind)
 			KeyBind->OnKeyAssigned.AddDynamic(this, &USettingsPanel_Control::HandleKeyBindChanged);
 	};
-
+	
 	BindDelegate(KeyBind_MoveForward);
 	BindDelegate(KeyBind_MoveBackward);
 	BindDelegate(KeyBind_MoveLeft);
@@ -84,6 +87,8 @@ void USettingsPanel_Control::NativeConstruct()
 	BindDelegate(KeyBind_UseSkill2);
 	BindDelegate(KeyBind_UseSkill3);
 	BindDelegate(KeyBind_Ride);
+	BindDelegate(KeyBind_LookUp);
+	BindDelegate(KeyBind_Turn);
 
 	if (Button_ResetKeys)
 	{

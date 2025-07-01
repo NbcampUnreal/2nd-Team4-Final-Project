@@ -1,4 +1,6 @@
 #include "Character/DW_PlayerController.h"
+
+#include "DW_GameInstance.h"
 #include "DW_GmBase.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -11,13 +13,16 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
+#include "Character/DW_CharacterBase.h"
 #include "UI/Widget/BossHUDWidget.h"
+#include "UI/Widget/SettingsManager.h"
 
 const FName ADW_PlayerController::Action_MoveForward = TEXT("Move_Forward");
 const FName ADW_PlayerController::Action_MoveBackward = TEXT("Move_Backward");
 const FName ADW_PlayerController::Action_MoveLeft = TEXT("Move_Left");
 const FName ADW_PlayerController::Action_MoveRight = TEXT("Move_Right");
-const FName ADW_PlayerController::Action_Look = TEXT("Look");
+const FName ADW_PlayerController::Action_LookUp = TEXT("LookUp");
+const FName ADW_PlayerController::Action_Turn = TEXT("Turn");
 const FName ADW_PlayerController::Action_Jump = TEXT("Jump");
 const FName ADW_PlayerController::Action_Attack = TEXT("Attack");
 const FName ADW_PlayerController::Action_Interact = TEXT("Interact");
@@ -37,7 +42,8 @@ ADW_PlayerController::ADW_PlayerController()
 	MoveBackwardAction(nullptr),
 	MoveLeftAction(nullptr),
 	MoveRightAction(nullptr),
-	LookAction(nullptr),
+	LookUpAction(nullptr),
+	TurnAction(nullptr),
 	JumpAction(nullptr),
 	AttackAction(nullptr),
 	InteractAction(nullptr),
@@ -56,6 +62,11 @@ ADW_PlayerController::ADW_PlayerController()
 void ADW_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetGameInstance()))
+	{
+		GI->GetSettingsManager()->ApplyKeyBindingsToInputSystem();
+	}
 
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
 	{
@@ -72,7 +83,8 @@ void ADW_PlayerController::BeginPlay()
 	ActionMap.Add(Action_MoveBackward, MoveBackwardAction);
 	ActionMap.Add(Action_MoveLeft, MoveLeftAction);
 	ActionMap.Add(Action_MoveRight, MoveRightAction);
-	ActionMap.Add(Action_Look, LookAction);
+	ActionMap.Add(Action_LookUp, LookUpAction);
+	ActionMap.Add(Action_Turn, TurnAction);
 	ActionMap.Add(Action_Jump, JumpAction);
 	ActionMap.Add(Action_Attack, AttackAction);
 	ActionMap.Add(Action_Interact, InteractAction);
@@ -93,27 +105,16 @@ void ADW_PlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	if (UEnhancedInputComponent* EI = Cast<UEnhancedInputComponent>(InputComponent))
 	{
-		if (ESCAction)
+		// if (ESCAction)
+		// {
+		// 	EI->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
+		// }
+
+		if (auto* SM = Cast<UDW_GameInstance>(GetGameInstance())->GetSettingsManager())
 		{
-			EnhancedInputComponent->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
-		}
-		if (MoveForwardAction)
-		{
-			EnhancedInputComponent->BindAction(MoveForwardAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveForward);
-		}
-		if (MoveBackwardAction)
-		{
-			EnhancedInputComponent->BindAction(MoveBackwardAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveBackward);
-		}
-		if (MoveLeftAction)
-		{
-			EnhancedInputComponent->BindAction(MoveLeftAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveLeft);
-		}
-		if (MoveRightAction)
-		{
-			EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveRight);
+			ApplyCustomKeyBindings(SM->GetCustomKeyMap());
 		}
 	}
 }
@@ -138,6 +139,7 @@ void ADW_PlayerController::OnPossess(APawn* InPawn)
 
 void ADW_PlayerController::ToggleESCMenu()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ToggleESCMenu() 호출됨"));
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (!GameMode || !ESCMenuWidgetClass)
     {
@@ -338,7 +340,6 @@ void ADW_PlayerController::ApplyCustomKeyBindings(const TMap<FName, FKey>& KeyMa
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		EnhancedInput->ClearActionBindings();
-
 		for (const TPair<FName, FKey>& Pair : KeyMap)
 		{
 			const FName& ActionName = Pair.Key;
@@ -361,9 +362,13 @@ void ADW_PlayerController::ApplyCustomKeyBindings(const TMap<FName, FKey>& KeyMa
 			{
 				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleMoveRight);
 			}
-			else if (ActionName == Action_Look)
+			else if (ActionName == Action_LookUp)
 			{
-				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleLook);
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleLookUp);
+			}
+			else if (ActionName == Action_Turn)
+			{
+				EnhancedInput->BindAction(Action, ETriggerEvent::Triggered, this, &ADW_PlayerController::HandleTurn);
 			}
 			else if (ActionName == Action_Jump)
 			{
@@ -459,11 +464,15 @@ void ADW_PlayerController::HandleMoveRight(const FInputActionValue& Value)
 }
 
 
-void ADW_PlayerController::HandleLook(const FInputActionValue& Value)
+void ADW_PlayerController::HandleLookUp(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Log, TEXT("[입력] Look: %s"), *Value.ToString());
+
 }
 
+void ADW_PlayerController::HandleTurn(const FInputActionValue& Value)
+{
+
+}
 void ADW_PlayerController::HandleJump()
 {
 	UE_LOG(LogTemp, Log, TEXT("[입력] Jump"));

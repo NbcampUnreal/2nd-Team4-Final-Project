@@ -11,6 +11,7 @@
 #include "Character/DW_PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
+#include "Engine/ObjectLibrary.h"
 
 USettingsManager::USettingsManager()
 {
@@ -20,23 +21,46 @@ USettingsManager::USettingsManager()
 	SFXClassAsset = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_SFX.SC_SFX")));
 	UIClassAsset   = TSoftObjectPtr<USoundClass>(FSoftObjectPath(TEXT("/Game/BluePrint/UI/Sounds/SoundClass/SC_UI.SC_UI")));
 
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC(TEXT("/Game/Input/IMC_Default.IMC_Default"));
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC(TEXT("/Game/BluePrint/Input/IMC_Base.IMC_Base"));
 	if (IMC.Succeeded())
 	{
 		DefaultMappingContext = IMC.Object;
 	}
 }
 
+void USettingsManager::AutoInitializeInputActionMap()
+{
+	const FString Path = TEXT("/Game/BluePrint/Input");
+	UObjectLibrary* ObjLib = UObjectLibrary::CreateLibrary(UInputAction::StaticClass(), false, GIsEditor);
+	if (!ObjLib) return;
+
+	
+	ObjLib->AddToRoot();
+	ObjLib->LoadAssetDataFromPath(Path);
+	TArray<FAssetData> AssetDatas;
+	ObjLib->GetAssetDataList(AssetDatas);
+
+	for (const FAssetData& Data : AssetDatas)
+	{
+		FName ActionName = FName(*Data.AssetName.ToString().Replace(TEXT("IA_"), TEXT("")));
+		UInputAction* LoadedAction = Cast<UInputAction>(Data.GetAsset());
+		if (LoadedAction)
+		{
+			InputActionMap.Add(ActionName, LoadedAction);
+		}
+	}
+}
+
 void USettingsManager::Initialize()
 {
-	// 에셋 로드
 	MasterMix = MasterMixAsset.LoadSynchronous();
 	MasterClass = MasterClassAsset.LoadSynchronous();
 	BGMClass = BGMClassAsset.LoadSynchronous();
 	SFXClass = SFXClassAsset.LoadSynchronous();
 	UIClass = UIClassAsset.LoadSynchronous();
 
-	// 저장값 로드 또는 기본값 설정
+	AutoInitializeInputActionMap();
+
 	LoadSettings();
 
 	if (CustomKeyMap.Num() == 0)
@@ -44,11 +68,12 @@ void USettingsManager::Initialize()
 		CustomKeyMap = GetDefaultKeyMap();
 	}
 
-	// 오디오 즉시 반영
 	ApplyVolumeMaster(VolumeMaster);
 	ApplyVolumeBGM(VolumeBGM);
 	ApplyVolumeSFX(VolumeSFX);
 	ApplyVolumeUI(VolumeUI);
+
+	ApplyKeyBindingsToInputSystem();
 }
 
 void USettingsManager::ApplySettings()
@@ -78,7 +103,6 @@ void USettingsManager::SaveToSlot()
 				UE_LOG(LogTemp, Warning, TEXT("[SettingsManager] Skipping save for None key: %s"), *Pair.Value.ToString());
 				continue;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Saving KeyMap - %s: %s"), *Pair.Key.ToString(), *Pair.Value.ToString());
 		}
 		UGameplayStatics::SaveGameToSlot(Save, TEXT("Default"), 0);
 	}
@@ -317,6 +341,8 @@ TMap<FName, FKey> USettingsManager::GetDefaultKeyMap() const
 	DefaultMap.Add(ADW_PlayerController::Action_MoveBackward, EKeys::S);
 	DefaultMap.Add(ADW_PlayerController::Action_MoveLeft, EKeys::A);
 	DefaultMap.Add(ADW_PlayerController::Action_MoveRight, EKeys::D);
+	DefaultMap.Add(ADW_PlayerController::Action_LookUp, EKeys::MouseY);
+	DefaultMap.Add(ADW_PlayerController::Action_Turn, EKeys::MouseX);
 
 	return DefaultMap;
 }
@@ -345,25 +371,38 @@ void USettingsManager::ApplyKeyBindingsToInputSystem()
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
 			{
 				Subsystem->ClearAllMappings();
+				DefaultMappingContext->UnmapAll();
+
+				DefaultMappingContext->UnmapAll();
 
 				for (const TPair<FName, FKey>& Pair : CustomKeyMap)
 				{
-					if (Pair.Key.IsNone() || !Pair.Value.IsValid())
-						continue;
-
-					if (UInputAction* InputAction = GetInputActionByName(Pair.Key))
+					if (UInputAction* Action = GetInputActionByName(Pair.Key))
 					{
-						// 예시 Context: 반드시 유효한 MappingContext를 먼저 지정해야 함
-						if (UInputMappingContext* MappingContext = DefaultMappingContext)
-						{
-							Subsystem->AddPlayerMappedKey(Pair.Key, Pair.Value, FModifyContextOptions());
-							UE_LOG(LogTemp, Warning, TEXT("[EnhancedInput] %s -> %s"), *Pair.Key.ToString(), *Pair.Value.ToString());
-						}
+						DefaultMappingContext->MapKey(Action, Pair.Value);
 					}
 				}
+
+				if (UInputAction* TurnAction = GetInputActionByName("Turn"))
+				{
+					DefaultMappingContext->MapKey(TurnAction, EKeys::MouseX);
+				}
+				if (UInputAction* LookUpAction = GetInputActionByName("LookUp"))
+				{
+					DefaultMappingContext->MapKey(LookUpAction, EKeys::MouseY);
+				}
+
+				// 고정 키 등록
+				// if (UInputAction* ESCAction = GetInputActionByName("ESC"))
+				// {
+				// 	DefaultMappingContext->MapKey(ESCAction, EKeys::Zero);
+				// }
+
+				Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			}
 		}
 	}
+	DebugPrintAllMappings();
 }
 
 UInputAction* USettingsManager::GetInputActionByName(FName ActionName) const
@@ -381,6 +420,8 @@ float USettingsManager::GetVolumeBGM() const { return VolumeBGM; }
 float USettingsManager::GetVolumeSFX() const { return VolumeSFX; }
 float USettingsManager::GetVolumeUI() const { return VolumeUI; }
 
+TMap<FName, FKey> USettingsManager::GetCustomKeyMap() const { return CustomKeyMap; } 
+
 int32 USettingsManager::GetWindowModeIndex() const { return WindowModeIndex; }
 FIntPoint USettingsManager::GetResolution() const { return ResolutionValue; }
 float USettingsManager::GetFrameRateLimit() const { return FrameRateLimit; }
@@ -388,3 +429,27 @@ float USettingsManager::GetFrameRateLimit() const { return FrameRateLimit; }
 bool USettingsManager::IsVSyncEnabled() const { return bVSyncEnabled; }
 bool USettingsManager::IsMotionBlurEnabled() const { return bMotionBlurEnabled; }
 bool USettingsManager::IsShadowEnabled() const { return bShadowEnabled; }
+
+void USettingsManager::DebugPrintAllMappings()
+{
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		if (ULocalPlayer* LocalPlayer = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("===== 현재 입력 매핑 목록 ====="));
+				const UInputMappingContext* Context = DefaultMappingContext; // 네 시스템에 맞게 수정
+				if (Context)
+				{
+					const TArray<FEnhancedActionKeyMapping>& Mappings = Context->GetMappings();
+					for (const FEnhancedActionKeyMapping& Mapping : Mappings)
+					{
+						FString ActionName = Mapping.Action ? Mapping.Action->GetName() : TEXT("NULL");
+						UE_LOG(LogTemp, Warning, TEXT("Action: %s, Key: %s"), *ActionName, *Mapping.Key.GetDisplayName().ToString());
+					}
+				}
+			}
+		}
+	}
+}

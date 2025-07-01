@@ -36,6 +36,12 @@ protected:
 	
 	// 키 바인딩 위젯 참조 (BindWidget)
 	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_LookUp;
+	
+	UPROPERTY(meta = (BindWidget))
+	class USettingRow_KeyBind* KeyBind_Turn;
+	
+	UPROPERTY(meta = (BindWidget))
 	class USettingRow_KeyBind* KeyBind_MoveForward;
 
 	UPROPERTY(meta = (BindWidget))
