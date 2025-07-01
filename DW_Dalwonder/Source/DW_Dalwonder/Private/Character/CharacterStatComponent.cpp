@@ -49,138 +49,80 @@ void UCharacterStatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	ClearAllBuffTimers(); // 버프 타이머들도 클리어
 }
 
-void UCharacterStatComponent::ConsumeHealth(float ConsumeRate)
+void UCharacterStatComponent::StartHealthTimer(float Rate, bool bSwitch)
 {
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
-	GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
-		{
-			if (FMath::IsNearlyZero(Health) || Character->CurrentCombatState == ECharacterCombatState::Dead)
-			{
-				StopConsumeHealth();
-				return;
-			}
-		
-			Health = FMath::Clamp(Health - ConsumeRate, 0.f, GetTotalMaxHealth());
-            OnHealthChanged.Broadcast(Health, TotalMaxHealth);
-		}), 0.5f, true);
-#if WITH_EDITOR
-    UE_LOG(LogTemp, Log, TEXT("Health consume started. Rate: %f"), ConsumeRate);
-#endif
-}
-
-void UCharacterStatComponent::ConsumeStamina(float ConsumeRate)
-{
-	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-	GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
-		{
-			if (FMath::IsNearlyZero(Stamina) || Character->CurrentCombatState == ECharacterCombatState::Dead)
-			{
-				StopConsumeStamina();
-				return;
-			}
-		
-			Stamina = FMath::Clamp(Stamina - ConsumeRate, 0.f, GetTotalMaxStamina());
-            OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
-		}), 0.5f, true);
-}
-
-void UCharacterStatComponent::StopConsumeHealth()
-{
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
-}
-
-void UCharacterStatComponent::StopConsumeStamina()
-{
-	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
-
-    if (Character) // Character가 유효한지 확인
-    {
-        if (Character->bIsGuarding)
-        {
-            Character->SetGuarding(false);
-        }
-
-        if (Character->bIsSprinting)
-        {
-            Character->Sprint(false);
-        }
-    }
-
-}
-
-void UCharacterStatComponent::StartHealthRegen()
-{
-	if (Character->CurrentCombatState == ECharacterCombatState::Dead)
-	{
-		return;
-	}
-
-	GetWorld()->GetTimerManager().ClearTimer(HealthTimer);  
-
-    // 이미 최대 체력이면 재생 시작하지 않음
-    if (Health >= GetTotalMaxHealth())
+    if (Character->CurrentCombatState == ECharacterCombatState::Dead)
     {
         return;
     }
-
-    GetWorld()->GetTimerManager().SetTimer(HealthTimer, FTimerDelegate::CreateLambda([&]
-        {
-            // 재생 중 캐릭터가 죽으면 중지
-            if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
-            {
-                StopConsumeHealth(); // 재생 타이머를 중지
-                return;
-            }
-
-            // 체력이 최대치에 도달하면 재생 중지
-            if (FMath::IsNearlyEqual(Health, GetTotalMaxHealth())) // 부동 소수점 비교는 IsNearlyEqual 사용
-            {
-                StopConsumeHealth(); // 재생 타이머를 중지
-                return;
-            }
-
-            // 체력 재생, GetTotalHealthGenRate() 사용
-            Health = FMath::Clamp(Health + GetTotalHealthGenRate(), 0.f, GetTotalMaxHealth());
-            OnHealthChanged.Broadcast(Health, TotalMaxHealth); // 체력 변경 UI 업데이트
-        }), 0.5f, true);
+    
+    StopHealthTimer();
+    GetWorld()->GetTimerManager().SetTimer(
+        HealthTimer,
+        FTimerDelegate::CreateUObject(this, &UCharacterStatComponent::ChangeHealthTick, Rate, bSwitch),
+        1.f, true);
 }
 
-void UCharacterStatComponent::StartStaminaRegen()
+void UCharacterStatComponent::StartStaminaTimer(float Rate, bool bSwitch)
 {
-    if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
+    if (Character->CurrentCombatState == ECharacterCombatState::Dead)
     {
         return;
     }
+    
+    StopStaminaTimer();
+    GetWorld()->GetTimerManager().SetTimer(
+        StaminaTimer,
+        FTimerDelegate::CreateUObject(this, &UCharacterStatComponent::ChangeStaminaTick, Rate, bSwitch),
+        1.f, true);
+}
 
-    // 기존 타이머가 있다면 중지
+void UCharacterStatComponent::StopHealthTimer()
+{
+    GetWorld()->GetTimerManager().ClearTimer(HealthTimer);
+}
+
+void UCharacterStatComponent::StopStaminaTimer()
+{
     GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+}
 
-    // 이미 최대 스태미너면 재생 시작하지 않음
-    if (Stamina >= GetTotalMaxStamina())
+void UCharacterStatComponent::ChangeHealthTick(float Rate, bool bSwitch)
+{
+    if (GetHealth() <= 0 || GetHealth() >= GetTotalMaxHealth())
     {
+        StopHealthTimer();
         return;
     }
+    
+    if (bSwitch)
+    {
+        Health += Rate;
+    }
+    else
+    {
+        Health -= Rate;
+    }
+    OnHealthChanged.Broadcast(Health, TotalMaxHealth);
+}
 
-    GetWorld()->GetTimerManager().SetTimer(StaminaTimer, FTimerDelegate::CreateLambda([&]
-        {
-            // 재생 중 캐릭터가 죽으면 중지
-            if (Character && Character->CurrentCombatState == ECharacterCombatState::Dead)
-            {
-                StopConsumeStamina(); // 재생 타이머를 중지
-                return;
-            }
-
-            // 스태미나가 최대치에 도달하면 재생 중지
-            if (FMath::IsNearlyEqual(Stamina, GetTotalMaxStamina()))
-            {
-                StopConsumeStamina(); // 재생 타이머를 중지
-                return;
-            }
-
-            // 스태미너 재생, GetTotalStaminaGenRate() 사용
-            Stamina = FMath::Clamp(Stamina + GetTotalStaminaGenRate(), 0.f, GetTotalMaxStamina());
-            OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina); // 스태미나 변경 UI 업데이트
-        }), 0.5f, true);
+void UCharacterStatComponent::ChangeStaminaTick(float Rate, bool bSwitch)
+{
+    if (GetStamina() <= 0 || GetStamina() >= GetTotalMaxStamina())
+    {
+        StopStaminaTimer();
+        return;
+    }
+    
+    if (bSwitch)
+    {
+        Stamina += Rate;
+    }
+    else
+    {
+        Stamina -= Rate;
+    }
+    OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
 }
 
 #pragma region GetterSetter
@@ -190,6 +132,11 @@ void UCharacterStatComponent::SetHealth(const float Value)
     // TotalMaxHealth를 사용
     Health = FMath::Clamp(Value, 0.f, TotalMaxHealth);
     OnHealthChanged.Broadcast(Health, TotalMaxHealth);
+
+    if (Health < GetTotalMaxHealth())
+    {
+        StartHealthTimer(GetTotalHealthGenRate(), true);
+    }
 }
 
 void UCharacterStatComponent::SetStamina(const float Value)
@@ -197,6 +144,11 @@ void UCharacterStatComponent::SetStamina(const float Value)
     // TotalMaxStamina를 사용
     Stamina = FMath::Clamp(Value, 0.f, TotalMaxStamina);
     OnStaminaChanged.Broadcast(Stamina, TotalMaxStamina);
+
+    if (Stamina < GetTotalMaxStamina())
+    {
+        StartStaminaTimer(GetTotalStaminaGenRate(), true);
+    }
 }
 
 void UCharacterStatComponent::SetCurrentWeight(const float Value)
