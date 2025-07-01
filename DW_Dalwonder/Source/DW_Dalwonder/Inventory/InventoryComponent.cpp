@@ -154,15 +154,13 @@ bool UInventoryComponent::AddItem(UItemBase* ItemTemplate, int32& QuantityToAdd)
     return true; // 모든 아이템 추가 성공
 }
 
-int32 UInventoryComponent::FindItemSlotIndex(UItemBase* Item)
+int32 UInventoryComponent::FindItemSlotIndex(FString ItemCode)
 {
-    if (!IsValid(Item)) return -1;
-    
     for (int32 i = 0; i < InventorySlots.Num(); i++)
     {
         if (!InventorySlots[i].IsEmpty() && InventorySlots[i].Quantity > 0)
         {
-            if (InventorySlots[i].IsSameItemType(Item))
+            if (InventorySlots[i].ItemBase->ItemCode == ItemCode)
             {
                 return i;
             }

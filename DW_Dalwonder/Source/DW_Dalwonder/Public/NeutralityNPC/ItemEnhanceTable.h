@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "Item/ItemBase.h"
 #include "ItemEnhanceTable.generated.h"
 
 USTRUCT(BlueprintType)
@@ -11,7 +10,7 @@ struct FEnhanceItemData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftObjectPtr<UItemBase> ItemClass;
+	FString ItemCode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Amount;
@@ -24,6 +23,9 @@ struct FEnhanceItemTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ItemCode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText ItemName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FEnhanceItemData> IngredientItems;

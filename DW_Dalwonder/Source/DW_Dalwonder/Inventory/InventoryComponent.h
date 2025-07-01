@@ -65,7 +65,7 @@ public:
     bool AddItem(UItemBase* ItemTemplate, int32& QuantityToAdd);
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    int32 FindItemSlotIndex(UItemBase* Item);
+    int32 FindItemSlotIndex(FString ItemCode);
 
     // {{인벤토리 아이템 상호작용 함수들}} //
     // 인벤토리 슬롯의 아이템을 사용하는 함수

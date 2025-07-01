@@ -23,7 +23,7 @@ bool UItemEnhanceManager::TryEnhanceItem(UItemBase* TargetItem, UInventoryCompon
 	// 인벤토리에 충분한 양의 재료가 있는지 확인 후 소진
 	for (FEnhanceItemData& Ingredient : EnhanceTable->IngredientItems)
 	{
-		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemClass.Get());
+		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemCode);
 		if (ItemIndex == -1)
 		{
 			return false;
@@ -47,7 +47,7 @@ bool UItemEnhanceManager::TryEnhanceItem(UItemBase* TargetItem, UInventoryCompon
 
 	// 제작 성공 시 아이템 지급
 	int32 ItemQuantity = 1;
-	int32 ItemIndex = Inventory->FindItemSlotIndex(TargetItem);
+	int32 ItemIndex = Inventory->FindItemSlotIndex(TargetItem->ItemCode);
 	Inventory->DropItemInSlot(ItemIndex, 1);
 	TargetItem->ItemCode = GetEnhanceItemCode(TargetItem);
 	TargetItem->LoadItemFromCode(TargetItem->ItemCode);
@@ -62,8 +62,8 @@ FString UItemEnhanceManager::GetEnhanceItemCode(UItemBase* TargetItem)
 	
 	CodeInt += 10;
 	TargetCode = FString::FromInt(CodeInt);
-	
-	if (TargetCode.Len() < 4)
+
+	while (TargetCode.Len() < 4)
 	{
 		TargetCode = TEXT("0") + TargetCode;
 	}

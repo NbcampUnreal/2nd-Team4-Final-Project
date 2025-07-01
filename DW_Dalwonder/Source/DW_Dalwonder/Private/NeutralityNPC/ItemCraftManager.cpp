@@ -29,7 +29,7 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 	// 인벤토리에 충분한 양의 재료가 있는지 확인 후 소진
 	for (FCraftItemData& Ingredient : CraftRecipe->IngredientItems)
 	{
-		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemClass.Get());
+		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemCode);
 		if (ItemIndex == -1)
 		{
 			return false;
@@ -112,7 +112,7 @@ FString UItemCraftManager::GetUpgradeItemCode(UItemBase* TargetItem, EItemGrade 
 		TargetCode = FString::FromInt(CodeInt);
 	}
 
-	if (TargetCode.Len() < 4)
+	while (TargetCode.Len() < 4)
 	{
 		TargetCode = TEXT("0") + TargetCode;
 	}
