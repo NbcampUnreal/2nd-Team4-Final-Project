@@ -1,6 +1,7 @@
 #include "NeutralityNPC/ItemCraftManager.h"
 #include "NeutralityNPC/ItemCraftTable.h"
 #include "Inventory/InventoryComponent.h"
+#include "Item/ItemBase.h"
 
 UItemCraftManager::UItemCraftManager()
 	: CraftDataTable(nullptr)
@@ -28,7 +29,7 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 	// 인벤토리에 충분한 양의 재료가 있는지 확인 후 소진
 	for (FCraftItemData& Ingredient : CraftRecipe->IngredientItems)
 	{
-		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemClass);
+		int32 ItemIndex = Inventory->FindItemSlotIndex(Ingredient.ItemClass.Get());
 		if (ItemIndex == -1)
 		{
 			return false;
@@ -44,7 +45,7 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 
 	// 확률에 따른 제작 성공
 	float RandomFloat = FMath::FRand();
-	if (RandomFloat >  CraftRecipe->CraftProbability)
+	if (RandomFloat > CraftRecipe->CraftProbability)
 	{
 		return false;
 	}
@@ -52,7 +53,8 @@ bool UItemCraftManager::TryCraftItem(UItemBase* TargetItem, UInventoryComponent*
 	// 제작 성공 시 아이템 지급
 	float StarcatcherChance = 0.f;	// 스타캐처 보너스 확률
 	EItemGrade ItemGrade = GetItemGrade(StarcatcherChance);
-	TargetItem->ItemGrade = ItemGrade;
+	TargetItem->ItemCode = GetUpgradeItemCode(TargetItem, ItemGrade);
+	TargetItem->LoadItemFromCode(TargetItem->ItemCode);
 	Inventory->AddItem(TargetItem, Quantity);
 	return true;
 }
@@ -83,4 +85,37 @@ EItemGrade UItemCraftManager::GetItemGrade(float BonusChance)
 	}
 
 	return EItemGrade::UnKnown;
+}
+
+FString UItemCraftManager::GetUpgradeItemCode(UItemBase* TargetItem, EItemGrade ItemGrade)
+{
+	FString TargetCode = TargetItem->ItemCode;
+	int32 CodeInt = FCString::Atoi(*TargetCode);
+
+	if (ItemGrade == EItemGrade::Normal)
+	{
+		
+	}
+	if (ItemGrade == EItemGrade::Rare)
+	{
+		CodeInt += 100;
+		TargetCode = FString::FromInt(CodeInt);
+	}
+	if (ItemGrade == EItemGrade::Unique)
+	{
+		CodeInt += 200;
+		TargetCode = FString::FromInt(CodeInt);
+	}
+	if (ItemGrade == EItemGrade::Legendary)
+	{
+		CodeInt += 300;
+		TargetCode = FString::FromInt(CodeInt);
+	}
+
+	if (TargetCode.Len() < 4)
+	{
+		TargetCode = TEXT("0") + TargetCode;
+	}
+
+	return TargetCode;
 }

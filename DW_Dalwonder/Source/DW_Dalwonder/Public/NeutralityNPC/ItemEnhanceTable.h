@@ -3,10 +3,10 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Item/ItemBase.h"
-#include "ItemCraftTable.generated.h"
+#include "ItemEnhanceTable.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCraftItemData
+struct FEnhanceItemData
 {
 	GENERATED_BODY()
 
@@ -18,7 +18,7 @@ struct FCraftItemData
 };
 
 USTRUCT(BlueprintType)
-struct FCraftItemTable : public FTableRowBase
+struct FEnhanceItemTable : public FTableRowBase
 {
 	GENERATED_BODY();
 
@@ -26,8 +26,11 @@ struct FCraftItemTable : public FTableRowBase
 	FString ItemCode;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FCraftItemData> IngredientItems;
+	TArray<FEnhanceItemData> IngredientItems;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CraftProbability;
+	float EnhanceProbability;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 EnhanceLevel;
 };

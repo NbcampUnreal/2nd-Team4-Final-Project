@@ -20,6 +20,8 @@ public:
 	bool TryCraftItem(UItemBase* TargetItem, UInventoryComponent* Inventory, int32 Quantity);
 
 	EItemGrade GetItemGrade(float BonusChance);
+
+	FString GetUpgradeItemCode(UItemBase* TargetItem, EItemGrade ItemGrade);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Craft")
