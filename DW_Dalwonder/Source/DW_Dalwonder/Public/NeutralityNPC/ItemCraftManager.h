@@ -3,11 +3,11 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "NeutralityNPC/ItemCraftTable.h"
+#include "Item/EItemGrade.h"
 #include "ItemCraftManager.generated.h"
 
 class UInventoryComponent;
 class UItemBase;
-enum class EItemGrade : uint8;
 
 UCLASS()
 class DW_DALWONDER_API UItemCraftManager : public UObject

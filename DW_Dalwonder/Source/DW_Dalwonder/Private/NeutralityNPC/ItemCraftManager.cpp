@@ -1,7 +1,6 @@
 #include "NeutralityNPC/ItemCraftManager.h"
 #include "NeutralityNPC/ItemCraftTable.h"
 #include "Inventory/InventoryComponent.h"
-#include "Item/EItemGrade.h"
 
 UItemCraftManager::UItemCraftManager()
 	: CraftDataTable(nullptr)
