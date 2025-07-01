@@ -11,7 +11,7 @@ ADW_NPC_TownFolk::ADW_NPC_TownFolk()
 		AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	}
 	NavInvokerComp = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
-	NavInvokerComp->SetGenerationRadii(1000.f, 1000.f);
+	NavInvokerComp->SetGenerationRadii(5000.f, 5000.f);
 }
 
 void ADW_NPC_TownFolk::BeginPlay()
