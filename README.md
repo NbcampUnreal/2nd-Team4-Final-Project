@@ -1,4 +1,4 @@
-# Dal's Wondering *(가제)*
+# Dal's Wondering
 
 > UE 5.4.4 기반 오픈월드 소울라이크 액션 RPG
 > **Twiluna Studio · 4조**
