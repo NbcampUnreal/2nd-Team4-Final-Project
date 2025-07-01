@@ -189,26 +189,11 @@ void ADW_CharacterBase::PostInitializeComponents()
 void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// if (auto* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	// {
-	// 	// 컨트롤러로 토글 요청
-	// 	if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
-	// 	{
-	// 		EIC->BindAction(PC->ESCAction, ETriggerEvent::Started, PC, &ADW_PlayerController::ToggleESCMenu);
-	// 	}
-	// }
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (ADW_PlayerController* PlayerController = Cast<ADW_PlayerController>(GetController()))
 		{
-			// EnhancedInputComponent->BindAction(
-			// 	PlayerController->ESCAction,
-			// 	ETriggerEvent::Started,
-			// 	PlayerController,
-			// 	&ADW_PlayerController::ToggleESCMenu
-			// );
 			if (PlayerController->MoveForwardAction)
 			{
 				EnhancedInputComponent->BindAction(
@@ -384,6 +369,7 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 	}
 }
+
 void ADW_CharacterBase::MoveForward(const FInputActionValue& Value)
 {
 	if (!Controller || !bCanControl) return;

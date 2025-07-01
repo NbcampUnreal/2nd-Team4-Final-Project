@@ -17,25 +17,6 @@
 #include "UI/Widget/BossHUDWidget.h"
 #include "UI/Widget/SettingsManager.h"
 
-const FName ADW_PlayerController::Action_MoveForward = TEXT("Move_Forward");
-const FName ADW_PlayerController::Action_MoveBackward = TEXT("Move_Backward");
-const FName ADW_PlayerController::Action_MoveLeft = TEXT("Move_Left");
-const FName ADW_PlayerController::Action_MoveRight = TEXT("Move_Right");
-const FName ADW_PlayerController::Action_LookUp = TEXT("LookUp");
-const FName ADW_PlayerController::Action_Turn = TEXT("Turn");
-const FName ADW_PlayerController::Action_Jump = TEXT("Jump");
-const FName ADW_PlayerController::Action_Attack = TEXT("Attack");
-const FName ADW_PlayerController::Action_Interact = TEXT("Interact");
-const FName ADW_PlayerController::Action_ESC = TEXT("ESC");
-const FName ADW_PlayerController::Action_Guard = TEXT("Guard");
-const FName ADW_PlayerController::Action_Dodge = TEXT("Dodge");
-const FName ADW_PlayerController::Action_Lockon = TEXT("Lockon");
-const FName ADW_PlayerController::Action_Skill = TEXT("Skill");
-const FName ADW_PlayerController::Action_Skill1 = TEXT("Skill1");
-const FName ADW_PlayerController::Action_Skill2 = TEXT("Skill2");
-const FName ADW_PlayerController::Action_Skill3 = TEXT("Skill3");
-const FName ADW_PlayerController::Action_Ride = TEXT("Ride");
-
 ADW_PlayerController::ADW_PlayerController()
 	: InputMappingContext(nullptr),
 	MoveForwardAction(nullptr),

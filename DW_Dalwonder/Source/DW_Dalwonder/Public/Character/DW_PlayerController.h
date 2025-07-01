@@ -107,24 +107,24 @@ public:
 	UBossHUDWidget* CachedBossHUD;
 
 	// 바인딩에 사용할 액션 이름 상수 정의
-	static const FName Action_MoveForward;
-	static const FName Action_MoveBackward;
-	static const FName Action_MoveLeft;
-	static const FName Action_MoveRight;
-	static const FName Action_LookUp;
-	static const FName Action_Turn;
-	static const FName Action_Jump;
-	static const FName Action_Attack;
-	static const FName Action_Interact;
-	static const FName Action_ESC;
-	static const FName Action_Guard;
-	static const FName Action_Dodge;
-	static const FName Action_Lockon;
-	static const FName Action_Skill;
-	static const FName Action_Skill1;
-	static const FName Action_Skill2;
-	static const FName Action_Skill3;
-	static const FName Action_Ride;
+	inline static const FName Action_MoveForward   = TEXT("Move_Forward");
+	inline static const FName Action_MoveBackward  = TEXT("Move_Backward");
+	inline static const FName Action_MoveLeft      = TEXT("Move_Left");
+	inline static const FName Action_MoveRight     = TEXT("Move_Right");
+	inline static const FName Action_LookUp        = TEXT("LookUp");
+	inline static const FName Action_Turn          = TEXT("Turn");
+	inline static const FName Action_Jump          = TEXT("Jump");
+	inline static const FName Action_Attack        = TEXT("Attack");
+	inline static const FName Action_Interact      = TEXT("Interact");
+	inline static const FName Action_ESC           = TEXT("ESC");
+	inline static const FName Action_Guard         = TEXT("Guard");
+	inline static const FName Action_Dodge         = TEXT("Dodge");
+	inline static const FName Action_Lockon        = TEXT("Lockon");
+	inline static const FName Action_Skill         = TEXT("Skill");
+	inline static const FName Action_Skill1        = TEXT("Skill1");
+	inline static const FName Action_Skill2        = TEXT("Skill2");
+	inline static const FName Action_Skill3        = TEXT("Skill3");
+	inline static const FName Action_Ride          = TEXT("Ride");
 
 	UFUNCTION()
 	void HandleMoveForward(const FInputActionValue& Value);

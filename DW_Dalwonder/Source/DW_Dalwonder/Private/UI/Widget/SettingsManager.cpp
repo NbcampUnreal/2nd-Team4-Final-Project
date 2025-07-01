@@ -399,12 +399,6 @@ void USettingsManager::ApplyKeyBindingsToInputSystem()
 					DefaultMappingContext->MapKey(LookUpAction, EKeys::MouseY);
 				}
 
-				// 고정 키 등록
-				// if (UInputAction* ESCAction = GetInputActionByName("ESC"))
-				// {
-				// 	DefaultMappingContext->MapKey(ESCAction, EKeys::Zero);
-				// }
-
 				Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			}
 		}
