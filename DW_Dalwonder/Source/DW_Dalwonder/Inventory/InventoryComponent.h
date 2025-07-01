@@ -91,4 +91,7 @@ public:
     // 인벤토리 상태를 디버그 메시지로 출력하는 함수
     UFUNCTION(BlueprintCallable, Category = "Inventory | Debug")
         void ShowInventoryStatus();
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    bool AddAndEquipByItemCode(const FString& ItemCode);
 };
