@@ -21,24 +21,24 @@ void ADW_NPC_TownFolk::BeginPlay()
 	
 }
 
-void ADW_NPC_TownFolk::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-	
-	UE_LOG(LogTemp, Warning, TEXT("OnConstruction Called!"));
-
-#if WITH_EDITOR
-	if (PatrolAnchorPoint)
-	{
-		DrawDebugSphere(
-			GetWorld(),
-			PatrolAnchorPoint->GetActorLocation(),
-			RoamingRadius,
-			24,  // 세그먼트 수 (원형 품질)
-			FColor::Red,
-			false,  // 영구적으로 그릴지 (false면 몇 초 후 사라짐)
-			30.0f    // 지속 시간 (초)
-		);
-	}
-#endif
-}
+// void ADW_NPC_TownFolk::OnConstruction(const FTransform& Transform)
+// {
+// 	Super::OnConstruction(Transform);
+// 	
+// 	UE_LOG(LogTemp, Warning, TEXT("OnConstruction Called!"));
+//
+// #if WITH_EDITOR
+// 	if (PatrolAnchorPoint)
+// 	{
+// 		DrawDebugSphere(
+// 			GetWorld(),
+// 			PatrolAnchorPoint->GetActorLocation(),
+// 			RoamingRadius,
+// 			24,  // 세그먼트 수 (원형 품질)
+// 			FColor::Red,
+// 			false,  // 영구적으로 그릴지 (false면 몇 초 후 사라짐)
+// 			5.0f    // 지속 시간 (초)
+// 		);
+// 	}
+// #endif
+// }

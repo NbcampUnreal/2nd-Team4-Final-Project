@@ -20,13 +20,13 @@ class DW_DALWONDER_API ADW_NPC_TownFolk : public ADW_NpcBase
 public:
 	ADW_NPC_TownFolk();
 	void BeginPlay();
-	virtual void OnConstruction(const FTransform& Transform) override;
+	// virtual void OnConstruction(const FTransform& Transform) override;
 
 	UPROPERTY(EditInstanceOnly, Category="Patrol")
 	AActor* PatrolAnchorPoint;
 
 	UPROPERTY(EditAnywhere, Category="Patrol")
-	float RoamingRadius = 4500.0f;
+	float RoamingRadius = 3000.0f;
 
 	UPROPERTY()
 	class UNavigationInvokerComponent* NavInvokerComp;
