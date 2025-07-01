@@ -9,7 +9,7 @@ class DW_DALWONDER_API ANPC_Controller : public AAIController
 {
 	GENERATED_BODY()
 public:
-	ANPC_Controller();
+	ANPC_Controller(const FObjectInitializer& ObjectInit);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 	void BeginPlay();
@@ -17,6 +17,7 @@ public:
 protected:
 	void TryMoveToPatrol();
 	void MoveToCurrentPatrolPoint();
+	bool IsTooCloseToOthers(const FVector& TestPos, float MinDistSq) const;
 
 	UPROPERTY()
 	TArray<AActor*> PatrolPoints;
