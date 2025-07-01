@@ -3,6 +3,8 @@
 #include "Item/EquippableItem.h" 
 #include "Character/CharacterStatComponent.h"
 #include "Engine/Engine.h" 
+#include <Item/ItemDataManager.h>
+#include <Item/ItemTranslator.h>
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -470,3 +472,64 @@ UEquippableItem* UInventoryComponent::GetEquippedItem(EEquipSlotType SlotType) c
     // FindRef는 키가 없으면 nullptr 반환
     return EquippedItems.FindRef(SlotType);
 }
+
+
+void UItemBase::LoadItemFromCode(FString InItemCode)
+{
+    ItemCode = InItemCode;
+
+    EItemGrade ParsedGrade = EItemGrade::Normal;
+    int32 ParsedEnchantLevel = 0;
+    FString ParsedRowID;
+    bool bSuccess = false;
+
+#if WITH_EDITOR
+    UE_LOG(LogTemp, Warning, TEXT("[LoadItemFromCode] Input ItemCode: %s"), *InItemCode);
+#endif
+
+    // 1. 코드 파싱
+    UItemTranslator::ParseItemCode(ItemCode, ParsedGrade, ParsedEnchantLevel, ParsedRowID, bSuccess);
+
+#if WITH_EDITOR
+    if (bSuccess)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[LoadItemFromCode] Parsed Result - Grade: %d, Enchant: %d, RowID: %s"),
+            (int32)ParsedGrade, ParsedEnchantLevel, *ParsedRowID);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[LoadItemFromCode] ParseItemCode FAILED for ItemCode: %s"), *InItemCode);
+    }
+#endif
+
+    if (bSuccess)
+    {
+        ItemGrade = ParsedGrade;
+        EnchantLevel = ParsedEnchantLevel;
+
+        // 2. 아이템 데이터 로딩
+        const FItemData* FoundData = UItemDataManager::GetInstance()->GetItemData(ParsedRowID);
+
+        if (FoundData)
+        {
+            ItemBaseData = *FoundData;
+
+#if WITH_EDITOR
+            UE_LOG(LogTemp, Warning, TEXT("[LoadItemFromCode] Item Loaded Successfully: %s (RowID: %s)"),
+                *ItemBaseData.ItemName.ToString(), *ParsedRowID);
+#endif
+        }
+        else
+        {
+#if WITH_EDITOR
+            UE_LOG(LogTemp, Error, TEXT("[LoadItemFromCode] ItemData NOT FOUND for RowID: %s"), *ParsedRowID);
+#endif
+            ItemBaseData = FItemData(); // 비어 있는 기본값으로 초기화
+        }
+    }
+    else
+    {
+        ItemBaseData = FItemData(); // 파싱 실패 시 초기화
+    }
+}
+
