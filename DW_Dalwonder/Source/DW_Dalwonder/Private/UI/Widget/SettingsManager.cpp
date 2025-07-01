@@ -100,7 +100,6 @@ void USettingsManager::SaveToSlot()
 		{
 			if (Pair.Key.IsNone())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[SettingsManager] Skipping save for None key: %s"), *Pair.Value.ToString());
 				continue;
 			}
 		}
@@ -288,11 +287,12 @@ void USettingsManager::SetCustomKey(FName ActionName, FKey NewKey)
 {
 	if (ActionName.IsNone())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SettingsManager] Ignored SetCustomKey with None ActionName, Key: %s"), *NewKey.ToString());
 		return;
 	}
+
 	CustomKeyMap.FindOrAdd(ActionName) = NewKey;
 
+	// (Optional) Controller 쪽 액션 바인딩도 갱신
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
@@ -300,6 +300,9 @@ void USettingsManager::SetCustomKey(FName ActionName, FKey NewKey)
 			DWPC->ApplyCustomKeyBindings(CustomKeyMap);
 		}
 	}
+
+	// **매핑 컨텍스트를 즉시 다시 적용** → 런타임에 바로 새 키로 동작
+	ApplyKeyBindingsToInputSystem();
 }
 
 FKey USettingsManager::GetKeyForAction(FName ActionName) const
@@ -351,6 +354,7 @@ void USettingsManager::ResetKeyBindingsToDefault()
 {
 	CustomKeyMap = GetDefaultKeyMap();
 
+	// Controller 쪽 바인딩 갱신
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		if (ADW_PlayerController* DWPC = Cast<ADW_PlayerController>(PC))
@@ -358,6 +362,9 @@ void USettingsManager::ResetKeyBindingsToDefault()
 			DWPC->ApplyCustomKeyBindings(CustomKeyMap);
 		}
 	}
+
+	// **매핑 컨텍스트 전체를 다시 적용**
+	ApplyKeyBindingsToInputSystem();
 
 	SaveToSlot();
 }
@@ -438,7 +445,6 @@ void USettingsManager::DebugPrintAllMappings()
 		{
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("===== 현재 입력 매핑 목록 ====="));
 				const UInputMappingContext* Context = DefaultMappingContext; // 네 시스템에 맞게 수정
 				if (Context)
 				{
@@ -446,7 +452,6 @@ void USettingsManager::DebugPrintAllMappings()
 					for (const FEnhancedActionKeyMapping& Mapping : Mappings)
 					{
 						FString ActionName = Mapping.Action ? Mapping.Action->GetName() : TEXT("NULL");
-						UE_LOG(LogTemp, Warning, TEXT("Action: %s, Key: %s"), *ActionName, *Mapping.Key.GetDisplayName().ToString());
 					}
 				}
 			}

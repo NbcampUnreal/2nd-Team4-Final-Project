@@ -63,21 +63,22 @@ void ADW_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetGameInstance()))
-	{
-		GI->GetSettingsManager()->ApplyKeyBindingsToInputSystem();
-	}
+    if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetGameInstance()))
+    {
+        // 키 변경 시마다 IMC 전체를 재적용해 주는 함수
+        GI->GetSettingsManager()->ApplyKeyBindingsToInputSystem();
+    }
 
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* EILPS = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			if (InputMappingContext)
-			{
-				EILPS->AddMappingContext(InputMappingContext, 0);
-			}
-		}
-	}
+    // if (ULocalPlayer* LP = GetLocalPlayer())
+    // {
+    //     if (auto* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+    //     {
+    //         if (InputMappingContext)
+    //         {
+    //             Subsystem->AddMappingContext(InputMappingContext, 0);
+    //         }
+    //     }
+    // }
 
 	ActionMap.Add(Action_MoveForward, MoveForwardAction);
 	ActionMap.Add(Action_MoveBackward, MoveBackwardAction);
@@ -103,21 +104,24 @@ void ADW_PlayerController::BeginPlay()
 
 void ADW_PlayerController::SetupInputComponent()
 {
-	Super::SetupInputComponent();
+    Super::SetupInputComponent();
 
-	if (UEnhancedInputComponent* EI = Cast<UEnhancedInputComponent>(InputComponent))
-	{
-		// if (ESCAction)
-		// {
-		// 	EI->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
-		// }
+    if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
+    {
+        // 1) 커스텀 키 바인딩 먼저 적용
+        if (UDW_GameInstance* GI = Cast<UDW_GameInstance>(GetGameInstance()))
+        {
+            ApplyCustomKeyBindings(GI->GetSettingsManager()->GetCustomKeyMap());
+        }
 
-		if (auto* SM = Cast<UDW_GameInstance>(GetGameInstance())->GetSettingsManager())
-		{
-			ApplyCustomKeyBindings(SM->GetCustomKeyMap());
-		}
-	}
+        // 2) ESCAction 은 ClearActionBindings() 이후에 재바인딩
+        if (ESCAction)
+        {
+            EIC->BindAction(ESCAction, ETriggerEvent::Started, this, &ADW_PlayerController::ToggleESCMenu);
+        }
+    }
 }
+
 
 void ADW_PlayerController::OnPossess(APawn* InPawn)
 {
@@ -139,7 +143,6 @@ void ADW_PlayerController::OnPossess(APawn* InPawn)
 
 void ADW_PlayerController::ToggleESCMenu()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ToggleESCMenu() 호출됨"));
     ADW_GmBase* GameMode = Cast<ADW_GmBase>(UGameplayStatics::GetGameMode(this));
     if (!GameMode || !ESCMenuWidgetClass)
     {
@@ -198,6 +201,7 @@ void ADW_PlayerController::ToggleESCMenu()
         }
     }
 }
+
 
 void ADW_PlayerController::ShowBossHUD(const FName& BossName, float MaxHP)
 {

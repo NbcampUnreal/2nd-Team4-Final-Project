@@ -190,14 +190,14 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (auto* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		// 컨트롤러로 토글 요청
-		if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
-		{
-			EIC->BindAction(PC->ESCAction, ETriggerEvent::Started, PC, &ADW_PlayerController::ToggleESCMenu);
-		}
-	}
+	// if (auto* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	// {
+	// 	// 컨트롤러로 토글 요청
+	// 	if (ADW_PlayerController* PC = Cast<ADW_PlayerController>(GetController()))
+	// 	{
+	// 		EIC->BindAction(PC->ESCAction, ETriggerEvent::Started, PC, &ADW_PlayerController::ToggleESCMenu);
+	// 	}
+	// }
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -365,7 +365,6 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			if (PlayerController->InteractAction)
 			{
 #if WITH_EDITOR
-				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 시작"));
 #endif
 
 				EnhancedInputComponent->BindAction(
@@ -375,13 +374,11 @@ void ADW_CharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 					&ADW_CharacterBase::Interact);
 
 #if WITH_EDITOR
-				UE_LOG(LogTemp, Warning, TEXT("[입력 바인딩] InteractAction 바인딩 완료"));
 #endif
 			}
 			else
 			{
 #if WITH_EDITOR
-				UE_LOG(LogTemp, Error, TEXT("[입력 바인딩] InteractAction이 nullptr임!"));
 #endif
 			}
 		}
@@ -467,7 +464,6 @@ void ADW_CharacterBase::LookUp(const FInputActionValue& Value)
 
 void ADW_CharacterBase::Turn(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Log, TEXT("[입력] TURN: %s"), *Value.ToString());
 	if (bIsLockOn) return;
 
 	float XInput = Value.Get<float>();
