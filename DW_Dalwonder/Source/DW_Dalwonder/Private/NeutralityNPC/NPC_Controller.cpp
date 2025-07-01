@@ -43,18 +43,27 @@ void ANPC_Controller::TryMoveToPatrol()
 void ANPC_Controller::MoveToCurrentPatrolPoint()
 {
 	ADW_NPC_TownFolk* MyNPCChar = Cast<ADW_NPC_TownFolk>(GetPawn());
-	if (!MyNPCChar || MyNPCChar->PatrolPoints.Num() == 0)
+	if (!MyNPCChar || !MyNPCChar->PatrolAnchorPoint)
 		return;
 
-	AActor* Target = MyNPCChar->PatrolPoints[CurrentPatrolIndex];
-	if (!Target)
+	FVector AnchorLocation = MyNPCChar->PatrolAnchorPoint->GetActorLocation();
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (!NavSys)
 		return;
 
-	bIsMoving = true;
-
-	MoveToActor(Target, 5.0f, true, true, false, nullptr, true);
-	CurrentPatrolIndex = (CurrentPatrolIndex + 1) % MyNPCChar->PatrolPoints.Num();
+	FNavLocation RandomLocation;
+	if (NavSys->GetRandomReachablePointInRadius(AnchorLocation, MyNPCChar->RoamingRadius, RandomLocation))
+	{
+		bIsMoving = true;
+		MoveToLocation(RandomLocation.Location, 100.0f);
+		UE_LOG(LogTemp, Warning, TEXT("Anchor: %s | Radius: %f"), *MyNPCChar->PatrolAnchorPoint->GetName(), MyNPCChar->RoamingRadius);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ANPC_Controller::TryMoveToPatrol);
+	}
 }
+
 
 void ANPC_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {

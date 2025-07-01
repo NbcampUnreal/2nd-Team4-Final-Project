@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "DW_NpcBase.h"
+#if WITH_EDITOR
+#include "DrawDebugHelpers.h"
+#endif
 #include "DW_NPC_TownFolk.generated.h"
 
 /**
@@ -17,6 +20,13 @@ class DW_DALWONDER_API ADW_NPC_TownFolk : public ADW_NpcBase
 public:
 	ADW_NPC_TownFolk();
 	void BeginPlay();
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	UPROPERTY(EditInstanceOnly, Category="Patrol")
+	AActor* PatrolAnchorPoint;
+
+	UPROPERTY(EditAnywhere, Category="Patrol")
+	float RoamingRadius = 4500.0f;
 
 	UPROPERTY()
 	class UNavigationInvokerComponent* NavInvokerComp;
