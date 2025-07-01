@@ -90,13 +90,25 @@ FItemData UItemDataManager::GetItemBaseData(FName ItemID, bool& bOutSuccess)
 	return FItemData();
 }
 
-const FItemData* UItemDataManager::GetItemData(FString InRowID) const
+const FItemData* UItemDataManager::GetItemData(const FString& InItemID) const
 {
-    if (ItemBaseDataTable)
+    if (!ItemBaseDataTable) return nullptr;
+
+    const TArray<FName> RowNames = ItemBaseDataTable->GetRowNames();
+
+    for (const FName& RowName : RowNames)
     {
-        FName RowName = FName(*InRowID);
-        return ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemData"));
+        const FItemData* RowData = ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemDataByItemID"));
+        if (RowData && RowData->ItemID == InItemID)
+        {
+            return RowData;
+        }
     }
+    // if (ItemBaseDataTable)
+    // {
+    //     FName RowName = FName(*InRowID);
+    //     return ItemBaseDataTable->FindRow<FItemData>(RowName, TEXT("GetItemData"));
+    // }
     //UE_LOG(LogTemp, Warning, TEXT("UItemDataManager: ItemDataTable is null. Cannot get item data for RowID %d."), InRowID);
     return nullptr;
 }

@@ -30,6 +30,9 @@ public:
     // 월드 위치 기준으로 안개 밝히기
     void UpdateFogAtPlayerLocation(const FVector& WorldLocation);
 
+    // 맵 이동후 지도 복원(Bitmask로 복원)
+    void ApplyRevealedFogFromGameInstance();
+
     /** FogTexture 반환 */
     UTexture2D* GetFogTexture() const { return FogTexture; }
 
@@ -62,9 +65,6 @@ protected:
 
     // 마지막으로 밝힌 그리드 셀
     FIntPoint LastRevealedGrid;
-
-    // 밝힌 셀 좌표 저장 (저장용)
-    TSet<FIntPoint> RevealedGrids;
 
     // 안개 범위 설정값들
     UPROPERTY(EditAnywhere, Category = "Fog")

@@ -11,6 +11,9 @@
 #include "AIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/DecalComponent.h"
+#include "Monster/Dissolve/DissolveComponent.h"
 
 ABossArachnid::ABossArachnid()
 {
@@ -21,6 +24,8 @@ ABossArachnid::ABossArachnid()
 
 	TraceStart->SetupAttachment(GetMesh(), TEXT("Front1"));
 	TraceEnd->SetupAttachment(GetMesh(), TEXT("Front2"));
+
+	DissolveComponent = CreateDefaultSubobject<UDissolveComponent>(TEXT("DissolveComponent"));
 }
 
 void ABossArachnid::Tick(float DeltaTime)
@@ -204,6 +209,12 @@ void ABossArachnid::ChangingAttackTrace(int32 Value)
 		TraceStart->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("Left"));
 		TraceEnd->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("Left"));
 		break;
+
+	case 3:
+		TraceStart->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("Rush1"));
+		TraceEnd->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("Rush2"));
+		break;
+
 	/*case 0:
 		TraceStart->SetupAttachment(GetMesh(), TEXT("Front1"));
 		TraceEnd->SetupAttachment(GetMesh(), TEXT("Front2"));
@@ -255,6 +266,7 @@ void ABossArachnid::UndeadOn()
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(UndeadTimerHandle, this, &ABossArachnid::Undead, 3.f, false);
+		GetWorldTimerManager().SetTimer(UndeadEffectTimerHandle, this, &ABossArachnid::UndeadEffect, 2.5f, false);
 	}
 }
 
@@ -265,6 +277,8 @@ void ABossArachnid::UndeadOff()
 
 void ABossArachnid::Dead()
 {
+	GetMesh()->SetCollisionProfileName("NoCollision");
+
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
 		AnimInstance->StopAllMontages(0.f); 
@@ -282,6 +296,22 @@ void ABossArachnid::Dead()
 	bCanRotate = false;
 	bIsJumping = false;
 	bIsUndead = false;
+
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(DeadTimerHandle, this, &ABossArachnid::DestroyLogic, 20.f, false);
+		GetWorldTimerManager().SetTimer(DissolveTimerHandle, this, &ABossArachnid::DissolveLogic, 4.2f, false);
+	}
+}
+
+void ABossArachnid::DissolveLogic()
+{
+	DissolveComponent->DissolveStart(0, 0, 10.f);
+}
+
+void ABossArachnid::DestroyLogic()
+{
+	Destroy();
 }
 
 void ABossArachnid::Undead()
@@ -293,5 +323,51 @@ void ABossArachnid::Undead()
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(UndeadTimerHandle, this, &ABossArachnid::Undead, 1.f, false);
+	}
+}
+
+void ABossArachnid::UndeadEffect()
+{
+	DissolveComponent->ArachnidUndead(1, 1, 10.f);
+}
+
+void ABossArachnid::SpawnDecal(UMaterialInterface* DecalMaterial)
+{
+	if (!this) return;
+
+	UMaterialInterface* NewDecalMaterial = Cast<UMaterialInterface>(DecalMaterial);
+
+		/*UDecalComponent* Decal = UGameplayStatics::SpawnDecalAttached(
+			NewDecalMaterial,
+			FVector(100.f),
+			GetMesh(),
+			NAME_None,
+			GetActorLocation(),
+			FRotator(0.f, -90.f, 0.f),
+			EAttachLocation::KeepRelativeOffset,
+			0.0f
+		);*/
+
+	FVector OwnerLocation = GetActorLocation();
+
+	FVector SpawnLocation = OwnerLocation - FVector(0.f, 0.f, GetSimpleCollisionHalfHeight());
+
+	float RandomYaw = FMath::FRandRange(-15.f, 15.f);
+	float RandomUV = FMath::FRandRange(1400.f, 1600.f);
+
+	FRotator DecalRotation = FRotator(-90.f, RandomYaw, 0.f);
+
+	UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(
+		GetWorld(),
+		NewDecalMaterial,
+		FVector(10.f, RandomUV, RandomUV),
+		SpawnLocation,
+		DecalRotation,
+		0.f
+	);
+
+	if (Decal)
+	{
+		Decal->SetFadeOut(1.5f, 2.0f, true);
 	}
 }

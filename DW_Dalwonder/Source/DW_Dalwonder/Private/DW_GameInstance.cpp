@@ -12,6 +12,7 @@
 #include "Engine/DataTable.h"
 #include "Character/CharacterStatComponent.h"
 #include "Character/CharacterArmorComponent.h"
+#include "FogManager.h"
 #include "UI/Widget/FogOfWarManager.h"
 #include "UI/Widget/SettingsManager.h"
 
@@ -90,69 +91,47 @@ void UDW_GameInstance::SaveGameData()
     // 2. 회전값 저장
     SaveGameInstance->SavedPlayerRotation = PlayerCharacter->GetActorRotation();
 
-    // 3. 스탯 저장
-    if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
-    {
-        AttrComp->SaveData(SaveGameInstance->SavedAttributes);
-    }
-
-	// 4. 스탯 저장
+	// 3. 스탯 저장
 	if (UCharacterStatComponent* StatComp = PlayerCharacter->FindComponentByClass<UCharacterStatComponent>())
 	{
-		FTmpCharacterStatData& Out = SaveGameInstance->SaveStatData;
-		Out.Health = StatComp->GetHealth();
-		Out.Stamina = StatComp->GetStamina();
+        FCharacterStatSaveData& Out = SaveGameInstance->SavedCharacterStat;
+
+        Out.Health = StatComp->GetHealth();
+        Out.Stamina = StatComp->GetStamina();
         Out.CurrentWeight = StatComp->GetCurrentWeight();
 
-		Out.TotalMaxHealth = StatComp->GetTotalMaxHealth();
-		Out.TotalHealthGenRate = StatComp->GetTotalHealthGenRate();
-		Out.TotalMaxStamina = StatComp->GetTotalMaxStamina();
-		Out.TotalStaminaGenRate = StatComp->GetTotalStaminaGenRate();
-		Out.TotalAttack = StatComp->GetTotalAttack();
-		Out.TotalDefense = StatComp->GetTotalDefense();
-		Out.TotalAttackSpeed = StatComp->GetTotalAttackSpeed();
-		Out.TotalWalkSpeed = StatComp->GetTotalWalkSpeed();
-		Out.TotalMaxWeight = StatComp->GetTotalMaxWeight();
+        Out.BaseMaxHealth = StatComp->GetBaseMaxHealth();
+        Out.BaseHealthGenRate = StatComp->GetBaseHealthGenRate();
+        Out.BaseMaxStamina = StatComp->GetBaseMaxStamina();
+        Out.BaseStaminaGenRate = StatComp->GetBaseStaminaGenRate();
+        Out.BaseAttack = StatComp->GetBaseAttack();
+        Out.BaseDefense = StatComp->GetBaseDefense();
+        Out.BaseAttackSpeed = StatComp->GetBaseAttackSpeed();
+        Out.BaseWalkSpeed = StatComp->GetBaseWalkSpeed();
+        Out.BaseMaxWeight = StatComp->GetBaseMaxWeight();
 
-		Out.BaseMaxHealth = StatComp->GetBaseMaxHealth();
-		Out.BaseHealthGenRate = StatComp->GetBaseHealthGenRate();
-		Out.BaseMaxStamina = StatComp->GetBaseMaxStamina();
-		Out.BaseStaminaGenRate = StatComp->GetBaseStaminaGenRate();
-		Out.BaseAttack = StatComp->GetBaseAttack();
-		Out.BaseDefense = StatComp->GetBaseDefense();
-		Out.BaseAttackSpeed = StatComp->GetBaseAttackSpeed();
-		Out.BaseWalkSpeed = StatComp->GetBaseWalkSpeed();
-		Out.BaseMaxWeight = StatComp->GetBaseMaxWeight();
-
-		Out.BuffBonusMaxHealth = StatComp->GetBuffBonusMaxHealth();
-		Out.BuffBonusHealthGenRate = StatComp->GetBuffBonusHealthGenRate();
-		Out.BuffBonusMaxStamina = StatComp->GetBuffBonusMaxStamina();
-		Out.BuffBonusStaminaGenRate = StatComp->GetBuffBonusStaminaGenRate();
-		Out.BuffBonusAttack = StatComp->GetBuffBonusAttack();
-		Out.BuffBonusDefense = StatComp->GetBuffBonusDefense();
-		Out.BuffBonusAttackSpeed = StatComp->GetBuffBonusAttackSpeed();
-		Out.BuffBonusMaxWeight = StatComp->GetBuffBonusMaxWeight();
-		Out.BuffBonusWalkSpeed = StatComp->GetBuffBonusWalkSpeed();
-
-		Out.EquipmentBonusMaxHealth = StatComp->GetEquipmentBonusMaxHealth();
-		Out.EquipmentBonusHealthGenRate = StatComp->GetEquipmentBonusHealthGenRate();
-		Out.EquipmentBonusMaxStamina = StatComp->GetEquipmentBonusMaxStamina();
-		Out.EquipmentBonusStaminaGenRate = StatComp->GetEquipmentBonusStaminaGenRate();
-		Out.EquipmentBonusAttack = StatComp->GetEquipmentBonusAttack();
-		Out.EquipmentBonusDefense = StatComp->GetEquipmentBonusDefense();
-		Out.EquipmentBonusAttackSpeed = StatComp->GetEquipmentBonusAttackSpeed();
-		Out.EquipmentBonusMaxWeight = StatComp->GetEquipmentBonusMaxWeight();
-		Out.EquipmentBonusWalkSpeed = StatComp->GetEquipmentBonusWalkSpeed();
-
+        Out.EquipmentBonusMaxHealth = StatComp->GetEquipmentBonusMaxHealth();
+        Out.EquipmentBonusHealthGenRate = StatComp->GetEquipmentBonusHealthGenRate();
+        Out.EquipmentBonusMaxStamina = StatComp->GetEquipmentBonusMaxStamina();
+        Out.EquipmentBonusStaminaGenRate = StatComp->GetEquipmentBonusStaminaGenRate();
+        Out.EquipmentBonusAttack = StatComp->GetEquipmentBonusAttack();
+        Out.EquipmentBonusDefense = StatComp->GetEquipmentBonusDefense();
+        Out.EquipmentBonusAttackSpeed = StatComp->GetEquipmentBonusAttackSpeed();
+        Out.EquipmentBonusWalkSpeed = StatComp->GetEquipmentBonusWalkSpeed();
+        Out.EquipmentBonusMaxWeight = StatComp->GetEquipmentBonusMaxWeight();
 	}
 
-    // 5. 스킬 트리 저장
+    // 4. 스킬 관련 정보 저장(스킬포인트, 숙련도, 스킬트리)
     if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
     {
-        SaveGameInstance->SavedSkillStates = SkillComp->SkillStateMap;
+        SaveGameInstance->SavedSkillData.CurrentSP = SkillComp->CurrentSP;
+        SaveGameInstance->SavedSkillData.SkillStates = SkillComp->SkillStateMap;
+        SaveGameInstance->SavedSkillData.LevelUpCount = SkillComp->LevelUpCount;
+        SaveGameInstance->SavedSkillData.CurrentMastery = SkillComp->CurrentMastery;
+        SaveGameInstance->SavedSkillData.MaxMastery = SkillComp->MaxMastery;
     }
 
-	// 6. 퀘스트 상태 저장
+	// 5. 퀘스트 상태 저장
     if (UQuestManagerComponent* QuestComp = PlayerCharacter->FindComponentByClass<UQuestManagerComponent>())
     {
         SaveGameInstance->SaveAcceptedQuests.Empty();
@@ -181,7 +160,7 @@ void UDW_GameInstance::SaveGameData()
         }
     }
 
-    // 7. 인벤토리 저장
+    // 6. 인벤토리 저장
     if (UInventoryComponent* InvComp = PlayerCharacter->FindComponentByClass<UInventoryComponent>())
     {
         // 저장 배열 초기화
@@ -203,7 +182,7 @@ void UDW_GameInstance::SaveGameData()
         }
     }
 
-	// 8. 방어구/무기 저장(아이템코드)
+	// 7. 방어구/무기 저장(아이템코드)
     if (UCharacterArmorComponent* ArmorComp = PlayerCharacter->FindComponentByClass<UCharacterArmorComponent>())
     {
         SaveGameInstance->SavedArmorData.HelmetCode = ArmorComp->Helmet ? ArmorComp->Helmet->ItemCode : "0";
@@ -213,28 +192,8 @@ void UDW_GameInstance::SaveGameData()
         SaveGameInstance->SavedArmorData.WeaponCode = ArmorComp->Weapon ? ArmorComp->Weapon->ItemCode : "0";
     }
 
-    // 9. 안개 저장
-    
-    TArray<AActor*> FogActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFogOfWarManager::StaticClass(), FogActors);
-    if (FogActors.Num() > 0)
-    {
-        AFogOfWarManager* FogManager = Cast<AFogOfWarManager>(FogActors[0]);
-        if (FogManager)
-        {
-            SaveGameInstance->CompressedFogBits = FogManager->GetFogAsBitmask();
-        }
-    }
-
-    // 10. 경험치 저장
-
-    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
-    {
-        FTmpCharacterStatData& Out = SaveGameInstance->SaveStatData;
-        Out.CurrentMastery = SkillComp->CurrentMastery;
-        Out.MaxMastery = SkillComp->MaxMastery;
-        Out.LevelUpCount = SkillComp->LevelUpCount;
-    }
+    // 8. 안개 저장
+    SaveGameInstance->SavedFogMap = RevealedFogMap;
 
     UGameplayStatics::SaveGameToSlot(SaveGameInstance, DefaultSaveSlot, 0);
 }
@@ -245,8 +204,6 @@ void UDW_GameInstance::LoadGameData()
 
     LoadedSaveGame = Cast<UDW_SaveGame>(UGameplayStatics::LoadGameFromSlot(DefaultSaveSlot, 0));
     if (!LoadedSaveGame) return;
-
-    UGameplayStatics::OpenLevel(GetWorld(), TEXT("TestLoadingMap"));
 }
 
 void UDW_GameInstance::ApplyLoadedData()
@@ -267,47 +224,51 @@ void UDW_GameInstance::ApplyLoadedData()
     // 2. 회전값 적용
     PlayerCharacter->SetActorRotation(LoadedSaveGame->SavedPlayerRotation);
 
-    // 3. Attribute 적용
-    UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>();
-    if (AttrComp)
-    {
-        AttrComp->LoadData(LoadedSaveGame->SavedAttributes);
-    }
-
 	// 4. 스탯 적용
 	if (UCharacterStatComponent* StatComp = PlayerCharacter->FindComponentByClass<UCharacterStatComponent>())
 	{
-		const FTmpCharacterStatData& In = LoadedSaveGame->SaveStatData;
-		StatComp->SetHealth(In.Health);
-		StatComp->SetStamina(In.Stamina);
-		StatComp->SetCurrentWeight(In.CurrentWeight);
+        const FCharacterStatSaveData& In = LoadedSaveGame->SavedCharacterStat;
 
-		StatComp->SetBaseMaxHealth(In.BaseMaxHealth);
-		StatComp->SetBaseHealthGenRate(In.BaseHealthGenRate);
-		StatComp->SetBaseMaxStamina(In.BaseMaxStamina);
-		StatComp->SetBaseStaminaGenRate(In.BaseStaminaGenRate);
-		StatComp->SetBaseAttack(In.BaseAttack);
-		StatComp->SetBaseDefense(In.BaseDefense);
-		StatComp->SetBaseAttackSpeed(In.BaseAttackSpeed);
-		StatComp->SetBaseWalkSpeed(In.BaseWalkSpeed);
-		StatComp->SetBaseMaxWeight(In.BaseMaxWeight);
+        StatComp->SetStamina(In.Stamina);
+        StatComp->SetCurrentWeight(In.CurrentWeight);
 
-		StatComp->SetEquipmentBonusMaxHealth(In.EquipmentBonusMaxHealth);
-		StatComp->SetEquipmentBonusHealthGenRate(In.EquipmentBonusHealthGenRate);
-		StatComp->SetEquipmentBonusMaxStamina(In.EquipmentBonusMaxStamina);
-		StatComp->SetEquipmentBonusStaminaGenRate(In.EquipmentBonusStaminaGenRate);
-		StatComp->SetEquipmentBonusAttack(In.EquipmentBonusAttack);
-		StatComp->SetEquipmentBonusDefense(In.EquipmentBonusDefense);
-		StatComp->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
-		StatComp->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
-		StatComp->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
+        StatComp->SetBaseMaxHealth(In.BaseMaxHealth);
+        StatComp->SetBaseHealthGenRate(In.BaseHealthGenRate);
+        StatComp->SetBaseMaxStamina(In.BaseMaxStamina);
+        StatComp->SetBaseStaminaGenRate(In.BaseStaminaGenRate);
+        StatComp->SetBaseAttack(In.BaseAttack);
+        StatComp->SetBaseDefense(In.BaseDefense);
+        StatComp->SetBaseAttackSpeed(In.BaseAttackSpeed);
+        StatComp->SetBaseWalkSpeed(In.BaseWalkSpeed);
+        StatComp->SetBaseMaxWeight(In.BaseMaxWeight);
+
+        StatComp->SetEquipmentBonusMaxHealth(In.EquipmentBonusMaxHealth);
+        StatComp->SetEquipmentBonusHealthGenRate(In.EquipmentBonusHealthGenRate);
+        StatComp->SetEquipmentBonusMaxStamina(In.EquipmentBonusMaxStamina);
+        StatComp->SetEquipmentBonusStaminaGenRate(In.EquipmentBonusStaminaGenRate);
+        StatComp->SetEquipmentBonusAttack(In.EquipmentBonusAttack);
+        StatComp->SetEquipmentBonusDefense(In.EquipmentBonusDefense);
+        StatComp->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
+        StatComp->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
+        StatComp->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
+
+        StatComp->RecalculateAllTotalStats();
+        StatComp->SetHealth(In.Health);
 	}
 
-    // 5. Skill 복원 + 보너스 적용
+    // 5. 스킬정보들 복원(스킬포인트, 스킬트리, 숙련도)
     if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
     {
-        SkillComp->SkillStateMap = LoadedSaveGame->SavedSkillStates;
-        if (AttrComp)
+        const FSkillSystemSaveData& In = LoadedSaveGame->SavedSkillData;
+
+        SkillComp->SkillStateMap = In.SkillStates;
+        SkillComp->LevelUpCount = In.LevelUpCount;
+        SkillComp->CurrentMastery = In.CurrentMastery;
+        SkillComp->MaxMastery = In.MaxMastery;
+        SkillComp->CurrentSP = In.CurrentSP;
+
+        // 스킬 갱신
+        if (UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
         {
             SkillComp->ApplyAllSkillBonuses(AttrComp);
         }
@@ -400,32 +361,14 @@ void UDW_GameInstance::ApplyLoadedData()
         ArmorComp->Weapon = CreateItem(Loaded.WeaponCode);
 
         //필수!! 캐릭터에 장비로 스탯 올라가는 함수 추가되고 나면은 여기 추가해주기!!
+        //근데 스탯에서 다 저장해서 없어도 될꺼같은데 확인해야함
 
 		// 캐릭터의 스켈레탈 메시 업데이트
         PlayerCharacter->UpdateSkeletalMesh();
     }
 
     // 9. 안개 적용
-    TArray<AActor*> FogActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFogOfWarManager::StaticClass(), FogActors);
-    if (FogActors.Num() > 0)
-    {
-        AFogOfWarManager* FogManager = Cast<AFogOfWarManager>(FogActors[0]);
-        if (FogManager)
-        {
-            FogManager->SetFogFromBitmask(LoadedSaveGame->CompressedFogBits);
-        }
-    }
-
-    // 10. 경험치 적용
-    if (UDW_SkillComponent* SkillComp = PlayerCharacter->FindComponentByClass<UDW_SkillComponent>())
-    {
-        const FTmpCharacterStatData& In = LoadedSaveGame->SaveStatData;
-        SkillComp->CurrentMastery = In.CurrentMastery;
-        SkillComp->MaxMastery = In.MaxMastery;
-        SkillComp->LevelUpCount = In.LevelUpCount;
-    }
-
+    RevealedFogMap = LoadedSaveGame->SavedFogMap;
 
     LoadedSaveGame = nullptr; // 일회성 데이터로 초기화
 }
@@ -438,23 +381,49 @@ void UDW_GameInstance::CacheTempDataBeforeLevelChange()
     CachedTempSaveData.PlayerLocation = Player->GetActorLocation();
     CachedTempSaveData.PlayerRotation = Player->GetActorRotation();
 
-    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    if (UCharacterStatComponent* StatComp = Player->FindComponentByClass<UCharacterStatComponent>())
     {
-        Attr->SaveData(CachedTempSaveData.TempAttributes);
+		FTmpCharacterStatData& TempStatData = CachedTempSaveData.TempStatData;
+        TempStatData.Health = StatComp->GetHealth();
+        TempStatData.Stamina = StatComp->GetStamina();
+
+		TempStatData.CurrentWeight = StatComp->GetCurrentWeight();
+		TempStatData.BaseMaxHealth = StatComp->GetBaseMaxHealth();
+		TempStatData.BaseHealthGenRate = StatComp->GetBaseHealthGenRate();
+		TempStatData.BaseMaxStamina = StatComp->GetBaseMaxStamina();
+		TempStatData.BaseStaminaGenRate = StatComp->GetBaseStaminaGenRate();
+		TempStatData.BaseAttack = StatComp->GetBaseAttack();
+		TempStatData.BaseDefense = StatComp->GetBaseDefense();
+		TempStatData.BaseAttackSpeed = StatComp->GetBaseAttackSpeed();
+		TempStatData.BaseWalkSpeed = StatComp->GetBaseWalkSpeed();
+		TempStatData.BaseMaxWeight = StatComp->GetBaseMaxWeight();
+		TempStatData.EquipmentBonusMaxHealth = StatComp->GetEquipmentBonusMaxHealth();
+		TempStatData.EquipmentBonusHealthGenRate = StatComp->GetEquipmentBonusHealthGenRate();
+		TempStatData.EquipmentBonusMaxStamina = StatComp->GetEquipmentBonusMaxStamina();
+		TempStatData.EquipmentBonusStaminaGenRate = StatComp->GetEquipmentBonusStaminaGenRate();
+		TempStatData.EquipmentBonusAttack = StatComp->GetEquipmentBonusAttack();
+		TempStatData.EquipmentBonusDefense = StatComp->GetEquipmentBonusDefense();
+		TempStatData.EquipmentBonusAttackSpeed = StatComp->GetEquipmentBonusAttackSpeed();
+		TempStatData.EquipmentBonusWalkSpeed = StatComp->GetEquipmentBonusWalkSpeed();
+		TempStatData.EquipmentBonusMaxWeight = StatComp->GetEquipmentBonusMaxWeight();
     }
 
-    if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+    if (UDW_SkillComponent* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
     {
-        CachedTempSaveData.TempSkillStates = Skill->SkillStateMap;
+		CachedTempSaveData.TempSkillData.SkillStates = Skill->SkillStateMap;
+		CachedTempSaveData.TempSkillData.CurrentSP = Skill->CurrentSP;
+		CachedTempSaveData.TempSkillData.LevelUpCount = Skill->LevelUpCount;
+		CachedTempSaveData.TempSkillData.CurrentMastery = Skill->CurrentMastery;
+		CachedTempSaveData.TempSkillData.MaxMastery = Skill->MaxMastery;
     }
 
-    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    if (UQuestManagerComponent* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
     {
         CachedTempSaveData.TempAcceptedQuests = Quest->GetActiveQuests();
         CachedTempSaveData.TempCompletedQuests = Quest->GetCompletedQuests();
     }
 
-    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
     {
         CachedTempSaveData.TempInventory.TempInventorySlots = Inv->InventorySlots;
         CachedTempSaveData.TempInventory.TempInventorySlotQuantity = Inv->InventorySlotQuantity;
@@ -467,7 +436,7 @@ void UDW_GameInstance::CacheTempDataBeforeLevelChange()
         }
     }
 
-    if (auto* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
+    if (UCharacterArmorComponent* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
     {
         CachedTempSaveData.TempArmor.Helmet = TSoftObjectPtr<UItemBase>(Armor->Helmet);
         CachedTempSaveData.TempArmor.Armor = TSoftObjectPtr<UItemBase>(Armor->Armor);
@@ -503,19 +472,9 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
 {
 	check(Player); // Player가 nullptr이 아니어야 함
 
-    if (auto* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    if (UCharacterStatComponent* Stat = Player->FindComponentByClass<UCharacterStatComponent>())
     {
-        Attr->LoadData(CachedTempSaveData.TempAttributes);
-        if (auto* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
-        {
-            Skill->SkillStateMap = CachedTempSaveData.TempSkillStates;
-            Skill->ApplyAllSkillBonuses(Attr);
-        }
-    }
-
-    if (auto* Stat = Player->FindComponentByClass<UCharacterStatComponent>())
-    {
-        const auto& In = CachedTempSaveData.TempStatData;
+        const FTmpCharacterStatData& In = CachedTempSaveData.TempStatData;
         Stat->SetHealth(In.Health);
         Stat->SetStamina(In.Stamina);
         Stat->SetCurrentWeight(In.CurrentWeight);
@@ -539,15 +498,32 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         Stat->SetEquipmentBonusAttackSpeed(In.EquipmentBonusAttackSpeed);
         Stat->SetEquipmentBonusWalkSpeed(In.EquipmentBonusWalkSpeed);
         Stat->SetEquipmentBonusMaxWeight(In.EquipmentBonusMaxWeight);
+
+        Stat->RecalculateAllTotalStats();
+        Stat->SetHealth(In.Health);
     }
 
-    if (auto* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
+    if (UDW_AttributeComponent* Attr = Player->FindComponentByClass<UDW_AttributeComponent>())
+    {
+        if (UDW_SkillComponent* Skill = Player->FindComponentByClass<UDW_SkillComponent>())
+        {
+			// 스킬 상태 복원
+			Skill->CurrentSP = CachedTempSaveData.TempSkillData.CurrentSP;
+			Skill->LevelUpCount = CachedTempSaveData.TempSkillData.LevelUpCount;
+			Skill->CurrentMastery = CachedTempSaveData.TempSkillData.CurrentMastery;
+			Skill->MaxMastery = CachedTempSaveData.TempSkillData.MaxMastery;
+            Skill->SkillStateMap = CachedTempSaveData.TempSkillData.SkillStates;
+            Skill->ApplyAllSkillBonuses(Attr);
+        }
+    }
+
+    if (UQuestManagerComponent* Quest = Player->FindComponentByClass<UQuestManagerComponent>())
     {
         Quest->AcceptedQuests = CachedTempSaveData.TempAcceptedQuests;
         Quest->CompletedQuests = CachedTempSaveData.TempCompletedQuests;
     }
 
-    if (auto* Inv = Player->FindComponentByClass<UInventoryComponent>())
+    if (UInventoryComponent* Inv = Player->FindComponentByClass<UInventoryComponent>())
     {
         Inv->InventorySlots = CachedTempSaveData.TempInventory.TempInventorySlots;
         Inv->InventorySlotQuantity = CachedTempSaveData.TempInventory.TempInventorySlotQuantity;
@@ -562,7 +538,7 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         }
     }
 
-    if (auto* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
+    if (UCharacterArmorComponent* Armor = Player->FindComponentByClass<UCharacterArmorComponent>())
     {
         Armor->Helmet = CachedTempSaveData.TempArmor.Helmet.Get();
         Armor->Armor = CachedTempSaveData.TempArmor.Armor.Get();
@@ -570,5 +546,50 @@ void UDW_GameInstance::ApplyTempDatatoCharacterComponents(ADW_CharacterBase* Pla
         Armor->Boots = CachedTempSaveData.TempArmor.Boots.Get();
         Armor->Weapon = CachedTempSaveData.TempArmor.Weapon.Get();
         Player->UpdateSkeletalMesh();   // 장비 변경 후 스켈레탈 메시 업데이트
+    }
+}
+
+void UDW_GameInstance::RevealGrid(FName MapName, int32 X, int32 Y)
+{
+    FBitmaskFogData& FogData = RevealedFogMap.FindOrAdd(MapName);
+
+    // 비트마스크 크기 초기화 (처음 등록 시)
+    if (FogData.Bitmask.Num() == 0)
+    {
+        FogData.Width = 128;  // 실제 사용하는 GridCountX로 교체
+        FogData.Height = 128; // 실제 사용하는 GridCountY로 교체
+
+        int32 TotalBits = FogData.Width * FogData.Height;
+        int32 TotalBytes = FMath::DivideAndRoundUp(TotalBits, 8);
+        FogData.Bitmask.Init(0, TotalBytes);
+    }
+
+    int32 Index = Y * FogData.Width + X;
+    int32 ByteIndex = Index / 8;
+    int32 BitIndex = Index % 8;
+
+    if (FogData.Bitmask.IsValidIndex(ByteIndex))
+    {
+        FogData.Bitmask[ByteIndex] |= (1 << BitIndex);
+    }
+}
+
+void UDW_GameInstance::GetRevealedGridSet(FName MapName, TSet<FIntPoint>& OutGridSet) const
+{
+    const FBitmaskFogData* FogData = RevealedFogMap.Find(MapName);
+    if (!FogData) return;
+
+    int32 TotalBits = FogData->Width * FogData->Height;
+    for (int32 Index = 0; Index < TotalBits; ++Index)
+    {
+        int32 ByteIndex = Index / 8;
+        int32 BitIndex = Index % 8;
+
+        if ((FogData->Bitmask[ByteIndex] >> BitIndex) & 1)
+        {
+            int32 X = Index % FogData->Width;
+            int32 Y = Index / FogData->Width;
+            OutGridSet.Add(FIntPoint(X, Y));
+        }
     }
 }

@@ -7,6 +7,8 @@
 #include "MonsterTypes.h"
 #include "GameFramework/Character.h"
 #include "Interface/BearableInterface.h"
+#include "NiagaraComponent.h"
+#include "CoreMinimal.h"
 #include "DW_MonsterBase.generated.h"
 
 
@@ -22,7 +24,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	
+	UPROPERTY()
+	UNiagaraComponent* SpawnedVFX;
+	
+	FTimerHandle DestroyVFXTimerHandle;
+	
 	virtual void Tick(float DeltaTime) override;
 
 public:
@@ -291,8 +298,6 @@ public:
 	// 사망 함수입니다.
 	virtual void Dead() override;
 
-
-
 	// 피격 시 호출됩니다.
 	virtual float TakeDamage(
 		float DamageAmount,
@@ -300,6 +305,8 @@ public:
 		class AController* EventInstigator,
 		AActor* DamageCauser
 	) override;
+
+	void RemoveDropVFX();
 
 	// 플레이어 캐릭터를 캐스팅합니다.
 	virtual void CastPlayerCharacter() override;
@@ -322,4 +329,6 @@ public:
 	virtual void ResetAttakingActors() override;
 
 	virtual void HitStop(float StopTime) override;
+	
+	void DestroySpawnedVFX();
 };

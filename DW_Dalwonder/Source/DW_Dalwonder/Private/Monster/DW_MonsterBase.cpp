@@ -15,7 +15,9 @@
 #include "Components/DecalComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Monster/MonsterDropTable.h"
-#include "DW_AttributeComponent.h"
+#include "Item/ItemTranslator.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 struct FDropItemData;
 
@@ -73,22 +75,7 @@ ADW_MonsterBase::ADW_MonsterBase(): CurrentState(EMonsterState::Idle), DataTable
 	{
 		DefaultHitCameraShake = ShakeClass.Class;
 	}
-
-	static ConstructorHelpers::FObjectFinder<UDataTable> DT_StatsTable(
-	TEXT("/Game/BluePrint/Monster/DataTable/MonsterDataTable.MonsterDataTable"));
-
-	if (DT_StatsTable.Succeeded())
-	{
-		DataTable = DT_StatsTable.Object;
-	}
 	
-	static ConstructorHelpers::FObjectFinder<UDataTable> DT_DropTable(
-	TEXT("/Game/BluePrint/Monster/DataTable/MonsterDropTable.MonsterDropTable"));
-
-	if (DT_DropTable.Succeeded())
-	{
-		DropTable = DT_DropTable.Object;
-	}
 }
 
 void ADW_MonsterBase::BeginPlay()
@@ -165,24 +152,6 @@ void ADW_MonsterBase::SetStats(UDataTable* NewDataTable)
 
 	SetMovementSpeed(MonsterSpeed);
 	SetAccelerationSpeed(MonsterAccelSpeed);
-}
-
-void ADW_MonsterBase::IncreaseMastery(UDataTable* NewDataTable)
-{
-	if (IsValid(NewDataTable))
-	{
-		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
-
-		const FString ContextString(TEXT("Monster Stat Lookup"));
-		FMonsterStatsTable* StatRow = NewDataTable->FindRow<FMonsterStatsTable>(RowName, ContextString);
-
-		if (StatRow)
-		{
-			int32 MasteryValue = StatRow->Level * 100;
-
-			PlayerCharacter->SkillComponent->IncreaseMastery(MasteryValue);
-		}
-	}
 }
 
 FName ADW_MonsterBase::GetMonsterName() const
@@ -472,28 +441,76 @@ void ADW_MonsterBase::Parried()
 
 void ADW_MonsterBase::Dead()
 {
-
 	if (bIsDead) return;
-
+	
 	bIsDead = true;
+	DropItem(DropTable); 
+	
+	if (DropTable)
+	{
+		FName RowName = FName(*StaticEnum<EMonsterName>()->GetNameStringByValue(static_cast<int64>(MonsterName)));
+		const FMonsterDropTable* DropData = DropTable->FindRow<FMonsterDropTable>(RowName, TEXT(""));
 
-	DropItem(DropTable);
-	IncreaseMastery(DataTable);
+		if (DropData && DropData->DropItems.Num() > 0)
+		{
+			EItemGrade HighestGrade = EItemGrade::Normal;
+			for (const FDropItemData& ItemData : DropData->DropItems)
+			{
+				EItemGrade CurrentGrade;
+				int32 EnchantLevel;
+				FString ItemRowID_FString; 
+				bool bIsSuccess;
+				
+				UItemTranslator::ParseItemCode(ItemData.ItemCode, CurrentGrade, EnchantLevel, ItemRowID_FString, bIsSuccess);
+				
+				if (bIsSuccess && static_cast<int32>(CurrentGrade) > static_cast<int32>(HighestGrade))
+				{
+					HighestGrade = CurrentGrade;
+				}
+			}
+			FString VFX_Path;
+			switch (HighestGrade)
+			{
+				case EItemGrade::Normal:   VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Normal.NE_Drop_Normal'");     break;
+				case EItemGrade::Rare:     VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Rare.NE_Drop_Rare'");         break;
+				case EItemGrade::Unique:   VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Unique.NE_Drop_Unique'");     break;
+				case EItemGrade::Legendary:VFX_Path = TEXT("NiagaraSystem'/Game/DropItem_Vfx/NE_Drop_Legendery.NE_Drop_Legendery'"); break;
+				default:                   VFX_Path = TEXT("");                                                                 break;
+			}
 
+			if (!VFX_Path.IsEmpty())
+			{
+				UNiagaraSystem* VFX_ToSpawn = Cast<UNiagaraSystem>(StaticLoadObject(UNiagaraSystem::StaticClass(), nullptr, *VFX_Path));
+				if (VFX_ToSpawn)
+				{
+					SpawnedVFX = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_ToSpawn, GetActorLocation());
+
+if (SpawnedVFX)
+{
+	GetWorld()->GetTimerManager().SetTimer(
+					DestroyVFXTimerHandle,    // 타이머를 식별할 핸들
+					this,                     // 함수를 호출할 객체 (자기 자신)
+					&ADW_MonsterBase::DestroySpawnedVFX, // 10초 뒤에 호출할 함수
+					1.0f,                    // 지연 시간 (초)
+					false                     // 반복하지 않음
+				);
+}
+				}
+			}
+				}
+}
+	// 3. 마지막으로 사망 애니메이션을 재생하고 AI를 정지시킵니다.
 	if (IsValid(DeadMontage))
 	{
 		UAnimMontage* Montage = DeadMontage;
-
 		if (Montage && GetMesh())
 		{
 			GetMesh()->GetAnimInstance()->Montage_Play(Montage);
-
 			if (AAIController* AIController = Cast<AAIController>(GetController()))
 			{
 				if (UBehaviorTreeComponent* BTComp = Cast<UBehaviorTreeComponent>(AIController->GetBrainComponent()))
 				{
 					BTComp->StopTree(EBTStopMode::Forced);
-
 					GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
@@ -501,13 +518,12 @@ void ADW_MonsterBase::Dead()
 	}
 }
 
-
 float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
+	
 	if (bIsGuard)
 	{
 		if (GuardHitNS)
@@ -558,27 +574,6 @@ float ADW_MonsterBase::TakeDamage(float DamageAmount, struct FDamageEvent const&
 	}
 
 	if (bIsDead) return 0;
-
-	// 체력 비례 데미지 계산 로직
-	if(UDW_AttributeComponent* AttrComp = PlayerCharacter->FindComponentByClass<UDW_AttributeComponent>())
-	{
-		if(MonsterHP >= (MonsterMaxHP / 10.f) * 7.f)
-		{
-			// 현재 체력이 최대 체력의 70% 이상일 경우(기본값이 0으로 되어있어서 임시 예외처리)
-			if (float NewDMG = AttrComp->GetDamageToHighHPEnemies() > DamageAmount)
-			{
-				DamageAmount = NewDMG;
-			}
-		}
-		else if(MonsterHP < (MonsterMaxHP / 10.f) * 3.f)
-		{
-			// 현재 체력이 최대 체력의 30% 미만일 경우(기본값이 0으로 되어있어서 임시 예외처리)
-			if (float NewDMG = AttrComp->GetDamageToHighHPEnemies() > DamageAmount)
-			{
-				DamageAmount = NewDMG;
-			}
-		}
-	}
 
 	if (bIsInvincible)
 	{
@@ -711,8 +706,8 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 	{
 		if (ItemData.DropItem && FMath::FRand() <= ItemData.DropChance)
 		{
-			FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
-			FVector SpawnLocation = GetActorLocation() + RandOffset;
+			//FVector RandOffset = FVector(FMath::RandRange(-100, 100), FMath::RandRange(-100, 100), 0);
+			FVector SpawnLocation = GetActorLocation();
 
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -727,6 +722,7 @@ void ADW_MonsterBase::DropItem(UDataTable* NewDataTable)
 			);
 
 			ItemActor->SetItemCode(ItemData.ItemCode);
+			ItemActor->SetOwnerMonster(this);
 			
 			int32 ItemCount;
 			if (ItemData.bUseMinDropCount)
@@ -758,4 +754,18 @@ void ADW_MonsterBase::HitStop(float StopTime)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
 	}, 0.001f * StopTime, false);
+}
+void ADW_MonsterBase::DestroySpawnedVFX()
+{
+	if (SpawnedVFX && SpawnedVFX->IsValidLowLevel())
+	{
+		SpawnedVFX->Deactivate(); 
+		
+		SpawnedVFX->DestroyComponent(); 
+		
+		SpawnedVFX = nullptr; 
+	}
+}
+void ADW_MonsterBase::IncreaseMastery(UDataTable* NewDataTable)
+{
 }

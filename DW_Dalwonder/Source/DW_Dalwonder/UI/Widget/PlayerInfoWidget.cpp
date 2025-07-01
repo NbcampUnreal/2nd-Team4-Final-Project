@@ -27,13 +27,13 @@ void UPlayerInfoWidget::NativeConstruct()
         {
             if (const UCharacterStatComponent* Stat = Player->GetCharacterStatComponent())
             {
-                const float MaxHP = Stat->GetTotalMaxHealth() + Attr->BonusMaxHealth;
-                const float MaxStamina = Stat->GetTotalMaxStamina() + Attr->BonusMaxStamina;
-                const float Defense = Stat->GetTotalDefense() + Attr->BonusDefense;
-                const float Weight = Stat->GetTotalMaxWeight() + Attr->BonusMaxCarryWeight;
-                const float MoveSpeed = Stat->GetTotalWalkSpeed() + Attr->BonusMoveSpeed;
-                const float HPRegen = Stat->GetTotalHealthGenRate() + Attr->BonusHealthRegen;
-                const float STRegen = Stat->GetTotalStaminaGenRate() + Attr->BonusStaminaRegen;
+                const float MaxHP = Stat->GetTotalMaxHealth();
+                const float MaxStamina = Stat->GetTotalMaxStamina();
+                const float Defense = Stat->GetTotalDefense();
+                const float Weight = Stat->GetTotalMaxWeight();
+                const float MoveSpeed = Stat->GetTotalWalkSpeed();
+                const float HPRegen = Stat->GetTotalHealthGenRate();
+                const float STRegen = Stat->GetTotalStaminaGenRate();
 
                 // 기본 공격력
                 float Attack = Stat->GetTotalAttack();

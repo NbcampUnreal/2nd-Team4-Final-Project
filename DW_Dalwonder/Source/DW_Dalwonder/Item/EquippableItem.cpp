@@ -1,8 +1,8 @@
 #include "Item/EquippableItem.h"
-#include "GameFramework/Character.h" 
 #include "Engine/Engine.h"           
 #include "Components/SkeletalMeshComponent.h"
-#include "Character/CharacterStatComponent.h" 
+#include "Character/CharacterStatComponent.h"
+#include "Character/CharacterArmorComponent.h"
 
 UEquippableItem::UEquippableItem()
 {
@@ -50,9 +50,15 @@ bool UEquippableItem::EquipItem(AActor* Instigator)
 #endif
 
 	// 기본 ItemBase의 EquipItem 호출 (필요하다면)
-	// Super::EquipItem(Instigator); 
+	// Super::EquipItem(Instigator);
 
-	return true; // 아이템 장착 성공
+	UCharacterArmorComponent* CharacterArmors = Instigator->FindComponentByClass<UCharacterArmorComponent>();
+	if (!CharacterArmors)
+	{
+		return false;
+	}
+	
+	return CharacterArmors->EquipArmor(this); // 아이템 장착 성공
 }
 
 bool UEquippableItem::UnequipItem(AActor* Instigator)

@@ -68,8 +68,8 @@ ADW_CharacterBase::ADW_CharacterBase()
 	
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 	AttributeComponent = CreateDefaultSubobject<UDW_AttributeComponent>(TEXT("AttributeComponent"));
+	SkillComponent = CreateDefaultSubobject<UDW_SkillComponent>(TEXT("SkillComponent"));
 
 	// SceneCaptureComponent 초기화
 	SceneCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent"));
@@ -675,6 +675,22 @@ void ADW_CharacterBase::PlayMontage(UAnimMontage* Montage, int32 SectionIndex)
 	}
 }
 
+void ADW_CharacterBase::SetWeaponMesh(UStaticMesh* WeaponMesh)
+{
+	if (IsValid(Weapon) && IsValid(WeaponMesh))
+	{
+		AActor* WeaponActor = Weapon->GetChildActor();
+		if (IsValid(WeaponActor))
+		{
+			UStaticMeshComponent* StaticMesh = WeaponActor->FindComponentByClass<UStaticMeshComponent>();
+			if (IsValid(StaticMesh))
+			{
+				StaticMesh->SetStaticMesh(WeaponMesh);
+			}
+		}
+	}
+}
+
 void ADW_CharacterBase::SetWeaponType(int32 NewWeaponType)
 {
 	if (WeaponType == NewWeaponType)
@@ -978,6 +994,11 @@ void ADW_CharacterBase::UseActiveSkillSlot3()
 
 void ADW_CharacterBase::KnockBackCharacter()
 {
+	if (bIsInvincible)
+	{
+		return;
+	}
+	
 	if (CurrentCombatState != ECharacterCombatState::Dead)
 	{
 		SetCombatState(ECharacterCombatState::Hit);
@@ -1039,6 +1060,7 @@ void ADW_CharacterBase::Dead()
 	StatComponent->StopConsumeHealth();
 	StatComponent->StopConsumeStamina();
 	bCanRideVehicle = false;
+	bCanControl = false;
 	
 	if (CurrentCombatState == ECharacterCombatState::Attacking)
 	{

@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "DW_AttributeComponent.generated.h"
 
+
+
 struct FAttributeSaveData;
 class UCharacterStatComponent;
 
@@ -72,6 +74,10 @@ public:
 	/* ==================== Skills ================== */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill")
 	bool bHasLastStandSkill = false;    // 마지막 저항 스킬 보유 여부
+
+    // Bonus 한번에 넘겨주기
+    UFUNCTION(BlueprintCallable, Category = "Attribute | Sync")
+    void ApplyAllBonusToStat();
 
     void ClearAllBonuses();
 

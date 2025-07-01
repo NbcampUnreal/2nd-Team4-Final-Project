@@ -40,27 +40,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void CloseLastPopupUI();
 
-	//안개
-	
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Fog")
-	TSubclassOf<UUserWidget> FogOverlayWidgetClass;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Fog")
-	class UMaterialInterface* FogMaterialBase;
-
-private:
-	UPROPERTY()
-	class UUserWidget* FogWidget;
-	
-	UPROPERTY()
-	class UMaterialInstanceDynamic* FogMaterialInstance;
-	
-	UPROPERTY()
-	class AFogOfWarManager* FogManager;
-
-	//안개
-
 public:
 
     //차례로 닫고 마지막 ESC닫기용

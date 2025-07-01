@@ -1,14 +1,13 @@
 #include "Character/CharacterArmorComponent.h"
 #include "Item/ItemBase.h"
 #include "Character/DW_CharacterBase.h"
-#include "Character/DW_Warrior.h"
 #include "DW_GameInstance.h"
 #include "Item/ItemDataManager.h"
 #include "Item/ItemData.h"
 #include "Engine/DataTable.h"
 
 UCharacterArmorComponent::UCharacterArmorComponent()
-	: Helmet(nullptr), Armor(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
+	: Helmet(nullptr), Armor(nullptr), Pants(nullptr), Glove(nullptr), Boots(nullptr), Weapon(nullptr)
 {
 	Character = Cast<ADW_CharacterBase>(GetOwner());
 }
@@ -19,13 +18,16 @@ void UCharacterArmorComponent::BeginPlay()
 
 }
 
-void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
+bool UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 {
-	if (Item == nullptr) return;
+	if (Item == nullptr) return false;
 
 	UDW_GameInstance* GameInstance = Cast<UDW_GameInstance>(GetWorld()->GetGameInstance());
-	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)return;
-
+	if (!GameInstance || !GameInstance->GetItemDataManager() || !GameInstance->GetItemDataManager()->ItemBaseDataTable)
+	{
+		return false;
+	}
+	
 	FItemData* ItemData = GameInstance->GetItemDataManager()->ItemBaseDataTable->FindRow<FItemData>(
 		FName(*Item->ItemCode),
 		TEXT("Lookup ItemCode")
@@ -33,79 +35,103 @@ void UCharacterArmorComponent::EquipArmor(UItemBase* Item)
 
 	if (!ItemData || ItemData->ItemType != EItemType::Equipment)
 	{
-		return;
+		return false;
 	}
 
-	ECharacterArmor ItemType = static_cast<ECharacterArmor>(ItemData->EquipSlot);
+	EEquipSlotType ItemType = ItemData->EquipSlot;
 
-	if (ItemType == ECharacterArmor::Helmet)
+	if (ItemType == EEquipSlotType::Helmet)
 	{
 		Helmet = Item;
-		Character->Helmet->SetSkeletalMeshAsset(GetArmorSkeletalMesh(Helmet));
+		Character->Helmet->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
-	else if (ItemType == ECharacterArmor::Armor)
+	else if (ItemType == EEquipSlotType::Chest)
 	{
 		Armor = Item;
-		GetArmorSkeletalMesh(Armor);
+		Character->Armor->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
-	else if (ItemType == ECharacterArmor::Glove)
+	else if (ItemType == EEquipSlotType::Legs)
+	{
+		Pants = Item;
+		Character->Pants->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
+	}
+	else if (ItemType == EEquipSlotType::Gloves)
 	{
 		Glove = Item;
-		GetArmorSkeletalMesh(Glove);
+		Character->Glove->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
-	else if (ItemType == ECharacterArmor::Boots)
+	else if (ItemType == EEquipSlotType::Boots)
 	{
 		Boots = Item;
-		GetArmorSkeletalMesh(Boots);
+		Character->Boots->SetSkeletalMeshAsset(GetItemSkeletalMesh(Item));
 	}
-	else if (ItemType == ECharacterArmor::Weapon)
+	else if (ItemType == EEquipSlotType::Weapon)
 	{
 		Weapon = Item;
-		Character->SetWeapon(GetWeaponActor(Item));
+		Character->SetWeaponMesh(GetItemStaticMesh(Item));
 
 		// 무기 타입 결정
-		int32 WeaponType = FCString::Atoi(*Item->ItemCode) / 10000;
-		if (ADW_Warrior* Warrior = Cast<ADW_Warrior>(Character))
+		int32 WeaponCode = FCString::Atoi(*Item->ItemCode);
+		if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
 		{
-			Warrior->SetWeaponType(WeaponType);
+			Character->SetWeaponType(1);
+		}
+		else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
+		{
+			Character->SetWeaponType(0);
 		}
 	}
 
 	Character->UpdateSkeletalMesh();
+	return true;
 }
 
-USkeletalMesh* UCharacterArmorComponent::GetArmorSkeletalMesh(UItemBase* Item) const
+UStaticMesh* UCharacterArmorComponent::GetItemStaticMesh(UItemBase* Item) const
 {
-	FString ItemCodeStr = Item->ItemCode;
-	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
-
-	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
+	if (ItemDataTable)
 	{
-		Character->SetWeaponType(1);
-	}
-	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
-	{
-		Character->SetWeaponType(0);
+		static const FString ContextString(TEXT("Item Lookup"));
+		const TMap<FName, uint8*>& RowMap = ItemDataTable->GetRowMap();
+
+		for (const TPair<FName, uint8*>& RowPair : RowMap)
+		{
+			const FItemData* RowData = reinterpret_cast<FItemData*>(RowPair.Value);
+			if (RowData && RowData->ItemID == Item->ItemBaseData.ItemID)
+			{
+				Item->ItemBaseData = *RowData;
+
+				if (RowData->ItemMesh.Get())
+				{
+					return RowData->ItemMesh.Get();
+				}
+			}
+		}
 	}
 
-	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
-	return nullptr; // ItemData.ItemMesh;
+	return nullptr;
 }
 
-AActor* UCharacterArmorComponent::GetWeaponActor(UItemBase* Item) const
+USkeletalMesh* UCharacterArmorComponent::GetItemSkeletalMesh(UItemBase* Item) const
 {
-	FString ItemCodeStr = Item->ItemCode;
-	int32 WeaponCode = FCString::Atoi(*ItemCodeStr);
+	if (ItemDataTable)
+	{
+		static const FString ContextString(TEXT("Item Lookup"));
+		const TMap<FName, uint8*>& RowMap = ItemDataTable->GetRowMap();
 
-	if ((WeaponCode >= 1 && WeaponCode <= 11) || WeaponCode == 23 || WeaponCode == 24)
-	{
-		Character->SetWeaponType(1);
+		for (const TPair<FName, uint8*>& RowPair : RowMap)
+		{
+			const FItemData* RowData = reinterpret_cast<FItemData*>(RowPair.Value);
+			if (RowData && RowData->ItemID == Item->ItemBaseData.ItemID)
+			{
+				Item->ItemBaseData = *RowData;
+
+				if (RowData->ItemMesh.Get())
+				{
+					return RowData->ItemSkMesh.Get();
+				}
+			}
+		}
 	}
-	else if ((WeaponCode >= 12 && WeaponCode <= 22) || WeaponCode == 25 || WeaponCode == 26)
-	{
-		Character->SetWeaponType(0);
-	}
-	
-	FItemData ItemData = ItemDataManager->GetItemDataFromCode(ItemCodeStr);
-	return nullptr; // ItemData.ItemMesh;
+
+	return nullptr;
 }

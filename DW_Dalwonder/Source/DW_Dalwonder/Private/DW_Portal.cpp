@@ -19,6 +19,11 @@ void ADW_Portal::Interact_Implementation(AActor* Interactor)
 	if (UDW_GameInstance* GI = GetGameInstance<UDW_GameInstance>())
 	{
 		GI->LastPortalType = PortalType;
+
+		//맵이동
+		GI->bIsOpenLevel = true;
+		//여기서 데이터도 저장
+		GI->CacheTempDataBeforeLevelChange();
 	}
 
 	if (TargetLevel.IsValid() == false)
